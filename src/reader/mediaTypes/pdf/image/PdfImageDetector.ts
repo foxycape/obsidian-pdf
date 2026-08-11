@@ -3,6 +3,7 @@ import { compareTagName } from '@foxycape/core/kernal/html/finder'
 import { checkHasValidRange } from '@foxycape/core/kernal/html/selection'
 import type { IPdfDocument } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfDocument'
 import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
+import { asAugmentedCanvasContext } from '../canvasContextHooks'
 import type { CustomPdfOptions } from '../CustomPdfOptions'
 import type { IPdfImageDetector, PdfImageDetectResult } from './IPdfImageDetector'
 import { isFullPageInternalImage } from './pdfInternalImageUtils'
@@ -68,10 +69,11 @@ export class PdfImageDetector implements IPdfImageDetector {
       return null
     }
 
-    const canvasContext = pageView.canvas.getContext('2d') as CanvasRenderingContext2D
-    const imageDescriptors = (canvasContext as any)['imageDescriptors'] as
-      | ImageDescriptor[]
-      | undefined
+    const canvasContext = pageView.canvas.getContext('2d')
+    if (!canvasContext) {
+      return null
+    }
+    const imageDescriptors = asAugmentedCanvasContext(canvasContext).imageDescriptors
     if (!imageDescriptors?.length) {
       return null
     }

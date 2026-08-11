@@ -119,7 +119,7 @@ export class PdfImageExtractor implements IDisposable {
     imageCallback?: (imageDescriptor: ImageDescriptor) => void,
   ) => {
     const viewport = page.getViewport({ scale })
-    const canvas = document.createElement('canvas')
+    const canvas = createEl('canvas')
     const context = canvas.getContext('2d')
     if (!context) {
       return context
@@ -152,7 +152,7 @@ export class PdfImageExtractor implements IDisposable {
       canvasContext: context,
       viewport,
       annotationMode: 0,
-    } as any).promise
+    } as Parameters<typeof page.render>[0]).promise
 
     return context
   }
@@ -220,7 +220,7 @@ export class PdfImageExtractor implements IDisposable {
           resolve(data)
         })
       } catch (error) {
-        reject(error)
+        reject(error instanceof Error ? error : new Error(String(error)))
       }
     })
   }
@@ -234,7 +234,7 @@ export class PdfImageExtractor implements IDisposable {
   private readonly FULL_CHUNK_HEIGHT = 16
 
   createCanvasFromImageData(imgData: any) {
-    const canvas = document.createElement('canvas')
+    const canvas = createEl('canvas')
     canvas.width = imgData.width
     canvas.height = imgData.height
     const ctx = canvas.getContext('2d')
@@ -269,7 +269,7 @@ export class PdfImageExtractor implements IDisposable {
       const dest32DataLength = dest32.length
       const fullSrcDiff = (width + 7) >> 3
       const white = 0xffffffff
-      const black = (pdfjsLib as any).FeatureTest?.isLittleEndian ? 0xff000000 : 0x000000ff
+      const black = pdfjsLib.FeatureTest?.isLittleEndian ? 0xff000000 : 0x000000ff
 
       for (i = 0; i < totalChunks; i++) {
         thisChunkHeight = i < fullChunks ? this.FULL_CHUNK_HEIGHT : partialChunkHeight

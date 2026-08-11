@@ -100,7 +100,7 @@ export class PdfThumbnailViewer {
         const pagesCount = pdfDocument.numPages
         const viewport = firstPdfPage.getViewport({ scale: 1 })
         const fragment = document.createDocumentFragment()
-        const tempContainer = document.createElement('div')
+        const tempContainer = createDiv()
 
         this.pages = []
         for (let pageNum = 1; pageNum <= pagesCount; pageNum++) {
@@ -115,15 +115,15 @@ export class PdfThumbnailViewer {
           fragment.appendChild(thumbnail.anchor)
         }
 
-        // First page is already loaded â€” attach it immediately.
+        // First page is already loaded â€?attach it immediately.
         this.pages[0]?.setPdfPage(firstPdfPage)
         this.container.appendChild(fragment)
 
         const currentPage = this.linkService.page || 1
         if (currentPage > 0 && currentPage <= this.pages.length) {
           this.updateActiveThumbnail(currentPage)
-          requestAnimationFrame(() => {
-            setTimeout(() => {
+          window.requestAnimationFrame(() => {
+            window.setTimeout(() => {
               this.scrollToPage(currentPage)
               this.requestRendering()
             }, 50)
@@ -354,7 +354,7 @@ export class PdfThumbnailViewer {
         this.renderingQueue.renderHighestPriority()
         return
       }
-      // Re-check priority after async getPage â€” user may have scrolled away.
+      // Re-check priority after async getPage â€?user may have scrolled away.
       const latestVisible = this.getVisibleThumbs()
       const latest = this.renderingQueue.getHighestPriority(
         latestVisible,

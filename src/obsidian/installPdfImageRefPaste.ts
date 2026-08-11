@@ -42,6 +42,9 @@ export const installPdfImageRefPaste = (plugin: PdfImageRefPastePlugin): void =>
     plugin.app.workspace.on(
       'editor-paste',
       (evt: ClipboardEvent, editor: Editor, info: MarkdownView | MarkdownFileInfo) => {
+        if (evt.defaultPrevented) {
+          return
+        }
         if (!shouldHandlePaste(evt)) {
           return
         }

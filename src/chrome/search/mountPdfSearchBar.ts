@@ -34,9 +34,7 @@ export const mountPdfSearchBar = (options: {
 }): PdfSearchBarMount => {
   // Keep inside the leaf host so the bar only appears in this PDF tab
   // (body-fixed overlays leak across Obsidian workspace leaves).
-  const root = options.hostEl.ownerDocument.createElement('div')
-  root.className = 'foxycape-pdf-search-root'
-  options.hostEl.appendChild(root)
+  const root = options.hostEl.createDiv({ cls: 'foxycape-pdf-search-root' })
 
   let searcher = createSearcher(options.reader)
   const state = reactive<SearchBarState>({

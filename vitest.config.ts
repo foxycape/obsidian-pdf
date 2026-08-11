@@ -20,5 +20,6 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     include: ['tests/**/*.{test,spec}.ts'],
+    setupFiles: [resolve(packageDir, 'scripts/test/setupObsidianDom.ts')],
   },
 })

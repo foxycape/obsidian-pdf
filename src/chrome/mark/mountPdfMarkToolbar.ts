@@ -21,9 +21,7 @@ export const mountPdfMarkToolbar = (options: {
   injectToolbarIcons(doc)
 
   // Attach to document.body so fixed toolbar is never clipped by PDF mount overflow.
-  const root = doc.createElement('div')
-  root.className = 'foxycape-pdf-mark-toolbar-root'
-  doc.body.appendChild(root)
+  const root = doc.body.createDiv({ cls: 'foxycape-pdf-mark-toolbar-root' })
 
   let currentReader = markRaw(options.reader)
   let currentGetMarker = options.getMarker

@@ -320,7 +320,11 @@ export class PdfMarker implements IMarker {
     this.renderer.owner.events.off(EventNames.PdfScaleChanging, this.onScaleChanging)
   }
 
-  private onPageRendered = async (payload: PdfPageRenderedPayload) => {
+  private onPageRendered = (payload: PdfPageRenderedPayload) => {
+    void this.handlePageRendered(payload)
+  }
+
+  private handlePageRendered = async (payload: PdfPageRenderedPayload) => {
     const pageNumber = payload?.pageNumber
     if (!pageNumber) {
       return
@@ -331,8 +335,8 @@ export class PdfMarker implements IMarker {
     }
   }
 
-  private onScaleChanging = async () => {
-    await this.restoreLoadedPages()
+  private onScaleChanging = () => {
+    void this.restoreLoadedPages()
   }
 
   private async restoreLoadedPages() {

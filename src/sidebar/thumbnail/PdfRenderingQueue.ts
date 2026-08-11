@@ -60,7 +60,7 @@ export class PdfRenderingQueue {
 
   renderHighestPriority = (currentlyVisiblePages?: unknown) => {
     if (this.idleTimeout) {
-      clearTimeout(this.idleTimeout)
+      window.clearTimeout(this.idleTimeout)
       this.idleTimeout = null
     }
 
@@ -179,7 +179,7 @@ export class PdfRenderingQueue {
 
   cleanup = () => {
     if (this.idleTimeout) {
-      clearTimeout(this.idleTimeout)
+      window.clearTimeout(this.idleTimeout)
       this.idleTimeout = null
     }
     this.onIdle = null

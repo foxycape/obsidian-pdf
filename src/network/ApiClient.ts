@@ -33,7 +33,7 @@ export class ApiClient implements IApiClient {
   private currentRefreshSecretTimes = 0
   private lastRefreshSecretTime: Date | null = null
   private loadedWasm = false
-  private checkTimeout: ReturnType<typeof setTimeout> | null = null
+  private checkTimeout: number | null = null
   private ellapsedMillSeconds = 0
   private readonly crypto: ICrypto
   private readonly device:IDevice;
@@ -83,12 +83,13 @@ export class ApiClient implements IApiClient {
       headers: { ...(options?.headers ?? {}) },
       responseType: options?.responseType ?? 'json',
     }
-    if (!bodyData) {
+    if (!bodyData || typeof bodyData !== 'object') {
       bodyData = {}
     }
+    const bodyRecord = bodyData as Record<string, unknown>
 
     if (isApiHost) {
-      await this.handleMethodParameters(bodyData as object, requestOptions)
+      await this.handleMethodParameters(bodyRecord, requestOptions)
     }
 
     const deviceToken = this.device.getId()
@@ -105,17 +106,18 @@ export class ApiClient implements IApiClient {
     } else {
       let payload: Record<string, unknown>
       if (isApiHost) {
-        payload = { ...(bodyData as object), ...systemParameters }
+        payload = { ...bodyRecord, ...systemParameters }
         if (sign) {
           payload.X_Public_Token = await this.getSignature(payload)
         }
       } else {
-        payload = { ...(bodyData as object) }
+        payload = { ...bodyRecord }
       }
 
       const formData = new FormData()
       for (const key of Object.keys(payload)) {
-        formData.append(key, payload[key] as string | Blob)
+        const value = payload[key]
+        formData.append(key, value instanceof Blob ? value : String(value ?? ''))
       }
       if (files?.length) {
         for (const file of files) {
@@ -159,10 +161,11 @@ export class ApiClient implements IApiClient {
 
     const isApiHost = this.isSameHost(url, this.apiSettings.endPoint)
     let parametersData: Record<string, unknown> =
-      data instanceof Map ? Object.fromEntries(data) : ((data as object) ?? {})
-    if (!parametersData) {
-      parametersData = {}
-    }
+      data instanceof Map
+        ? Object.fromEntries(data)
+        : data && typeof data === 'object'
+          ? { ...(data as Record<string, unknown>) }
+          : {}
 
     const requestOptions: HttpClientOptions = Object.assign({}, options ?? {}, {
       headers: { ...(options?.headers ?? {}) },
@@ -204,10 +207,9 @@ export class ApiClient implements IApiClient {
     let parameters: Record<string, unknown> =
       methodParameters instanceof Map
         ? Object.fromEntries(methodParameters)
-        : ((methodParameters as object) ?? {})
-    if (!parameters) {
-      parameters = {}
-    }
+        : methodParameters && typeof methodParameters === 'object'
+          ? { ...(methodParameters as Record<string, unknown>) }
+          : {}
     await this.handleMethodParameters(parameters)
     await this.ensureEnvCompleted()
     const systemParameters = this.getSystemParameters(this.device.getId())
@@ -256,8 +258,9 @@ export class ApiClient implements IApiClient {
       return newData
     }
     if (typeof data === 'object') {
-      for (const key of Object.keys(data as object)) {
-        const value = (data as Record<string, unknown>)[key]
+      const record = data as Record<string, unknown>
+      for (const key of Object.keys(record)) {
+        const value = record[key]
         newData[key] = typeof value === 'string' ? this.handleText(value) : value
       }
       return newData
@@ -346,7 +349,7 @@ export class ApiClient implements IApiClient {
 
   private checkWasmLoaded = (resolve: () => void, reject: (reason?: unknown) => void) => {
     if (this.checkTimeout) {
-      clearTimeout(this.checkTimeout)
+      window.clearTimeout(this.checkTimeout)
       this.checkTimeout = null
     }
 
@@ -363,7 +366,7 @@ export class ApiClient implements IApiClient {
       return
     }
 
-    this.checkTimeout = setTimeout(() => {
+    this.checkTimeout = window.setTimeout(() => {
       this.checkWasmLoaded(resolve, reject)
     }, 10)
   }

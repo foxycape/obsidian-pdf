@@ -13,7 +13,7 @@ export const injectGotoAnimationStyles = (doc: Document): void => {
   if (doc.getElementById(PDF_GOTO_STYLE_ELEMENT_ID)) {
     return
   }
-  const style = doc.createElement('style')
+  const style = doc.head.createEl('style')
   style.id = PDF_GOTO_STYLE_ELEMENT_ID
   // Match legacy HtmlThemeApplier `bg` keyframes: transparent → highlight → transparent (2s).
   style.textContent = `
@@ -27,7 +27,6 @@ export const injectGotoAnimationStyles = (doc: Document): void => {
   border-color: transparent !important;
 }
 `
-  doc.head.appendChild(style)
 }
 
 export type PlayGotoHighlightOptions = {
@@ -104,7 +103,7 @@ export const playGotoHighlightAnimation = (
   elements: Array<Element | null | undefined>,
   options?: PlayGotoHighlightOptions,
 ): void => {
-  const nodes = elements.filter((el): el is HTMLElement => el instanceof HTMLElement)
+  const nodes = elements.filter((el): el is HTMLElement => !!el && el.instanceOf(HTMLElement))
   if (nodes.length === 0) {
     return
   }

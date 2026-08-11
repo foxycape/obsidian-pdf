@@ -91,7 +91,7 @@ export class FoxycapePdfPlugin extends Plugin {
     installPdfImageRefContextMenu(this)
 
     this.addCommand({
-      id: 'open-with-foxycape-pdf',
+      id: 'open-with-reader',
       name: this.t('plugin_command_open_with', 'Open with Foxycape PDF'),
       checkCallback: (checking) => {
         const file = this.getActivePdfFile()
@@ -106,7 +106,7 @@ export class FoxycapePdfPlugin extends Plugin {
     })
 
     this.addCommand({
-      id: 'open-foxycape-pdf-view',
+      id: 'open-pdf-view',
       name: this.t('plugin_command_open_view', 'Open Foxycape PDF view'),
       callback: () => {
         const file = this.getActivePdfFile()
@@ -260,7 +260,7 @@ export class FoxycapePdfPlugin extends Plugin {
       },
       normalizedSubpath ? { subpath: normalizedSubpath } : undefined,
     )
-    this.app.workspace.revealLeaf(leaf)
+    void this.app.workspace.revealLeaf(leaf)
   }
 
   /**

@@ -3,7 +3,7 @@ import fontFillSvg from './icons/font-fill.svg?raw'
 import fontStraightLineSvg from './icons/font-straight-line.svg?raw'
 import fontWavyLineSvg from './icons/font-wavy-line.svg?raw'
 
-export const getMarkListIconSvg = (styleName: MarkStyleName | string): string => {
+export const getMarkListIconSvg = (styleName: MarkStyleName): string => {
   if (styleName === 'mark_pen') {
     return fontFillSvg
   }

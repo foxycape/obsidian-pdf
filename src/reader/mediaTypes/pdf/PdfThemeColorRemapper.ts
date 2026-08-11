@@ -1,4 +1,10 @@
 import type { IDisposable, Reader, Theme } from '@foxycape/core/kernal'
+import {
+  asAugmentedCanvasContext,
+  callOriginalDrawImage,
+  type DrawImageArgs,
+  type PdfAugmentedCanvasContext,
+} from './canvasContextHooks'
 import { LabColor } from './color/LabColor'
 import type { CustomPdfOptions } from './CustomPdfOptions'
 import {
@@ -17,15 +23,22 @@ const DEFAULT_FG = '#222222'
 
 type ToneGradient = (p: number) => LabColor
 
-type CanvasContextHooks = CanvasRenderingContext2D & {
-  originalFill?: typeof CanvasRenderingContext2D.prototype.fill
-  originalFillRect?: typeof CanvasRenderingContext2D.prototype.fillRect
-  originalFillText?: typeof CanvasRenderingContext2D.prototype.fillText
-  originalStroke?: typeof CanvasRenderingContext2D.prototype.stroke
-  originalStrokeRect?: typeof CanvasRenderingContext2D.prototype.strokeRect
-  originalStrokeText?: typeof CanvasRenderingContext2D.prototype.strokeText
-  originalDrawImage?: typeof CanvasRenderingContext2D.prototype.drawImage
-}
+type PaintMethodName =
+  | 'fill'
+  | 'fillRect'
+  | 'fillText'
+  | 'stroke'
+  | 'strokeRect'
+  | 'strokeText'
+
+const ORIGINAL_PAINT_KEYS = {
+  fill: 'originalFill',
+  fillRect: 'originalFillRect',
+  fillText: 'originalFillText',
+  stroke: 'originalStroke',
+  strokeRect: 'originalStrokeRect',
+  strokeText: 'originalStrokeText',
+} as const satisfies Record<PaintMethodName, keyof PdfAugmentedCanvasContext>
 
 /**
  * Remaps PDF page canvas colors to the reader theme (doq-inspired).
@@ -90,7 +103,7 @@ export class PdfThemeColorRemapper implements IDisposable {
       return
     }
     const opts = Object.assign(new PdfRenderHandleOptions(), handleOptions)
-    const ctx = canvasContext as CanvasContextHooks
+    const ctx = asAugmentedCanvasContext(canvasContext)
 
     if (opts.handleFillText) {
       this.wrapPaint(ctx, 'fillText', 'fillStyle')
@@ -112,7 +125,7 @@ export class PdfThemeColorRemapper implements IDisposable {
     }
     if (opts.handleDrawImage) {
       ctx.originalDrawImage = canvasContext.drawImage.bind(canvasContext)
-      canvasContext.drawImage = ((...args: any[]) => {
+      canvasContext.drawImage = ((...args: DrawImageArgs) => {
         this.handleDrawImage(
           ctx,
           pageOriginWidth,
@@ -172,52 +185,43 @@ export class PdfThemeColorRemapper implements IDisposable {
     return result
   }
 
-  private wrapPaint = (
-    ctx: CanvasContextHooks,
-    methodName:
-      | 'fill'
-      | 'fillRect'
-      | 'fillText'
-      | 'stroke'
-      | 'strokeRect'
-      | 'strokeText',
+  private wrapPaint = <M extends PaintMethodName>(
+    ctx: PdfAugmentedCanvasContext,
+    methodName: M,
     styleProp: 'fillStyle' | 'strokeStyle',
   ) => {
-    const originalKey = `original${methodName[0].toUpperCase()}${methodName.slice(1)}` as
-      | 'originalFill'
-      | 'originalFillRect'
-      | 'originalFillText'
-      | 'originalStroke'
-      | 'originalStrokeRect'
-      | 'originalStrokeText'
-    const original = (ctx[methodName] as Function).bind(ctx)
-    ;(ctx as any)[originalKey] = original
+    const originalKey = ORIGINAL_PAINT_KEYS[methodName]
+    type Args = Parameters<CanvasRenderingContext2D[M]>
+    const original = (ctx[methodName] as (...args: Args) => void).bind(ctx)
+    ctx[originalKey] = original as PdfAugmentedCanvasContext[typeof originalKey]
 
-    ;(ctx as any)[methodName] = (...args: any[]) => {
+    ctx[methodName] = ((...args: Args) => {
       if (!this.isRemapActive) {
-        return original(...args)
+        original(...args)
+        return
       }
       const current = ctx[styleProp]
       const remapped = this.remapStyle(current)
       if (remapped == null || remapped === current) {
-        return original(...args)
+        original(...args)
+        return
       }
       ctx.save()
       try {
         ctx[styleProp] = remapped
-        return original(...args)
+        original(...args)
       } finally {
         ctx.restore()
       }
-    }
+    }) as CanvasRenderingContext2D[M]
   }
 
   private handleDrawImage = (
-    ctx: CanvasContextHooks,
+    ctx: PdfAugmentedCanvasContext,
     pageOriginWidth: number,
     pageOriginHeight: number,
     handleOptions: PdfRenderHandleOptions,
-    args: any[],
+    args: DrawImageArgs,
   ) => {
     if (!handleOptions.imageMinWidth) {
       handleOptions.imageMinWidth = this.minWidth
@@ -233,20 +237,17 @@ export class PdfThemeColorRemapper implements IDisposable {
       ...args,
     )
 
-    const original = ctx.originalDrawImage as
-      | ((...drawArgs: any[]) => void)
-      | undefined
-    if (!original) {
+    if (!ctx.originalDrawImage) {
       return
     }
     if (!this.isRemapActive) {
-      original(...args)
+      callOriginalDrawImage(ctx, args)
       return
     }
 
     const isDark = this.theme?.colorMode === 'dark'
     if (!isDark) {
-      original(...args)
+      callOriginalDrawImage(ctx, args)
       return
     }
 
@@ -254,14 +255,14 @@ export class PdfThemeColorRemapper implements IDisposable {
     const isGrayscale = this.isGrayscaleImageSource(source)
     if (!isGrayscale) {
       // Color images always stay original.
-      original(...args)
+      callOriginalDrawImage(ctx, args)
       return
     }
 
     ctx.save()
     try {
       ctx.filter = DARK_GRAYSCALE_INVERT_FILTER
-      original(...args)
+      callOriginalDrawImage(ctx, args)
     } finally {
       ctx.restore()
     }
@@ -328,7 +329,7 @@ export class PdfThemeColorRemapper implements IDisposable {
     }
 
     // ImageBitmap / HTMLImageElement: copy to a temp canvas for sampling.
-    const temp = document.createElement('canvas')
+    const temp = createEl('canvas')
     temp.width = width
     temp.height = height
     const tempCtx = temp.getContext('2d')

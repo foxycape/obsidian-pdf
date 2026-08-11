@@ -97,12 +97,12 @@ export const createPdfReader = async (
 
   reader.events.on(
     EventNames.RequirePdfPassword,
-    async (
+    (
       callback: (password: string | Error) => Promise<void> | void,
       reason: string,
       _reasonType: number,
     ) => {
-      await options.onRequirePassword(callback, reason)
+      void options.onRequirePassword(callback, reason)
     },
   )
 

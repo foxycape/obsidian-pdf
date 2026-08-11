@@ -22,13 +22,11 @@ const resolveWritingMode = (width: number, height: number): MarkWritingMode =>
 const ensureMarkLayer = (pageEl: HTMLElement): HTMLElement => {
   let layer = pageEl.querySelector<HTMLElement>(`:scope > .${PDF_MARK_LAYER_CLASS}`)
   if (!layer) {
-    layer = pageEl.ownerDocument.createElement('div')
-    layer.className = PDF_MARK_LAYER_CLASS
+    layer = pageEl.createDiv({ cls: PDF_MARK_LAYER_CLASS })
     const style = pageEl.ownerDocument.defaultView?.getComputedStyle(pageEl)
     if (style && style.position === 'static') {
       pageEl.classList.add('foxycape-pdf-page--relative')
     }
-    pageEl.appendChild(layer)
   }
   // Absolute children are positioned against the padding edge (already inside border).
   // Do NOT offset by clientLeft/clientTop again — that double-counts the page border
@@ -76,8 +74,7 @@ const paintGeometry = (
   }
   const writingMode = resolveWritingMode(scaled.width, scaled.height)
   const styleType = resolveMarkStyleType(mark.styleName as MarkStyleName, writingMode)
-  const mask = layer.ownerDocument.createElement('div')
-  mask.className = `${mark.styleName} ${PDF_MARK_MASK_CLASS}`
+  const mask = layer.createDiv({ cls: `${mark.styleName} ${PDF_MARK_MASK_CLASS}` })
   if (writingMode !== 'horizontal-tb') {
     mask.classList.add(styleType)
   }
@@ -89,7 +86,6 @@ const paintGeometry = (
     'style',
     `${custom}left:${scaled.x}px;top:${scaled.y}px;width:${scaled.width}px;height:${scaled.height}px;`,
   )
-  layer.appendChild(mask)
 }
 
 /**

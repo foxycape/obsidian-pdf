@@ -61,7 +61,7 @@ export class PdfImageViewer {
   private readonly historyTarget: PdfImageViewerHistoryTarget = { layer: 'pdf-internal-image-viewer' }
   private initialized = false
   private toastEl: HTMLElement | null = null
-  private toastTimer: ReturnType<typeof setTimeout> | null = null
+  private toastTimer: number | null = null
 
   constructor(
     public readonly reader: Reader,
@@ -218,8 +218,8 @@ export class PdfImageViewer {
       getViewportSizeFn: () => this.getViewportSize()
     })
 
-    this.lightbox.on('init', async () => {
-      await this.injectStyles()
+    this.lightbox.on('init', () => {
+      void this.injectStyles()
     })
 
     this.lightbox.on('initialLayout', () => {
@@ -287,8 +287,7 @@ export class PdfImageViewer {
         onInit: (el, instance) => {
           el.classList.add('foxycape-pdf-pswp-zoom-ui')
 
-          const indicator = document.createElement('div')
-          indicator.classList.add('foxycape-pdf-pswp-zoom-indicator')
+          const indicator = el.createDiv({ cls: 'foxycape-pdf-pswp-zoom-indicator' })
 
           instance.on('zoomPanUpdate', (event) => {
             if (event.slide === instance.currSlide) {
@@ -296,7 +295,6 @@ export class PdfImageViewer {
             }
           })
 
-          el.appendChild(indicator)
         }
       })
 
@@ -308,9 +306,7 @@ export class PdfImageViewer {
         onInit: (el, instance) => {
           el.classList.add('foxycape-pdf-pswp-bottom-ui')
 
-          const buttonsContainer = document.createElement('div')
-          buttonsContainer.classList.add('button-containers')
-          el.appendChild(buttonsContainer)
+          const buttonsContainer = el.createDiv({ cls: 'button-containers' })
           this.appendButtons(buttonsContainer, instance)
         }
       })
@@ -331,17 +327,15 @@ export class PdfImageViewer {
     title: string,
     onClick: () => void
   ) => {
-    const button = document.createElement('button')
-    button.type = 'button'
+    const button = parent.createEl('button', {
+      cls: 'pswp__button pswp-button pswp-custom-button',
+      attr: { type: 'button', rel: 'noopener', title },
+    })
     this.setButtonIconHtml(button, html)
     button.dataset[DEFAULT_HTML_DATA_KEY] = html
     button.dataset[DEFAULT_TITLE_DATA_KEY] = title
-    button.title = title
     // button.setAttribute('aria-label', title)
-    button.setAttribute('rel', 'noopener')
-    button.classList.add('pswp__button', 'pswp-button', 'pswp-custom-button')
     button.addEventListener('click', onClick)
-    parent.appendChild(button)
     return button
   }
 
@@ -385,14 +379,16 @@ export class PdfImageViewer {
     loadingTitle: string,
     action: () => Promise<void>
   ) => {
-    const button = this.createActionButton(parent, html, title, async () => {
-      if (button.disabled) return
-      this.setToolbarButtonsLoading(parent, true, button, loadingTitle)
-      try {
-        await action()
-      } finally {
-        this.setToolbarButtonsLoading(parent, false, button, title)
-      }
+    const button = this.createActionButton(parent, html, title, () => {
+      void (async () => {
+        if (button.disabled) return
+        this.setToolbarButtonsLoading(parent, true, button, loadingTitle)
+        try {
+          await action()
+        } finally {
+          this.setToolbarButtonsLoading(parent, false, button, title)
+        }
+      })()
     })
     return button
   }
@@ -484,7 +480,7 @@ export class PdfImageViewer {
     const baseHeight = baseBlob.height
     const isQuarterTurn = normalizedDegree === 90 || normalizedDegree === 270
 
-    const canvas = document.createElement('canvas')
+    const canvas = createEl('canvas')
     canvas.width = isQuarterTurn ? baseHeight : baseWidth
     canvas.height = isQuarterTurn ? baseWidth : baseHeight
     const ctx = canvas.getContext('2d')
@@ -514,10 +510,10 @@ export class PdfImageViewer {
     }
 
     if (!this.toastEl) {
-      this.toastEl = document.createElement('div')
-      this.toastEl.className = 'foxycape-pdf-image-toast'
-      this.toastEl.setAttribute('role', 'status')
-      this.toastEl.setAttribute('aria-live', 'polite')
+      this.toastEl = createDiv({
+        cls: 'foxycape-pdf-image-toast',
+        attr: { role: 'status', 'aria-live': 'polite' },
+      })
     }
     if (this.toastEl.parentElement !== host) {
       host.appendChild(this.toastEl)
@@ -531,16 +527,16 @@ export class PdfImageViewer {
     this.toastEl.classList.add('is-visible')
 
     if (this.toastTimer) {
-      clearTimeout(this.toastTimer)
+      window.clearTimeout(this.toastTimer)
     }
-    this.toastTimer = setTimeout(() => {
+    this.toastTimer = window.setTimeout(() => {
       this.hideToast()
     }, 2000)
   }
 
   private hideToast = (remove = false) => {
     if (this.toastTimer) {
-      clearTimeout(this.toastTimer)
+      window.clearTimeout(this.toastTimer)
       this.toastTimer = null
     }
     if (!this.toastEl) {
@@ -761,7 +757,7 @@ export class PdfImageViewer {
     if (this.lightbox.pswp?.isOpen) {
       this.lightbox.pswp.goTo(0)
     } else {
-      await this.lightbox.loadAndOpen(0)
+      this.lightbox.loadAndOpen(0)
     }
 
     await loadTask

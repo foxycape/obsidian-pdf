@@ -21,6 +21,7 @@ import {
   stagePdfImageRefCopy,
 } from '@/obsidian/pdfImageRef'
 import { buildPdfUserSpaceRectParam } from '@/obsidian/selectionLink'
+import { asAugmentedCanvasContext } from '../canvasContextHooks'
 import type { CustomPdfOptions } from '../CustomPdfOptions'
 import type { CustomPdfRenderer } from '../CustomPdfRenderer'
 import { PdfImageDetector } from './PdfImageDetector'
@@ -32,6 +33,12 @@ import type { PdfImageViewerCallbacks } from './viewer'
 import lensCss from './lens.css?raw'
 
 type ImageExportAction = 'download' | 'copy' | 'copyReference'
+
+type PdfPageRenderView = {
+  canvas?: HTMLCanvasElement
+  id: number
+  pdfPage: { view: number[] }
+}
 
 const LENS_BUTTON_SIZE_PX = 32
 const LENS_GAP_PX = 6
@@ -56,7 +63,7 @@ export class PdfInternalImageController implements IDisposable {
   private readonly copyReferenceButton: HTMLButtonElement
   private readonly mobileLensHost: HTMLElement
   private imageViewer: PdfImageViewer | null = null
-  private hideLensTimer: ReturnType<typeof setTimeout> | null = null
+  private hideLensTimer: number | null = null
   private isPointerOverLens = false
   private currentDoc: IPdfDocument | null = null
   private currentDescriptor: ImageDescriptor | null = null
@@ -93,8 +100,7 @@ export class PdfInternalImageController implements IDisposable {
     this.copyButton = toolbar.copyButton
     this.copyReferenceButton = toolbar.copyReferenceButton
 
-    this.mobileLensHost = document.createElement('div')
-    this.mobileLensHost.className = 'foxycape-pdf-mobile-lenses'
+    this.mobileLensHost = createDiv({ cls: 'foxycape-pdf-mobile-lenses' })
     this.surface.appendChild(this.lensToolbar)
     this.surface.appendChild(this.mobileLensHost)
 
@@ -153,20 +159,17 @@ export class PdfInternalImageController implements IDisposable {
   }
 
   private createLensToolbar() {
-    const root = document.createElement('div')
-    root.className = 'foxycape-pdf-image-toolbar'
+    const root = createDiv({ cls: 'foxycape-pdf-image-toolbar' })
 
-    const moreWrap = document.createElement('div')
-    moreWrap.className = 'foxycape-pdf-image-more-wrap'
+    const moreWrap = root.createDiv({ cls: 'foxycape-pdf-image-more-wrap' })
 
-    const moreButton = document.createElement('button')
-    moreButton.type = 'button'
-    moreButton.className =
-      'clickable-icon foxycape-pdf-image-lens foxycape-pdf-image-lens--more'
+    const moreButton = moreWrap.createEl('button', {
+      cls: 'clickable-icon foxycape-pdf-image-lens foxycape-pdf-image-lens--more',
+      attr: { type: 'button' },
+    })
     setIcon(moreButton, 'ellipsis-vertical')
 
-    const menuEl = document.createElement('div')
-    menuEl.className = 'foxycape-pdf-image-menu'
+    const menuEl = moreWrap.createDiv({ cls: 'foxycape-pdf-image-menu' })
     menuEl.setAttribute('role', 'menu')
 
     const downloadButton = this.createMenuItem('download', 'Download image')
@@ -176,17 +179,12 @@ export class PdfInternalImageController implements IDisposable {
     menuEl.appendChild(copyButton)
     menuEl.appendChild(copyReferenceButton)
 
-    moreWrap.appendChild(moreButton)
-    moreWrap.appendChild(menuEl)
-
-    const browseButton = document.createElement('button')
-    browseButton.type = 'button'
-    browseButton.className =
-      'clickable-icon foxycape-pdf-image-lens foxycape-pdf-image-lens--browse'
+    const browseButton = root.createEl('button', {
+      cls: 'clickable-icon foxycape-pdf-image-lens foxycape-pdf-image-lens--browse',
+      attr: { type: 'button' },
+    })
     setIcon(browseButton, 'search')
 
-    root.appendChild(moreWrap)
-    root.appendChild(browseButton)
 
     const markPointerOver = () => {
       this.isPointerOverLens = true
@@ -244,15 +242,15 @@ export class PdfInternalImageController implements IDisposable {
   }
 
   private createMenuItem(icon: string, fallbackLabel: string) {
-    const button = document.createElement('button')
-    button.type = 'button'
-    button.className = 'foxycape-pdf-image-menu__item clickable-icon'
-    button.setAttribute('role', 'menuitem')
+    const button = createEl('button', {
+      cls: 'foxycape-pdf-image-menu__item clickable-icon',
+      attr: { type: 'button', role: 'menuitem' },
+    })
     setIcon(button, icon)
-    const label = document.createElement('span')
-    label.className = 'foxycape-pdf-image-menu__label'
-    label.textContent = fallbackLabel
-    button.appendChild(label)
+    button.createSpan({
+      cls: 'foxycape-pdf-image-menu__label',
+      text: fallbackLabel,
+    })
     return button
   }
 
@@ -287,7 +285,11 @@ export class PdfInternalImageController implements IDisposable {
     this.mobileLensHost.empty()
   }
 
-  private onPdfPageRender = async (pageView: any) => {
+  private onPdfPageRender = (pageView: PdfPageRenderView) => {
+    void this.handlePdfPageRender(pageView)
+  }
+
+  private handlePdfPageRender = async (pageView: PdfPageRenderView) => {
     if (!this.options.enableViewPdfImages || !pageView?.canvas) {
       return
     }
@@ -295,12 +297,16 @@ export class PdfInternalImageController implements IDisposable {
     if (this.options.enablePdfThemeColorRemap) {
       return
     }
-    const canvasContext = pageView.canvas.getContext('2d') as any
-    canvasContext['imageDescriptors'] = null
-    if (canvasContext['originalDrawImage']) {
+    const rawContext = pageView.canvas.getContext('2d')
+    if (!rawContext) {
       return
     }
-    canvasContext['page'] = pageView.id
+    const canvasContext = asAugmentedCanvasContext(rawContext)
+    canvasContext.imageDescriptors = null
+    if (canvasContext.originalDrawImage) {
+      return
+    }
+    canvasContext.page = pageView.id
     handleOnlyImages(canvasContext, pageView.pdfPage.view[2], pageView.pdfPage.view[3], {
       pageView,
       handleDrawImage: true,
@@ -312,7 +318,14 @@ export class PdfInternalImageController implements IDisposable {
     })
   }
 
-  private onPdfPageRendered = async ({
+  private onPdfPageRendered = (payload: {
+    pageView: { canvas?: HTMLCanvasElement; id: number; width: number; height: number }
+    pageNumber: number
+  }) => {
+    void this.handlePdfPageRendered(payload)
+  }
+
+  private handlePdfPageRendered = async ({
     pageView,
     pageNumber,
   }: {
@@ -326,8 +339,12 @@ export class PdfInternalImageController implements IDisposable {
     if (!canvas) {
       return
     }
-    const canvasContext = canvas.getContext('2d') as any
-    const imageDescriptors = (canvasContext?.['imageDescriptors'] as ImageDescriptor[]) ?? []
+    const rawContext = canvas.getContext('2d')
+    if (!rawContext) {
+      return
+    }
+    const canvasContext = asAugmentedCanvasContext(rawContext)
+    const imageDescriptors = canvasContext.imageDescriptors ?? []
     const doc = this.renderer.getDocument((pageNumber - 1).toString()) as IPdfDocument | undefined
     if (!doc) {
       return
@@ -365,24 +382,21 @@ export class PdfInternalImageController implements IDisposable {
   }
 
   private createMobileToolbar(doc: IPdfDocument, descriptor: ImageDescriptor) {
-    const root = document.createElement('div')
-    root.className = 'foxycape-pdf-image-toolbar'
+    const root = createDiv({ cls: 'foxycape-pdf-image-toolbar' })
 
-    const moreWrap = document.createElement('div')
-    moreWrap.className = 'foxycape-pdf-image-more-wrap'
+    const moreWrap = root.createDiv({ cls: 'foxycape-pdf-image-more-wrap' })
 
-    const moreButton = document.createElement('button')
-    moreButton.type = 'button'
-    moreButton.className =
-      'clickable-icon foxycape-pdf-image-lens foxycape-pdf-image-lens--more'
+    const moreButton = moreWrap.createEl('button', {
+      cls: 'clickable-icon foxycape-pdf-image-lens foxycape-pdf-image-lens--more',
+      attr: { type: 'button' },
+    })
     setIcon(moreButton, 'ellipsis-vertical')
     moreButton.setAttribute(
       'aria-label',
       this.reader.locale.getText('pdf_image_more', 'More'),
     )
 
-    const menuEl = document.createElement('div')
-    menuEl.className = 'foxycape-pdf-image-menu'
+    const menuEl = moreWrap.createDiv({ cls: 'foxycape-pdf-image-menu' })
     menuEl.setAttribute('role', 'menu')
 
     const downloadLabel = this.reader.locale.getText(
@@ -403,21 +417,17 @@ export class PdfInternalImageController implements IDisposable {
     menuEl.appendChild(downloadButton)
     menuEl.appendChild(copyButton)
     menuEl.appendChild(copyReferenceButton)
-    moreWrap.appendChild(moreButton)
-    moreWrap.appendChild(menuEl)
 
-    const browseButton = document.createElement('button')
-    browseButton.type = 'button'
-    browseButton.className =
-      'clickable-icon foxycape-pdf-image-lens foxycape-pdf-image-lens--browse'
+    const browseButton = root.createEl('button', {
+      cls: 'clickable-icon foxycape-pdf-image-lens foxycape-pdf-image-lens--browse',
+      attr: { type: 'button' },
+    })
     setIcon(browseButton, 'search')
     browseButton.setAttribute(
       'aria-label',
       this.reader.locale.getText('pdf_image_browse', 'View image'),
     )
 
-    root.appendChild(moreWrap)
-    root.appendChild(browseButton)
 
     moreButton.addEventListener('click', (e) => {
       e.preventDefault()
@@ -495,7 +505,11 @@ export class PdfInternalImageController implements IDisposable {
     return this.renderer.getDocument((pageNumber - 1).toString()) as IPdfDocument
   }
 
-  private checkContainsImage = async (e: PointerEvent, doc?: IPdfDocument) => {
+  private checkContainsImage = (e: PointerEvent, doc?: IPdfDocument) => {
+    void this.checkContainsImageAsync(e, doc)
+  }
+
+  private checkContainsImageAsync = async (e: PointerEvent, doc?: IPdfDocument) => {
     if (!this.options.enableViewPdfImages || !this.supportsHoverLens) {
       return
     }
@@ -525,7 +539,11 @@ export class PdfInternalImageController implements IDisposable {
     this.showHoverLens(resolved, imageDescriptor)
   }
 
-  private delayCheckContainsImage = asyncDebounce(this.checkContainsImage, 50)
+  private delayCheckContainsImageAsync = asyncDebounce(this.checkContainsImageAsync, 50)
+
+  private delayCheckContainsImage = (e: PointerEvent, doc?: IPdfDocument) => {
+    void this.delayCheckContainsImageAsync(e, doc)
+  }
 
   private onMouseLeave = (e: MouseEvent, doc: IPdfDocument) => {
     if (!this.options.enableViewPdfImages) {
@@ -601,7 +619,7 @@ export class PdfInternalImageController implements IDisposable {
 
   private cancelHideLens() {
     if (this.hideLensTimer) {
-      clearTimeout(this.hideLensTimer)
+      window.clearTimeout(this.hideLensTimer)
       this.hideLensTimer = null
     }
   }
@@ -611,7 +629,7 @@ export class PdfInternalImageController implements IDisposable {
       return
     }
     this.cancelHideLens()
-    this.hideLensTimer = setTimeout(() => {
+    this.hideLensTimer = window.setTimeout(() => {
       this.hideLensTimer = null
       if (this.isPointerOverLens) {
         return
@@ -701,7 +719,7 @@ export class PdfInternalImageController implements IDisposable {
         new Notice(
           this.reader.locale.getText(
             'pdf_image_ref_copied',
-            'Image reference copied — paste into Markdown, then right-click the image to open its PDF location in Foxycape',
+            'Image reference copied -- paste into Markdown, then right-click the image to open its PDF location in Foxycape',
           ),
         )
       } else {
@@ -726,7 +744,7 @@ export class PdfInternalImageController implements IDisposable {
   private async downloadBlob(fileName: string, blob: Blob) {
     const url = URL.createObjectURL(blob)
     try {
-      const a = document.createElement('a')
+      const a = createEl('a')
       a.href = url
       a.download = fileName
       a.click()
@@ -780,11 +798,11 @@ export class PdfInternalImageController implements IDisposable {
         download: locale.getText('pdf_image_download', 'Download image'),
         rotate: locale.getText('pdf_image_rotate', 'Rotate'),
         close: locale.getText('pdf_image_close', 'Close'),
-        loading: locale.getText('pdf_image_loading', 'Loading…'),
+        loading: locale.getText('pdf_image_loading', 'Loading...'),
         copied: locale.getText('pdf_image_copied', 'Image copied'),
         referenceCopied: locale.getText(
           'pdf_image_ref_copied',
-          'Image reference copied — paste into Markdown, then right-click the image to open its PDF location in Foxycape',
+          'Image reference copied -- paste into Markdown, then right-click the image to open its PDF location in Foxycape',
         ),
         downloaded: locale.getText('pdf_image_downloaded', 'Image downloaded'),
         error: locale.getText('pdf_image_error', 'Image action failed: {message}'),

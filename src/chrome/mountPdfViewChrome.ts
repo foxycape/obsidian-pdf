@@ -1,4 +1,4 @@
-import { createApp, h, markRaw, reactive, type App } from 'vue'
+import { createApp, h, markRaw, reactive, toRaw, type App } from 'vue'
 import type { Reader } from '@foxycape/core/kernal'
 import type {
   PdfViewPreferencePatch,
@@ -121,17 +121,14 @@ export const mountPdfViewChrome = (options: {
   const pageTarget = hosts.pageParent.createDiv({
     cls: 'foxycape-pdf-header-page',
   })
-  const zoomTarget = document.createElement('div')
-  zoomTarget.className = 'foxycape-pdf-header-zoom'
+  const zoomTarget = createDiv({ cls: 'foxycape-pdf-header-zoom' })
   hosts.actionsParent.insertBefore(zoomTarget, hosts.actionsParent.firstChild)
-  const settingsTarget = document.createElement('div')
-  settingsTarget.className = 'foxycape-pdf-header-settings'
+  const settingsTarget = createDiv({ cls: 'foxycape-pdf-header-settings' })
   zoomTarget.after(settingsTarget)
   // Native Obsidian more-options lives in the tab title bar; recreate it in fallback.
   let moreTarget: HTMLElement | null = null
   if (hosts.placement === 'fallback' && options.onOpenMoreMenu) {
-    moreTarget = document.createElement('div')
-    moreTarget.className = 'foxycape-pdf-header-more'
+    moreTarget = createDiv({ cls: 'foxycape-pdf-header-more' })
     settingsTarget.after(moreTarget)
   }
 
@@ -161,7 +158,8 @@ export const mountPdfViewChrome = (options: {
   const chromeApp: App = createApp({
     setup: () => () =>
       h(PdfViewChromeApp, {
-        reader: state.reader as Reader,
+        // reactive() unwraps class types; markRaw+toRaw keep the runtime instance.
+        reader: toRaw(state.reader) as Reader,
         t: state.t,
         sidebarOpen: state.sidebarOpen,
         settingsOpenNonce: state.settingsOpenNonce,
@@ -174,18 +172,18 @@ export const mountPdfViewChrome = (options: {
         zoomTarget: state.zoomTarget,
         settingsTarget: state.settingsTarget,
         moreTarget: state.moreTarget,
-      } as any),
+      }),
   })
   chromeApp.mount(teleportRoot)
 
   const sidebarApp: App = createApp({
     setup: () => () =>
       h(PdfLeftNavPanel, {
-        reader: state.reader as Reader,
+        reader: toRaw(state.reader) as Reader,
         t: state.t,
         open: state.sidebarOpen,
         onRequestClose: state.onRequestCloseSidebar,
-      } as any),
+      }),
   })
   sidebarApp.mount(options.sidebarHost)
 

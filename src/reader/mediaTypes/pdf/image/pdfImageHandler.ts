@@ -1,6 +1,16 @@
 import { ImageDescriptor, SimpleMatrix } from '@foxycape/core/kernal'
 import * as pdfjsLib from '@foxycape/core/pdfjs/legacy/build/pdf.mjs'
+import {
+  asAugmentedCanvasContext,
+  callOriginalDrawImage,
+  markCanvasContextHandled,
+  storeBoundOriginal,
+  type DrawImageArgs,
+  type PdfAugmentedCanvasContext,
+} from '../canvasContextHooks'
 import { PdfRenderHandleOptions } from './PdfRenderHandleOptions'
+
+export { markCanvasContextHandled } from '../canvasContextHooks'
 
 export const buildPdfImageDest = (
   imageDescriptor: ImageDescriptor,
@@ -37,9 +47,10 @@ export const buildImageDescriptors = (
   pageOriginWidth: number,
   pageOriginHeight: number,
   handleOptions: PdfRenderHandleOptions,
-  ...args: any[]
+  ...args: DrawImageArgs
 ) => {
-  const objId = (canvasContext as any)['objId'] as string | undefined
+  const ctx = asAugmentedCanvasContext(canvasContext)
+  const objId = ctx.objId
   if (!objId) {
     return
   }
@@ -67,26 +78,33 @@ export const buildImageDescriptors = (
 
   const imageMinWidth = handleOptions.imageMinWidth ?? 200
   const imageMinHeight = handleOptions.imageMinHeight ?? 200
-  const originalWidth = (canvasContext as any)['originalWidth'] ?? width
-  const originalHeight = (canvasContext as any)['originalHeight'] ?? height
-  if (!(originalWidth >= imageMinWidth && originalHeight >= imageMinHeight)) {
+  const originalWidth = ctx.originalWidth ?? width
+  const originalHeight = ctx.originalHeight ?? height
+  if (
+    !(
+      originalWidth != null &&
+      originalHeight != null &&
+      originalWidth >= imageMinWidth &&
+      originalHeight >= imageMinHeight
+    )
+  ) {
     return
   }
 
   let x = 0
   let y = 0
-  let destWidth: number = width!
-  let destHeight: number = height!
+  let destWidth: number = width ?? 0
+  let destHeight: number = height ?? 0
   if (args.length == 5) {
-    x = parseFloat(args[1])
-    y = parseFloat(args[2])
-    destWidth = parseFloat(args[3])
-    destHeight = parseFloat(args[4])
+    x = Number(args[1])
+    y = Number(args[2])
+    destWidth = Number(args[3])
+    destHeight = Number(args[4])
   } else if (args.length == 9) {
-    x = parseFloat(args[5])
-    y = parseFloat(args[6])
-    destWidth = parseFloat(args[7])
-    destHeight = parseFloat(args[8])
+    x = Number(args[5])
+    y = Number(args[6])
+    destWidth = Number(args[7])
+    destHeight = Number(args[8])
   }
 
   let destX = x
@@ -104,7 +122,7 @@ export const buildImageDescriptors = (
 
   const canvasWidth = canvasContext.canvas.width
   const canvasHeight = canvasContext.canvas.height
-  let imageDescriptors = (canvasContext as any)['imageDescriptors'] as ImageDescriptor[]
+  let imageDescriptors = ctx.imageDescriptors
   if (!imageDescriptors) {
     imageDescriptors = []
   }
@@ -121,8 +139,8 @@ export const buildImageDescriptors = (
   const scaledWidth = maxX - minX
   const scaledHeight = maxY - minY
 
-  const page = (canvasContext as any)['page']
-  const imageDescriptor = new ImageDescriptor(objId, page?.toString() + '.pdf')
+  const page = ctx.page
+  const imageDescriptor = new ImageDescriptor(objId, String(page ?? '') + '.pdf')
   imageDescriptor.imageRefId = imageId
   imageDescriptor.x = minX
   imageDescriptor.y = minY
@@ -133,18 +151,8 @@ export const buildImageDescriptors = (
   buildPdfImageDest(imageDescriptor, canvasWidth, canvasHeight, pageOriginWidth, pageOriginHeight)
   imageDescriptor.matrix = new SimpleMatrix(a, b, c, d, 0, 0)
   imageDescriptors.push(imageDescriptor)
-  ;(canvasContext as any)['imageDescriptors'] = imageDescriptors
+  ctx.imageDescriptors = imageDescriptors
   handleOptions?.imageCallback?.(imageDescriptor)
-}
-
-const CANVAS_CONTEXT_HANDLED_KEY = 'handled'
-
-export const markCanvasContextHandled = (canvasContext: CanvasRenderingContext2D): boolean => {
-  if ((canvasContext as any)[CANVAS_CONTEXT_HANDLED_KEY]) {
-    return true
-  }
-  ;(canvasContext as any)[CANVAS_CONTEXT_HANDLED_KEY] = 1
-  return false
 }
 
 /** Hook drawImage only; optionally no-op other paint instructions. */
@@ -158,24 +166,27 @@ export const handleOnlyImages = (
   if (markCanvasContextHandled(canvasContext)) {
     return
   }
-  handleOptions = Object.assign(new PdfRenderHandleOptions(), handleOptions)
+  const ctx = asAugmentedCanvasContext(canvasContext)
+  const opts = Object.assign(new PdfRenderHandleOptions(), handleOptions)
   if (disableOtherInstructions) {
-    ;(canvasContext as any)['originalFillText'] = canvasContext.fillText
+    storeBoundOriginal(ctx, 'originalFillText', canvasContext.fillText)
     canvasContext.fillText = () => {}
-    ;(canvasContext as any)['originalStrokeText'] = canvasContext.strokeText
+    storeBoundOriginal(ctx, 'originalStrokeText', canvasContext.strokeText)
     canvasContext.strokeText = () => {}
-    ;(canvasContext as any)['originalFill'] = canvasContext.fill
+    storeBoundOriginal(ctx, 'originalFill', canvasContext.fill)
     canvasContext.fill = (() => {}) as typeof canvasContext.fill
-    ;(canvasContext as any)['originalFillRect'] = canvasContext.fillRect
+    storeBoundOriginal(ctx, 'originalFillRect', canvasContext.fillRect)
     canvasContext.fillRect = () => {}
-    ;(canvasContext as any)['originalStroke'] = canvasContext.stroke
+    storeBoundOriginal(ctx, 'originalStroke', canvasContext.stroke)
     canvasContext.stroke = (() => {}) as typeof canvasContext.stroke
-    ;(canvasContext as any)['originalStrokeRect'] = canvasContext.strokeRect
+    storeBoundOriginal(ctx, 'originalStrokeRect', canvasContext.strokeRect)
     canvasContext.strokeRect = () => {}
   }
-  ;(canvasContext as any)['originalDrawImage'] = canvasContext.drawImage
-  canvasContext.drawImage = (...args: any[]) => {
-    buildImageDescriptors(canvasContext, pageOriginWidth, pageOriginHeight, handleOptions!, ...args)
-    ;(canvasContext as any)['originalDrawImage'](...args)
-  }
+  storeBoundOriginal(ctx, 'originalDrawImage', canvasContext.drawImage)
+  canvasContext.drawImage = ((...args: DrawImageArgs) => {
+    buildImageDescriptors(canvasContext, pageOriginWidth, pageOriginHeight, opts, ...args)
+    callOriginalDrawImage(ctx, args)
+  }) as typeof canvasContext.drawImage
 }
+
+export type { PdfAugmentedCanvasContext }

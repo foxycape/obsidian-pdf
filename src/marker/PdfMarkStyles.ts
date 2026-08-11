@@ -54,7 +54,7 @@ const straightBackground = (color: string, mode: MarkWritingMode = 'horizontal-t
 }
 
 export const resolveMarkStyleType = (
-  styleName: MarkStyleName | string,
+  styleName: MarkStyleName,
   writingMode: MarkWritingMode = 'horizontal-tb',
 ): string => {
   if (writingMode === 'horizontal-tb') {
@@ -110,7 +110,7 @@ const withAlpha = (hex: string, alpha: number): string => {
  * `styleType` may be base name or vertical variant (`wavy_line-vertical-lr`).
  */
 export const getCustomColorStyleText = (
-  styleType: MarkStyleName | string,
+  styleType: MarkStyleName,
   customColor?: string,
 ): string => {
   if (!customColor) {
@@ -147,7 +147,7 @@ export const getCustomColorStyleText = (
  * applied on an `display: inline` span with `box-decoration-break: clone`).
  */
 export const getMarkListTextStyle = (
-  styleType: MarkStyleName | string,
+  styleType: MarkStyleName,
   color: string,
 ): Record<string, string> => {
   if (styleType === 'mark_pen' || styleType.startsWith('mark_pen')) {

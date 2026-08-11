@@ -138,7 +138,7 @@ const measureSubstringInElement = (
             break;
         }
     }
-    if (!textNode && el instanceof SVGTextElement) {
+    if (!textNode && el.instanceOf(SVGTextElement)) {
         // Some browsers expose text via textContent without a child Text node until layout.
         textNode = el.firstChild as Text | null;
     }
@@ -154,7 +154,7 @@ const measureSubstringInElement = (
         return [];
     }
 
-    if (el instanceof SVGTextElement && typeof el.getExtentOfChar === "function") {
+    if (el.instanceOf(SVGTextElement) && typeof el.getExtentOfChar === "function") {
         try {
             const layout = getPageLayoutRef(pageEl);
             const ctm = el.getScreenCTM();

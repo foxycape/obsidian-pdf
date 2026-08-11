@@ -42,7 +42,7 @@ export class PdfSearcher implements IPdfSearcher {
         entireWord: false,
     };
     private searchGeneration = 0;
-    /** Layer string cache: texts.join("") — same space as TextHighlighter / pageMatches. */
+    /** Layer string cache: texts.join("") ?same space as TextHighlighter / pageMatches. */
     private pageLayerTextCache = new Map<number, string>();
     private disposed = false;
     private pendingResolve?: {
@@ -50,7 +50,7 @@ export class PdfSearcher implements IPdfSearcher {
         resolve: (result: PdfSearchResult) => void;
         maxCount: number;
         query: string;
-        timer?: ReturnType<typeof setTimeout>;
+        timer?: number;
     };
 
     constructor(private readonly renderer: IPdfRenderer) {
@@ -83,7 +83,7 @@ export class PdfSearcher implements IPdfSearcher {
         };
         const maxCount = request.maxSearchCount ?? DEFAULT_MAX_SEARCH_COUNT;
         if (this.pendingResolve?.timer) {
-            clearTimeout(this.pendingResolve.timer);
+            window.clearTimeout(this.pendingResolve.timer);
         }
         this.pendingResolve = undefined;
         const generation = ++this.searchGeneration;
@@ -103,7 +103,7 @@ export class PdfSearcher implements IPdfSearcher {
 
         return new Promise<PdfSearchResult>((resolve) => {
             if (this.pendingResolve?.timer) {
-                clearTimeout(this.pendingResolve.timer);
+                window.clearTimeout(this.pendingResolve.timer);
             }
             this.pendingResolve = {
                 generation,
@@ -123,7 +123,7 @@ export class PdfSearcher implements IPdfSearcher {
             });
 
             // FindController debounces new queries (~250ms) then scans pages async.
-            this.pendingResolve.timer = setTimeout(() => {
+            this.pendingResolve.timer = window.setTimeout(() => {
                 void this.tryFinalizeSearch(generation);
             }, FIND_SETTLE_MS);
         });
@@ -219,7 +219,7 @@ export class PdfSearcher implements IPdfSearcher {
     async removeAll(reset: boolean): Promise<void> {
         this.searchGeneration++;
         if (this.pendingResolve?.timer) {
-            clearTimeout(this.pendingResolve.timer);
+            window.clearTimeout(this.pendingResolve.timer);
         }
         this.pendingResolve = undefined;
         const root = this.renderer.getRendererContainer();
@@ -261,7 +261,11 @@ export class PdfSearcher implements IPdfSearcher {
         this.renderer.getEventBus().off("updatefindmatchescount", this.onFindMatchesCount);
     }
 
-    private onScaleChanging = async () => {
+    private onScaleChanging = () => {
+        void this.handleScaleChanging();
+    };
+
+    private handleScaleChanging = async () => {
         if (this.result.items.length === 0) {
             return;
         }
@@ -296,7 +300,11 @@ export class PdfSearcher implements IPdfSearcher {
         this.rebuildResultItems(this.pendingResolve.maxCount, this.pendingResolve.query, false);
     };
 
-    private onPageRendered = async (pageView: { id?: number }) => {
+    private onPageRendered = (pageView: { id?: number }) => {
+        void this.handlePageRendered(pageView);
+    };
+
+    private handlePageRendered = async (pageView: { id?: number }) => {
         const pageNumber = pageView?.id;
         if (!pageNumber || this.result.items.length === 0) {
             return;
@@ -310,11 +318,15 @@ export class PdfSearcher implements IPdfSearcher {
         }
     };
 
-    private onPageTextRendered = async (_doc: unknown, pageNumber: number) => {
+    private onPageTextRendered = (_doc: unknown, pageNumber: number) => {
+        void this.handlePageTextRendered(pageNumber);
+    };
+
+    private handlePageTextRendered = async (pageNumber: number) => {
         if (!pageNumber || this.result.items.length === 0) {
             return;
         }
-        // Text layer just became available — drop empty/stale geometry for this page.
+        // Text layer just became available ?drop empty/stale geometry for this page.
         this.pageLayerTextCache.delete(pageNumber);
         for (const item of this.result.items) {
             if (item.pageNumber === pageNumber) {
@@ -340,7 +352,7 @@ export class PdfSearcher implements IPdfSearcher {
         const pageMatches = findController.pageMatches;
         if (!pageMatches || pageMatches.length === 0) {
             // Still extracting / waiting for debounce.
-            pending.timer = setTimeout(() => {
+            pending.timer = window.setTimeout(() => {
                 void this.tryFinalizeSearch(generation);
             }, 100);
             return;
@@ -348,7 +360,7 @@ export class PdfSearcher implements IPdfSearcher {
 
         const pagesCount = this.renderer.numberOfPages;
         if (pageMatches.length < pagesCount) {
-            pending.timer = setTimeout(() => {
+            pending.timer = window.setTimeout(() => {
                 void this.tryFinalizeSearch(generation);
             }, 100);
             return;
@@ -356,7 +368,7 @@ export class PdfSearcher implements IPdfSearcher {
 
         this.rebuildResultItems(pending.maxCount, pending.query, true);
         if (pending.timer) {
-            clearTimeout(pending.timer);
+            window.clearTimeout(pending.timer);
         }
         this.pendingResolve = undefined;
 
@@ -486,7 +498,7 @@ export class PdfSearcher implements IPdfSearcher {
         // pageMatches offsets are in TextHighlighter / texts.join("") space.
         const layerText = await this.getPageLayerText(item.pageNumber);
         if (!layerText) {
-            // Page text not available yet — keep unset so UI can retry.
+            // Page text not available yet ?keep unset so UI can retry.
             return "";
         }
         item.showText = buildShowTextSnippet(layerText, item.start, item.length);

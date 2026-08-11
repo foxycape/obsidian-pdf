@@ -10,13 +10,11 @@ export const PDF_SEARCH_STYLE_ELEMENT_ID = 'foxycape-pdf-search-styles'
 const ensureSearchLayer = (pageEl: HTMLElement): HTMLElement => {
   let layer = pageEl.querySelector<HTMLElement>(`:scope > .${PDF_SEARCH_LAYER_CLASS}`)
   if (!layer) {
-    layer = pageEl.ownerDocument.createElement('div')
-    layer.className = PDF_SEARCH_LAYER_CLASS
+    layer = pageEl.createDiv({ cls: PDF_SEARCH_LAYER_CLASS })
     const style = pageEl.ownerDocument.defaultView?.getComputedStyle(pageEl)
     if (style && style.position === 'static') {
       pageEl.classList.add('foxycape-pdf-page--relative')
     }
-    pageEl.appendChild(layer)
   }
   // left/top come from .foxycape-pdf-search-layer CSS; only size is dynamic.
   layer.setCssStyles({
@@ -52,10 +50,9 @@ export const injectSearchHighlightStyles = (doc: Document, replace = false) => {
     existing.textContent = css
     return
   }
-  const style = doc.createElement('style')
+  const style = doc.head.createEl('style')
   style.id = PDF_SEARCH_STYLE_ELEMENT_ID
   style.textContent = css
-  doc.head.appendChild(style)
 }
 
 const removeHitFromPage = (pageEl: HTMLElement, hitId: string) => {
@@ -91,16 +88,16 @@ export const paintSearchHitOnPage = (
     if (rect.width <= 0 || rect.height <= 0) {
       continue
     }
-    const mask = pageEl.ownerDocument.createElement('div')
-    mask.className = isActive
-      ? `${PDF_SEARCH_HIT_CLASS} ${PDF_SEARCH_HIT_ACTIVE_CLASS}`
-      : PDF_SEARCH_HIT_CLASS
+    const mask = layer.createDiv({
+      cls: isActive
+        ? `${PDF_SEARCH_HIT_CLASS} ${PDF_SEARCH_HIT_ACTIVE_CLASS}`
+        : PDF_SEARCH_HIT_CLASS,
+    })
     mask.setAttribute(PDF_SEARCH_HIT_ID_ATTR, match.id)
     mask.setAttribute(
       'style',
       `left:${rect.x}px;top:${rect.y}px;width:${rect.width}px;height:${rect.height}px;`,
     )
-    layer.appendChild(mask)
   }
 }
 

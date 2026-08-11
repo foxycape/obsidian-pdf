@@ -1,5 +1,4 @@
 import type { IMarker } from '@foxycape/core/kernal/mark/IMarker'
-import type { IPdfDocument } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfDocument'
 import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
 import {
   playGotoHighlightAnimation,
@@ -30,8 +29,7 @@ const waitForTextLayer = async (
 ): Promise<HTMLElement | undefined> => {
   const deadline = Date.now() + timeoutMs
   while (Date.now() < deadline) {
-    const pageView = renderer.getPageView(pageNumber) as { div?: HTMLElement } | undefined
-    const pageEl = pageView?.div
+    const pageEl = renderer.getPageView(pageNumber)?.div
     if (
       pageEl &&
       (pageEl.querySelector('svg.custom-text-layer text') ||
@@ -43,7 +41,7 @@ const waitForTextLayer = async (
       window.setTimeout(resolve, 40)
     })
   }
-  return (renderer.getPageView(pageNumber) as { div?: HTMLElement } | undefined)?.div
+  return renderer.getPageView(pageNumber)?.div
 }
 
 const resolveItemElement = (
@@ -76,9 +74,7 @@ const flashPageRects = async (
   }
   renderer.setCurrentPage(pageNumber, true)
   await waitForPageRendered(renderer, pageNumber)
-  const doc = (renderer.getDocuments() as IPdfDocument[]).find(
-    (d) => d.pageNumber === pageNumber,
-  )
+  const doc = renderer.getDocuments().find((d) => d.pageNumber === pageNumber)
   if (!doc) {
     return
   }
@@ -220,14 +216,12 @@ const paintRectHighlight = async (
   const [x1, y1, x2, y2] = tuple
   renderer.setCurrentPage(pageNumber, true)
   await waitForPageRendered(renderer, pageNumber)
-  const doc = (renderer.getDocuments() as IPdfDocument[]).find(
-    (d) => d.pageNumber === pageNumber,
-  )
+  const doc = renderer.getDocuments().find((d) => d.pageNumber === pageNumber)
   const pageEl = doc?.getContentContainer()
   if (!pageEl) {
     return
   }
-  const pageView = renderer.getPageView(pageNumber) as PageViewForRect | undefined
+  const pageView = renderer.getPageView(pageNumber)
   const cssRect = pdfUserSpaceRectToPageCss(pageView, pageEl, x1, y1, x2, y2)
   if (!cssRect) {
     return

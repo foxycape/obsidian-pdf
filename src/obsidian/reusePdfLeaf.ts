@@ -121,7 +121,7 @@ export const revealExistingPdfLeaf = async (
   openViewState?: OpenViewState,
   subpath?: string,
 ): Promise<void> => {
-  app.workspace.revealLeaf(leaf)
+  void app.workspace.revealLeaf(leaf)
   app.workspace.setActiveLeaf(leaf, { focus: true })
 
   const normalizedSubpath = normalizePdfSubpath(subpath)
@@ -148,7 +148,7 @@ type PdfLinkOpenPlugin = Plugin & {
  */
 export const installPdfLinkContextCapture = (plugin: PdfLinkOpenPlugin): void => {
   const { workspace } = plugin.app
-  const originalHandleLinkContextMenu = workspace.handleLinkContextMenu
+  const originalHandleLinkContextMenu = workspace.handleLinkContextMenu.bind(workspace)
 
   workspace.handleLinkContextMenu = (
     menu: Menu,
@@ -157,7 +157,7 @@ export const installPdfLinkContextCapture = (plugin: PdfLinkOpenPlugin): void =>
     leaf?: WorkspaceLeaf,
   ): boolean => {
     plugin.pendingPdfLink = { linktext, sourcePath }
-    return originalHandleLinkContextMenu.call(workspace, menu, linktext, sourcePath, leaf)
+    return originalHandleLinkContextMenu(menu, linktext, sourcePath, leaf)
   }
 
   plugin.register(() => {
@@ -184,7 +184,7 @@ export const consumePendingPdfLinkSubpath = (
  */
 export const installPdfLinkReuse = (plugin: Plugin): void => {
   const { workspace } = plugin.app
-  const originalOpenLinkText = workspace.openLinkText
+  const originalOpenLinkText = workspace.openLinkText.bind(workspace)
 
   workspace.openLinkText = async (
     linktext: string,
@@ -194,18 +194,18 @@ export const installPdfLinkReuse = (plugin: Plugin): void => {
   ): Promise<void> => {
     // Respect Ctrl/Cmd/middle-click / explicit new-pane requests.
     if (newLeaf) {
-      return originalOpenLinkText.call(workspace, linktext, sourcePath, newLeaf, openViewState)
+      return originalOpenLinkText(linktext, sourcePath, newLeaf, openViewState)
     }
 
     const { path, subpath } = parseLinktext(linktext)
     const file = plugin.app.metadataCache.getFirstLinkpathDest(path, sourcePath)
     if (!file || file.extension.toLowerCase() !== 'pdf') {
-      return originalOpenLinkText.call(workspace, linktext, sourcePath, newLeaf, openViewState)
+      return originalOpenLinkText(linktext, sourcePath, newLeaf, openViewState)
     }
 
     const existing = findExistingPdfLeaf(plugin.app, file)
     if (!existing) {
-      return originalOpenLinkText.call(workspace, linktext, sourcePath, newLeaf, openViewState)
+      return originalOpenLinkText(linktext, sourcePath, newLeaf, openViewState)
     }
 
     await revealExistingPdfLeaf(plugin.app, existing, openViewState, subpath)

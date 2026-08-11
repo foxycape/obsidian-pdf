@@ -30,7 +30,8 @@ export class ConfirmModal extends Modal {
       .addButton((button) => {
         button.setButtonText(options.confirmText)
         if (options.isWarning) {
-          button.setWarning()
+          // Avoid deprecated setWarning(); newer Obsidian maps it to mod-destructive.
+          button.buttonEl.addClass('mod-warning')
         } else {
           button.setCta()
         }

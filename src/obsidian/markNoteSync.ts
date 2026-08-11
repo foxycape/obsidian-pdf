@@ -51,7 +51,7 @@ export class MarkNoteCompanion {
       const view = this.companionLeaf.view
       const openFile = view instanceof MarkdownView ? view.file : null
       if (openFile?.path === noteFile.path) {
-        app.workspace.revealLeaf(this.companionLeaf)
+        void app.workspace.revealLeaf(this.companionLeaf)
         return
       }
       // Leaf reused for another file — treat as dismissed for this session.

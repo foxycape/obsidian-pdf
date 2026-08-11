@@ -51,16 +51,16 @@ export class ObsidianHttpClient implements IHttpClient {
     let dataIsArray = false
     for (const url of urls) {
       try {
-        const data = (await this.get(url, { responseType })) as T
+        const data: unknown = await this.get(url, { responseType })
         if (!data) {
           continue
         }
         if (!dataIsArray) {
           dataIsArray = Array.isArray(data)
         }
-        datas.push(data)
-      } catch (error) {
-        console.log(error)
+        datas.push(data as T)
+      } catch {
+        // Ignore failed pages when merging multi-page responses.
       }
     }
 
@@ -116,9 +116,10 @@ export class ObsidianHttpClient implements IHttpClient {
         }
       }
 
+      const record = data as Record<string, unknown>
       const formData = new FormData()
-      for (const key of Object.keys(data as object)) {
-        formData.append(key, String((data as Record<string, unknown>)[key]))
+      for (const key of Object.keys(record)) {
+        formData.append(key, String(record[key]))
       }
       const encoded = this.encodeFormData(formData)
       return {
@@ -214,7 +215,7 @@ export class ObsidianHttpClient implements IHttpClient {
     if (Array.isArray(headers)) {
       return Object.fromEntries(headers)
     }
-    return { ...(headers as Record<string, string>) }
+    return { ...headers }
   }
 
   private pickContentType = (headers: Record<string, string>): string | null => {

@@ -34,7 +34,7 @@ const initThumbnailViewer = async () => {
   }
 
   if (!renderingQueue) {
-    // Dedicated thumbnail queue â€” do not share with the main viewer so
+    // Dedicated thumbnail queue â€?do not share with the main viewer so
     // visible-area thumbnails are not starved by main-page pre-render.
     renderingQueue = new PdfRenderingQueue()
   }
@@ -55,14 +55,14 @@ const initThumbnailViewer = async () => {
   if (pdfDocument && thumbnailViewer) {
     thumbnailViewer.setDocument(pdfDocument)
     await thumbnailViewer.updatePageLabels()
-    setTimeout(() => {
+    window.setTimeout(() => {
       renderingQueue?.renderHighestPriority()
     }, 200)
   }
 }
 
 onMounted(() => {
-  setTimeout(() => {
+  window.setTimeout(() => {
     void initThumbnailViewer()
   }, 100)
 })
@@ -77,8 +77,8 @@ watch(
     if (!active || !thumbnailViewer) {
       return
     }
-    requestAnimationFrame(() => {
-      setTimeout(() => {
+    window.requestAnimationFrame(() => {
+      window.setTimeout(() => {
         renderingQueue?.renderHighestPriority()
       }, 50)
     })

@@ -7,10 +7,9 @@ export const injectToolbarIcons = (doc: Document = document): void => {
   if (doc.getElementById(SPRITE_ID)) {
     return
   }
-  const holder = doc.createElement('div')
+  const holder = doc.body.createDiv()
   holder.id = SPRITE_ID
   holder.setAttribute('aria-hidden', 'true')
   holder.classList.add('foxycape-pdf-visually-hidden')
   holder.appendChild(sanitizeHTMLToDom(toolbarIconsSvg))
-  doc.body.appendChild(holder)
 }

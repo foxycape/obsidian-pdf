@@ -9,10 +9,17 @@ import { EventNames } from '@foxycape/core/kernal'
 import type { PDFDocumentProxy } from '@foxycape/core/pdfjs/types/src/display/api'
 import type { MultiPDFViewer } from '@foxycape/core/mediaTypes/pdf/renderer/MultiPdfViewer'
 import { PdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/PdfRenderer'
+import { asAugmentedCanvasContext } from './canvasContextHooks'
 import { CustomPdfOptions, type PdfViewPreferencePatch } from './CustomPdfOptions'
 import type { IPdfImageSource } from './image/IPdfImageSource'
 import { PdfInternalImageController } from './image/PdfInternalImageController'
 import { PdfThemeColorRemapper } from './PdfThemeColorRemapper'
+
+type PdfPageRenderView = {
+  canvas?: HTMLCanvasElement
+  id: number
+  pdfPage: { view: number[] }
+}
 
 type PdfLinkService = {
   getAnchorUrl: (hash: string) => string
@@ -119,9 +126,19 @@ export class CustomPdfRenderer extends PdfRenderer implements IPdfImageSource {
   }
 
   getLinkService = (): PdfLinkService => {
-    const viewer = this.pdfViewer as any
-    if (viewer?.options?.linkService) {
-      return viewer.options.linkService as PdfLinkService
+    const viewer = this.pdfViewer
+    const linkService = viewer.linkService
+    if (linkService?.getAnchorUrl && linkService?.goToPage) {
+      return {
+        getAnchorUrl: (hash: string) => String(linkService.getAnchorUrl(hash)),
+        goToPage: (pageNumber: number) => {
+          linkService.goToPage(pageNumber)
+        },
+        get page() {
+          return linkService.page
+        },
+        pdfDocument: viewer.pdfDocument ?? null,
+      }
     }
     return {
       getAnchorUrl: (hash: string) => hash,
@@ -129,17 +146,14 @@ export class CustomPdfRenderer extends PdfRenderer implements IPdfImageSource {
         this.currentPage = pageNumber
       },
       get page() {
-        return viewer?.currentPageNumber as number
+        return viewer.currentPageNumber
       },
+      pdfDocument: viewer.pdfDocument ?? null,
     }
   }
 
-  getPdfDocument = (): PDFDocumentProxy | null => {
-    const viewer = this.pdfViewer as any
-    return (viewer?.pdfDocument as PDFDocumentProxy | null) ??
-      this.getLinkService().pdfDocument ??
-      null
-  }
+  getPdfDocument = (): PDFDocumentProxy | null =>
+    this.pdfViewer.pdfDocument ?? this.getLinkService().pdfDocument ?? null
 
   async getImages(
     options?: ExtractImageOptions,
@@ -200,10 +214,8 @@ export class CustomPdfRenderer extends PdfRenderer implements IPdfImageSource {
   }
 
   private refreshPages = () => {
-    const viewer = this.pdfViewer as
-      | { pdfDocument?: unknown; refresh?: (noUpdate?: boolean) => void }
-      | undefined
-    if (!viewer?.pdfDocument || typeof viewer.refresh !== 'function') {
+    const viewer = this.pdfViewer
+    if (!viewer.pdfDocument) {
       return
     }
     viewer.refresh()
@@ -242,16 +254,24 @@ export class CustomPdfRenderer extends PdfRenderer implements IPdfImageSource {
     this.isPageRenderBound = false
   }
 
-  private onPdfPageRender = async (pageView: any) => {
+  private onPdfPageRender = (pageView: PdfPageRenderView) => {
+    void this.handlePdfPageRender(pageView)
+  }
+
+  private handlePdfPageRender = async (pageView: PdfPageRenderView) => {
     if (!this.pdfThemeColorRemapper || !pageView?.canvas || !pageView?.pdfPage) {
       return
     }
-    const canvasContext = pageView.canvas.getContext('2d') as any
-    canvasContext['imageDescriptors'] = null
-    if (canvasContext['originalFillText'] || canvasContext['originalDrawImage']) {
+    const rawContext = pageView.canvas.getContext('2d')
+    if (!rawContext) {
       return
     }
-    canvasContext['page'] = pageView.id
+    const canvasContext = asAugmentedCanvasContext(rawContext)
+    canvasContext.imageDescriptors = null
+    if (canvasContext.originalFillText || canvasContext.originalDrawImage) {
+      return
+    }
+    canvasContext.page = pageView.id
 
     const enableImages = this.customOptions.enableViewPdfImages
     this.pdfThemeColorRemapper.handle(

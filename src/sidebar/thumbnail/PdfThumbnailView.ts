@@ -51,26 +51,26 @@ export class PdfThumbnailView {
     this.renderingQueue = renderingQueue
     this.renderingId = `thumbnail-${id}`
 
-    const anchor = document.createElement('a')
-    anchor.href = linkService.getAnchorUrl(`#page=${id}`)
-    anchor.title = `${id}`
-    anchor.setAttribute('data-page-number', String(id))
-    anchor.className = 'thumbnail'
+    const anchor = createEl('a', {
+      cls: 'thumbnail',
+      attr: {
+        href: linkService.getAnchorUrl(`#page=${id}`),
+        title: `${id}`,
+        'data-page-number': String(id),
+      },
+    })
 
-    const div = document.createElement('div')
-    div.className = 'thumbnailSelectionRing'
+    const div = anchor.createDiv({ cls: 'thumbnailSelectionRing' })
     void THUMBNAIL_CANVAS_BORDER_WIDTH
 
-    const canvas = document.createElement('canvas')
+    const canvas = div.createEl('canvas')
     canvas.width = 0
     canvas.height = 0
-    div.appendChild(canvas)
-    anchor.appendChild(div)
 
-    const pageLabel = document.createElement('div')
-    pageLabel.className = 'thumbnail-page-label'
-    pageLabel.textContent = String(id)
-    anchor.appendChild(pageLabel)
+    anchor.createDiv({
+      cls: 'thumbnail-page-label',
+      text: String(id),
+    })
     container.appendChild(anchor)
 
     this.anchor = anchor

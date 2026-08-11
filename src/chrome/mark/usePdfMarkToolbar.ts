@@ -78,14 +78,14 @@ export const usePdfMarkToolbar = (options: {
   let activeRange: Range | null = null
   let isPointerDown = false
   let clickedToolbar = false
-  let showTimer: ReturnType<typeof setTimeout> | null = null
+  let showTimer: number | null = null
   /**
    * Mark id that was open when pointerdown hid the toolbar.
    * Used so a second click on the same mark toggles the toolbar closed
-   * (pointerdown hides → click would otherwise reopen it).
+   * (pointerdown hides ?click would otherwise reopen it).
    */
   let toggleCloseMarkId = ''
-  let clearToggleCloseTimer: ReturnType<typeof setTimeout> | null = null
+  let clearToggleCloseTimer: number | null = null
   /** Last style chosen by user for new selections (survives hide / mark edit) */
   let lastStyle: MarkStyleName = 'mark_pen'
   let pdfTextAssistant: IPdfSelection | null = null
@@ -302,9 +302,9 @@ export const usePdfMarkToolbar = (options: {
 
   const scheduleShowFromSelection = () => {
     if (showTimer) {
-      clearTimeout(showTimer)
+      window.clearTimeout(showTimer)
     }
-    showTimer = setTimeout(() => {
+    showTimer = window.setTimeout(() => {
       void (async () => {
         const shown = await tryShowFromSelection()
         if (!shown && !state.markId) {
@@ -341,7 +341,7 @@ export const usePdfMarkToolbar = (options: {
   const clearToggleCloseMarkId = () => {
     toggleCloseMarkId = ''
     if (clearToggleCloseTimer) {
-      clearTimeout(clearToggleCloseTimer)
+      window.clearTimeout(clearToggleCloseTimer)
       clearToggleCloseTimer = null
     }
   }
@@ -359,11 +359,11 @@ export const usePdfMarkToolbar = (options: {
     clickedToolbar = false
     isPointerDown = true
     if (showTimer) {
-      clearTimeout(showTimer)
+      window.clearTimeout(showTimer)
       showTimer = null
     }
     if (clearToggleCloseTimer) {
-      clearTimeout(clearToggleCloseTimer)
+      window.clearTimeout(clearToggleCloseTimer)
       clearToggleCloseTimer = null
     }
     // Remember open mark before hide so click can toggle it closed.
@@ -388,7 +388,7 @@ export const usePdfMarkToolbar = (options: {
     }
     // Clear after click has a chance to run (same gesture); keeps drag-away safe.
     if (toggleCloseMarkId) {
-      clearToggleCloseTimer = setTimeout(() => {
+      clearToggleCloseTimer = window.setTimeout(() => {
         toggleCloseMarkId = ''
         clearToggleCloseTimer = null
       }, 0)
@@ -405,7 +405,7 @@ export const usePdfMarkToolbar = (options: {
       return
     }
 
-    // Capture before any await: pointerup may clear via setTimeout(0).
+    // Capture before any await: pointerup may clear via window.setTimeout(0).
     const closingMarkId = toggleCloseMarkId
     clearToggleCloseMarkId()
 
@@ -579,11 +579,10 @@ export const usePdfMarkToolbar = (options: {
     } catch {
       // Fallback for environments that block clipboard API during key handlers.
       try {
-        const ta = doc?.createElement('textarea')
-        if (ta && doc?.body) {
+        if (doc?.body) {
+          const ta = doc.body.createEl('textarea')
           ta.value = text
           ta.classList.add('foxycape-pdf-clipboard-proxy')
-          doc.body.appendChild(ta)
           ta.select()
           doc.execCommand('copy')
           ta.remove()
@@ -679,7 +678,7 @@ export const usePdfMarkToolbar = (options: {
         linkSource.pdfFile,
         '',
         subpath,
-        '↗',
+        '?',
       )
       const payload = formatMarkQuoteLine(quoteText, markdownLink)
       const ok = await writeClipboard(payload)
@@ -702,7 +701,7 @@ export const usePdfMarkToolbar = (options: {
     state.showCopyMenu = false
   }
 
-  /** Ctrl/Cmd+C → formatted copy via PdfTextAssistant (not raw browser selection). */
+  /** Ctrl/Cmd+C ?formatted copy via PdfTextAssistant (not raw browser selection). */
   const onCtrlWithCKeyCopy = async (e?: Event) => {
     const doc = getOwnerDocument()
     const range = activeRange ?? (doc ? getActiveRange(doc) : null)
@@ -739,27 +738,43 @@ export const usePdfMarkToolbar = (options: {
   const ownerDoc = getOwnerDocument()
   ownerDoc?.addEventListener('keydown', onCopyKeyDown, true)
 
-  options.reader.events.on(EventNames.DocumentSelectionChange, onSelectionChange)
-  options.reader.events.on(EventNames.DocumentClick, onDocumentClick)
-  options.reader.events.on(EventNames.Pointerdown, onPointerDown)
-  options.reader.events.on(EventNames.Pointerup, onPointerUp)
-  options.reader.events.on(EventNames.Pointercancel, onPointerUp)
-  options.reader.events.on(EventNames.CtrlWithCKeyCopy, onCtrlWithCKeyCopy)
+  const handleSelectionChange = () => {
+    void onSelectionChange()
+  }
+  const handleDocumentClick = (...args: Parameters<typeof onDocumentClick>) => {
+    void onDocumentClick(...args)
+  }
+  const handlePointerDown = (...args: Parameters<typeof onPointerDown>) => {
+    void onPointerDown(...args)
+  }
+  const handlePointerUp = (...args: Parameters<typeof onPointerUp>) => {
+    void onPointerUp(...args)
+  }
+  const handleCtrlWithCKeyCopy = (...args: Parameters<typeof onCtrlWithCKeyCopy>) => {
+    void onCtrlWithCKeyCopy(...args)
+  }
+
+  options.reader.events.on(EventNames.DocumentSelectionChange, handleSelectionChange)
+  options.reader.events.on(EventNames.DocumentClick, handleDocumentClick)
+  options.reader.events.on(EventNames.Pointerdown, handlePointerDown)
+  options.reader.events.on(EventNames.Pointerup, handlePointerUp)
+  options.reader.events.on(EventNames.Pointercancel, handlePointerUp)
+  options.reader.events.on(EventNames.CtrlWithCKeyCopy, handleCtrlWithCKeyCopy)
 
   onBeforeUnmount(() => {
     if (showTimer) {
-      clearTimeout(showTimer)
+      window.clearTimeout(showTimer)
     }
     if (clearToggleCloseTimer) {
-      clearTimeout(clearToggleCloseTimer)
+      window.clearTimeout(clearToggleCloseTimer)
     }
     ownerDoc?.removeEventListener('keydown', onCopyKeyDown, true)
-    options.reader.events.off(EventNames.DocumentSelectionChange, onSelectionChange)
-    options.reader.events.off(EventNames.DocumentClick, onDocumentClick)
-    options.reader.events.off(EventNames.Pointerdown, onPointerDown)
-    options.reader.events.off(EventNames.Pointerup, onPointerUp)
-    options.reader.events.off(EventNames.Pointercancel, onPointerUp)
-    options.reader.events.off(EventNames.CtrlWithCKeyCopy, onCtrlWithCKeyCopy)
+    options.reader.events.off(EventNames.DocumentSelectionChange, handleSelectionChange)
+    options.reader.events.off(EventNames.DocumentClick, handleDocumentClick)
+    options.reader.events.off(EventNames.Pointerdown, handlePointerDown)
+    options.reader.events.off(EventNames.Pointerup, handlePointerUp)
+    options.reader.events.off(EventNames.Pointercancel, handlePointerUp)
+    options.reader.events.off(EventNames.CtrlWithCKeyCopy, handleCtrlWithCKeyCopy)
   })
 
   return {

@@ -33,7 +33,7 @@ export class DeviceService {
       osType: info.osType,
       osVersion: info.osVersion,
       browserLanguage: info.browserLanguage,
-      devicePixelRatio: globalThis.devicePixelRatio,
+      devicePixelRatio: window.devicePixelRatio,
       availableResolutionX: info.availableResolutionX,
       availableResolutionY: info.availableResolutionY,
       availableResolution:

@@ -82,7 +82,7 @@ export class PdfReaderView extends FileView {
     })
   }
 
-  /** Ctrl/Cmd+C → formatted PDF text copy (paragraph-aware). */
+  /** Ctrl/Cmd+C ??formatted PDF text copy (paragraph-aware). */
   requestFormattedCopy(evt?: KeyboardEvent) {
     if (this.reader) {
       this.reader.events.emit(EventNames.CtrlWithCKeyCopy, evt)
@@ -211,7 +211,7 @@ export class PdfReaderView extends FileView {
     }
     // Ignore chrome toggles (header or content-area fallback toolbar).
     if (
-      target instanceof Element &&
+      target.instanceOf(Element) &&
       target.closest?.(
         '.foxycape-pdf-nav-btn, .foxycape-pdf-header-nav, .foxycape-pdf-more-btn, .foxycape-pdf-fallback-toolbar, .view-header, .menu',
       )
@@ -432,7 +432,7 @@ export class PdfReaderView extends FileView {
       iconColor: 'var(--text-accent)',
     })
 
-    let showLoadingTimer: ReturnType<typeof setTimeout> | null = null
+    let showLoadingTimer: number | null = null
     let loadingLayerState: 'idle' | 'loading' | 'loaded' = 'idle'
     let latestReceived = 0
     let latestTotal = Math.max(0, file.stat?.size ?? 0)
@@ -441,7 +441,7 @@ export class PdfReaderView extends FileView {
       if (!showLoadingTimer) {
         return
       }
-      clearTimeout(showLoadingTimer)
+      window.clearTimeout(showLoadingTimer)
       showLoadingTimer = null
     }
 
@@ -474,7 +474,7 @@ export class PdfReaderView extends FileView {
           }
 
           if (!showLoadingTimer) {
-            showLoadingTimer = setTimeout(() => {
+            showLoadingTimer = window.setTimeout(() => {
               void (async () => {
                 if (loadingLayerState === 'loaded' || signal.aborted) {
                   return

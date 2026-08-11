@@ -32,19 +32,18 @@ export const resolveCssColor = (
     return raw || fallback
   }
 
-  const ownerDocument = root instanceof Document ? root : root.ownerDocument ?? document
+  const ownerDocument = root.instanceOf(Document) ? root : root.ownerDocument ?? document
   const mountParent =
-    root instanceof Element
+    root.instanceOf(Element)
       ? root
       : ownerDocument.body ?? ownerDocument.documentElement
   if (!mountParent) {
     return raw || fallback
   }
 
-  const probe = ownerDocument.createElement('span')
+  const probe = mountParent.createSpan()
   probe.classList.add('foxycape-pdf-offscreen-probe')
   probe.setCssStyles({ color: SENTINEL_RGB })
-  mountParent.appendChild(probe)
 
   try {
     const sentinel = ownerDocument.defaultView?.getComputedStyle(probe).color ?? ''

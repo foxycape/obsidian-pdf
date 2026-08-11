@@ -17,7 +17,7 @@ const loadWorkerBlobSrc = async (plugin: Plugin): Promise<string> => {
   if (cachedWorkerBlobSrc) {
     return cachedWorkerBlobSrc
   }
-  if (workerLoadPromise) {
+  if (workerLoadPromise !== null) {
     return workerLoadPromise
   }
 
