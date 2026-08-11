@@ -582,8 +582,7 @@ export const usePdfMarkToolbar = (options: {
         const ta = doc?.createElement('textarea')
         if (ta && doc?.body) {
           ta.value = text
-          ta.style.position = 'fixed'
-          ta.style.left = '-9999px'
+          ta.classList.add('foxycape-pdf-clipboard-proxy')
           doc.body.appendChild(ta)
           ta.select()
           doc.execCommand('copy')

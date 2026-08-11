@@ -16,6 +16,7 @@ import {
 import { existsElement, injectCssContent, removeElement } from '@core/kernal/html/injector'
 import PhotoSwipe from 'photoswipe'
 import PhotoSwipeLightbox from 'photoswipe/lightbox'
+import { sanitizeHTMLToDom } from 'obsidian'
 import {
   clearPendingPdfImageRef,
   stagePdfImageRefCopy,
@@ -284,16 +285,10 @@ export class PdfImageViewer {
         tagName: 'div',
         appendTo: 'wrapper',
         onInit: (el, instance) => {
-          el.style.display = 'flex'
-          el.style.justifyContent = 'flex-end'
-          el.style.alignItems = 'center'
-          el.style.marginTop = '15px'
+          el.classList.add('foxycape-pdf-pswp-zoom-ui')
 
           const indicator = document.createElement('div')
-          indicator.setAttribute(
-            'style',
-            'text-align:center !important;width:50px;height:32px;margin-inline-end:20px;font-size:14px;line-height:30px;color:#fff;text-shadow:1px 1px 3px var(--pswp-icon-color-secondary)'
-          )
+          indicator.classList.add('foxycape-pdf-pswp-zoom-indicator')
 
           instance.on('zoomPanUpdate', (event) => {
             if (event.slide === instance.currSlide) {
@@ -311,13 +306,7 @@ export class PdfImageViewer {
         tagName: 'div',
         appendTo: 'wrapper',
         onInit: (el, instance) => {
-          el.style.position = 'absolute'
-          el.style.width = '100%'
-          el.style.bottom = '0px'
-          el.style.minHeight = '60px'
-          el.style.display = 'flex'
-          el.style.justifyContent = 'center'
-          el.style.alignItems = 'center'
+          el.classList.add('foxycape-pdf-pswp-bottom-ui')
 
           const buttonsContainer = document.createElement('div')
           buttonsContainer.classList.add('button-containers')
@@ -331,6 +320,11 @@ export class PdfImageViewer {
     this.initialized = true
   }
 
+  private setButtonIconHtml = (button: HTMLElement, html: string) => {
+    button.empty()
+    button.appendChild(sanitizeHTMLToDom(html))
+  }
+
   private createActionButton = (
     parent: HTMLElement,
     html: string,
@@ -339,7 +333,7 @@ export class PdfImageViewer {
   ) => {
     const button = document.createElement('button')
     button.type = 'button'
-    button.innerHTML = html
+    this.setButtonIconHtml(button, html)
     button.dataset[DEFAULT_HTML_DATA_KEY] = html
     button.dataset[DEFAULT_TITLE_DATA_KEY] = title
     button.title = title
@@ -362,7 +356,7 @@ export class PdfImageViewer {
       const actionButton = button as HTMLButtonElement
       actionButton.disabled = loading
       if (loading && actionButton === activeButton) {
-        actionButton.innerHTML = ICONS.loader
+        this.setButtonIconHtml(actionButton, ICONS.loader)
         actionButton.title = activeTitle
         // actionButton.setAttribute('aria-label', activeTitle)
         actionButton.setAttribute('aria-busy', 'true')
@@ -374,7 +368,7 @@ export class PdfImageViewer {
       actionButton.removeAttribute('aria-busy')
       const defaultHtml = actionButton.dataset[DEFAULT_HTML_DATA_KEY]
       if (defaultHtml) {
-        actionButton.innerHTML = defaultHtml
+        this.setButtonIconHtml(actionButton, defaultHtml)
       }
       const defaultTitle = actionButton.dataset[DEFAULT_TITLE_DATA_KEY]
       if (defaultTitle) {
@@ -736,14 +730,14 @@ export class PdfImageViewer {
   private beforePointerMove = () => {
     const iframes = document.getElementsByTagName('iframe')
     for (let i = 0; i < iframes.length; i++) {
-      iframes[i].style.setProperty('pointer-events', 'none', 'important')
+      iframes[i].classList.add('foxycape-pdf-iframe-no-pointer-events')
     }
   }
 
   private afterPointerMove = () => {
     const iframes = document.getElementsByTagName('iframe')
     for (let i = 0; i < iframes.length; i++) {
-      iframes[i].style.removeProperty('pointer-events')
+      iframes[i].classList.remove('foxycape-pdf-iframe-no-pointer-events')
     }
   }
 

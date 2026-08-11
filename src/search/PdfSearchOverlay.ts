@@ -14,14 +14,15 @@ const ensureSearchLayer = (pageEl: HTMLElement): HTMLElement => {
     layer.className = PDF_SEARCH_LAYER_CLASS
     const style = pageEl.ownerDocument.defaultView?.getComputedStyle(pageEl)
     if (style && style.position === 'static') {
-      pageEl.style.position = 'relative'
+      pageEl.classList.add('foxycape-pdf-page--relative')
     }
     pageEl.appendChild(layer)
   }
-  layer.style.left = '0'
-  layer.style.top = '0'
-  layer.style.width = `${pageEl.clientWidth}px`
-  layer.style.height = `${pageEl.clientHeight}px`
+  // left/top come from .foxycape-pdf-search-layer CSS; only size is dynamic.
+  layer.setCssStyles({
+    width: `${pageEl.clientWidth}px`,
+    height: `${pageEl.clientHeight}px`,
+  })
   return layer
 }
 

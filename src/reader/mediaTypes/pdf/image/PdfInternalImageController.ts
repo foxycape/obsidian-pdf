@@ -95,8 +95,6 @@ export class PdfInternalImageController implements IDisposable {
 
     this.mobileLensHost = document.createElement('div')
     this.mobileLensHost.className = 'foxycape-pdf-mobile-lenses'
-    this.mobileLensHost.style.cssText =
-      'position:absolute;inset:0;pointer-events:none;z-index:20;'
     this.surface.appendChild(this.lensToolbar)
     this.surface.appendChild(this.mobileLensHost)
 
@@ -112,7 +110,7 @@ export class PdfInternalImageController implements IDisposable {
   /** Hide hover/mobile lenses when image preview is turned off at runtime. */
   clearPreviewUi = () => {
     this.hideLensNow()
-    this.mobileLensHost.innerHTML = ''
+    this.mobileLensHost.empty()
   }
 
   private injectLensStyles() {
@@ -157,7 +155,6 @@ export class PdfInternalImageController implements IDisposable {
   private createLensToolbar() {
     const root = document.createElement('div')
     root.className = 'foxycape-pdf-image-toolbar'
-    root.style.display = 'none'
 
     const moreWrap = document.createElement('div')
     moreWrap.className = 'foxycape-pdf-image-more-wrap'
@@ -287,7 +284,7 @@ export class PdfInternalImageController implements IDisposable {
 
   private onScaleChanging = () => {
     this.hideLensNow()
-    this.mobileLensHost.innerHTML = ''
+    this.mobileLensHost.empty()
   }
 
   private onPdfPageRender = async (pageView: any) => {
@@ -357,10 +354,11 @@ export class PdfInternalImageController implements IDisposable {
       }
 
       const toolbar = this.createMobileToolbar(doc, descriptor)
-      toolbar.style.left = `${position.left}px`
-      toolbar.style.top = `${position.top}px`
-      toolbar.style.display = 'flex'
-      toolbar.style.pointerEvents = 'auto'
+      toolbar.setCssStyles({
+        left: `${position.left}px`,
+        top: `${position.top}px`,
+      })
+      toolbar.classList.add('is-visible')
       toolbar.dataset.page = String(doc.pageNumber)
       this.mobileLensHost.appendChild(toolbar)
     }
@@ -584,7 +582,7 @@ export class PdfInternalImageController implements IDisposable {
     this.cancelHideLens()
     // Keep a stable corner while hovering the same image (avoid subpixel jitter).
     if (
-      this.lensToolbar.style.display !== 'none' &&
+      this.lensToolbar.classList.contains('is-visible') &&
       this.currentDescriptor?.id === descriptor.id
     ) {
       this.currentDoc = doc
@@ -594,9 +592,11 @@ export class PdfInternalImageController implements IDisposable {
     this.currentDoc = doc
     this.currentDescriptor = descriptor
     this.closeMoreMenu()
-    this.lensToolbar.style.display = 'flex'
-    this.lensToolbar.style.left = `${position.left}px`
-    this.lensToolbar.style.top = `${position.top}px`
+    this.lensToolbar.classList.add('is-visible')
+    this.lensToolbar.setCssStyles({
+      left: `${position.left}px`,
+      top: `${position.top}px`,
+    })
   }
 
   private cancelHideLens() {
@@ -623,7 +623,7 @@ export class PdfInternalImageController implements IDisposable {
   private hideLensNow() {
     this.cancelHideLens()
     this.closeMoreMenu()
-    this.lensToolbar.style.display = 'none'
+    this.lensToolbar.classList.remove('is-visible')
     this.currentDoc = null
     this.currentDescriptor = null
   }

@@ -879,3 +879,49 @@ body.foxycape-pdf-resizing * {
 .foxycape-pdf-license-applied {
   color: var(--text-accent);
 }
+
+/* Off-DOM helpers (icon sprites, color probes, clipboard fallback). */
+.foxycape-pdf-visually-hidden {
+  display: none !important;
+}
+
+.foxycape-pdf-offscreen-probe {
+  position: absolute;
+  left: -99999px;
+  top: 0;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.foxycape-pdf-clipboard-proxy {
+  position: fixed;
+  left: -9999px;
+}
+
+/* Ensure mark/search overlay pages are positioning contexts. */
+.foxycape-pdf-page--relative {
+  position: relative;
+}
+
+/* Search hit overlays (also injected at runtime for iframe-safe docs). */
+.foxycape-pdf-search-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.foxycape-pdf-search-hit {
+  position: absolute;
+  background: rgba(255, 212, 0, 0.45);
+  border-radius: 2px;
+  mix-blend-mode: multiply;
+}
+
+.foxycape-pdf-search-hit-active {
+  background: rgba(255, 140, 0, 0.65);
+}

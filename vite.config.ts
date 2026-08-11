@@ -10,6 +10,10 @@ import {
   assertNoHostPdfjsGlobalsPlugin,
   renamePdfjsGlobalsPlugin,
 } from './vite.rename-pdfjs-globals'
+import {
+  assertNoDynamicScriptElementsPlugin,
+  stubVendorWebStoragePlugin,
+} from './vite.strip-localforage'
 
 const packageDir = fileURLToPath(new URL('.', import.meta.url))
 const corePdfjsDir = resolve(packageDir, 'vendor/core/pdfjs')
@@ -87,6 +91,7 @@ const base = createObsidianPluginConfig({
 export default {
   ...base,
   plugins: [
+    stubVendorWebStoragePlugin(),
     stubPdfWorkerImportsPlugin(),
     isolatePdfViewerPlugin(),
     renamePdfjsGlobalsPlugin(),
@@ -96,6 +101,7 @@ export default {
     copyLocaleAssetsPlugin(outDir, localesSrcDir),
     copySignerAssetsPlugin(outDir, signerSrcFile),
     assertNoHostPdfjsGlobalsPlugin(mainJsPath),
+    assertNoDynamicScriptElementsPlugin(mainJsPath),
   ],
   css: {
     preprocessorOptions: {

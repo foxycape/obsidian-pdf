@@ -24,6 +24,7 @@ import {
   type FoxycapePdfSettings,
 } from '@/settings/types'
 import { disposePdfWorkerBlobSrc } from '@/reader/pdfAssets'
+import { DexieStorage } from '@/storage'
 import { applyFoxycapeMenuIcon, registerFoxycapeIcon } from '@/ui/foxycapeIcon'
 import { showLicenseRequiredModal } from '@/ui/LicenseRequiredModal'
 import { PDF_READER_VIEW_TYPE, PdfReaderView } from '@/views/PdfReaderView'
@@ -36,6 +37,8 @@ type ViewRegistryLike = {
 export class FoxycapePdfPlugin extends Plugin {
   settings: FoxycapePdfSettings = { ...DEFAULT_SETTINGS }
   locale = new ObsidianLocale(this)
+  /** Shared IndexedDB storage for marks / progress (injected into core Reader). */
+  storage = new DexieStorage({ dbName: 'foxycape-pdf' })
   /** Shared signed API client (IApiClient + ObsidianHttpClient/requestUrl). */
   apiClient!: IApiClient
   /** Shared device identity used by API signing + registration. */
@@ -177,8 +180,8 @@ export class FoxycapePdfPlugin extends Plugin {
     } catch (error) {
       console.warn('[Foxycape PDF] failed to restore pdf extension', error)
     }
-    this.app.workspace.detachLeavesOfType(PDF_READER_VIEW_TYPE)
     disposePdfWorkerBlobSrc()
+    void this.storage.dispose()
     void this.locale.dispose()
   }
 

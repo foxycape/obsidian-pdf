@@ -36,9 +36,9 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
       this.licenseInput = null
       this.licenseActionButton = null
 
-      containerEl.createEl('h2', {
-        text: this.plugin.t('plugin_settings_title', 'Foxycape PDF'),
-      })
+      new Setting(containerEl)
+        .setName(this.plugin.t('plugin_settings_title', 'Foxycape PDF'))
+        .setHeading()
 
       new Setting(containerEl)
         .setName(
@@ -64,9 +64,9 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
   }
 
   private renderLicenseSection = (containerEl: HTMLElement) => {
-    containerEl.createEl('h3', {
-      text: this.plugin.t('plugin_settings_license_heading', 'License'),
-    })
+    new Setting(containerEl)
+      .setName(this.plugin.t('plugin_settings_license_heading', 'License'))
+      .setHeading()
 
     const licenseSetting = new Setting(containerEl)
       .setName(

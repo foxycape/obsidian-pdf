@@ -25,12 +25,14 @@ import { IPlatform } from "./device/IPlatform";
 import { IEnvironment } from "./device/IEnvironment";
 import { WebEnvironment } from "./device/WebEnvironment";
 import { WebPlatform } from "./device/WebPlatform";
+import { IStorage } from "./storage/IStorage";
 
 export type CoreServices = {
     platform?: IPlatform;
     environment?: IEnvironment;
     device?: IDevice;
     locale?: ILocale;
+    storage?: IStorage;
     loggerFactory?: ILoggerFactory;
 };
 
@@ -67,7 +69,7 @@ export class FileLoader {
     private instanceId?: string;
 
     constructor(options: Options, services?: CoreServices, lifecycle?: LifecycleHooks) {
-        this.options =Object.assign(new Options(), options);
+        this.options = Object.assign(new Options(), options);
         this.version = options.version || "1.0.0";
         this.readerInfo = new ReaderInfo(this.version, options.baseUrl, options.preventCacheHash, options.debug);
         this.events = new EventEmitter();
@@ -80,6 +82,11 @@ export class FileLoader {
 
         this.mediaTypeRegistry = new MediaTypeRegistry();
         this.services = new ServiceCollection<CoreServiceMap>(this.locale, this.events, this.readerInfo);
+        if (services?.storage) {
+            const storage = services.storage;
+            this.services.add("storage", () => storage);
+        }
+
         this.services.registerCoreServices();
 
         this.inputFormatter = new InputFormatter(this.services, this.options);

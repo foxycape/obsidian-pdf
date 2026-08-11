@@ -335,6 +335,7 @@ export class PdfReaderView extends FileView {
         app: this.app,
         assets,
         locale: this.plugin.locale,
+        storage: this.plugin.storage,
         viewPreferences: {
           enableViewPdfImages: settings.enableViewPdfImages,
           enablePdfThemeColorRemap: settings.enablePdfThemeColorRemap,
@@ -423,8 +424,7 @@ export class PdfReaderView extends FileView {
     }
 
     const loading = await reader.services.get('loading', true)
-    this.mountEl.style.position = 'relative'
-    this.mountEl.style.overflow = 'hidden'
+    // .foxycape-pdf-mount already sets position/overflow in pdf-view.css
     await loading?.initialize(this.mountEl, {
       // Obsidian CSS vars work before reader theme is applied.
       backgroundColor: 'var(--background-primary)',

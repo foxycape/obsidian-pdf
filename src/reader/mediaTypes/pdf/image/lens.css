@@ -1,9 +1,24 @@
+.foxycape-pdf-mobile-lenses {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
 .foxycape-pdf-image-toolbar {
   position: absolute;
   z-index: 20;
   display: none;
   align-items: center;
   gap: 6px;
+  pointer-events: auto;
+}
+
+.foxycape-pdf-image-toolbar.is-visible {
+  display: flex;
+}
+
+.foxycape-pdf-mobile-lenses .foxycape-pdf-image-toolbar.is-visible {
   pointer-events: auto;
 }
 

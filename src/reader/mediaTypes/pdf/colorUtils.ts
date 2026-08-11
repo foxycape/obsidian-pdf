@@ -42,14 +42,13 @@ export const resolveCssColor = (
   }
 
   const probe = ownerDocument.createElement('span')
-  probe.style.cssText =
-    'position:absolute;left:-99999px;top:0;width:0;height:0;overflow:hidden;pointer-events:none;visibility:hidden;'
-  probe.style.color = SENTINEL_RGB
+  probe.classList.add('foxycape-pdf-offscreen-probe')
+  probe.setCssStyles({ color: SENTINEL_RGB })
   mountParent.appendChild(probe)
 
   try {
     const sentinel = ownerDocument.defaultView?.getComputedStyle(probe).color ?? ''
-    probe.style.color = raw
+    probe.setCssStyles({ color: raw })
     const resolved = ownerDocument.defaultView?.getComputedStyle(probe).color ?? ''
     if (
       !resolved ||

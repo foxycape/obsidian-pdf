@@ -1,0 +1,1 @@
+export { DexieStorage } from './DexieStorage'

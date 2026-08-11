@@ -26,17 +26,18 @@ const ensureMarkLayer = (pageEl: HTMLElement): HTMLElement => {
     layer.className = PDF_MARK_LAYER_CLASS
     const style = pageEl.ownerDocument.defaultView?.getComputedStyle(pageEl)
     if (style && style.position === 'static') {
-      pageEl.style.position = 'relative'
+      pageEl.classList.add('foxycape-pdf-page--relative')
     }
     pageEl.appendChild(layer)
   }
   // Absolute children are positioned against the padding edge (already inside border).
   // Do NOT offset by clientLeft/clientTop again — that double-counts the page border
   // and shifts marks down/right by ~9px.
-  layer.style.left = '0'
-  layer.style.top = '0'
-  layer.style.width = `${pageEl.clientWidth}px`
-  layer.style.height = `${pageEl.clientHeight}px`
+  // left/top come from .foxycape-pdf-mark-layer CSS; only size is dynamic.
+  layer.setCssStyles({
+    width: `${pageEl.clientWidth}px`,
+    height: `${pageEl.clientHeight}px`,
+  })
   return layer
 }
 

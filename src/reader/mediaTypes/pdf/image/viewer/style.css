@@ -73,6 +73,38 @@
   transition: 0.5s;
 }
 
+.foxycape-pdf-pswp-zoom-ui {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 15px;
+}
+
+.foxycape-pdf-pswp-zoom-indicator {
+  text-align: center !important;
+  width: 50px;
+  height: 32px;
+  margin-inline-end: 20px;
+  font-size: 14px;
+  line-height: 30px;
+  color: #fff;
+  text-shadow: 1px 1px 3px var(--pswp-icon-color-secondary);
+}
+
+.foxycape-pdf-pswp-bottom-ui {
+  position: absolute;
+  width: 100%;
+  bottom: 0;
+  min-height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.foxycape-pdf-iframe-no-pointer-events {
+  pointer-events: none !important;
+}
+
 .button-containers {
   display: inline-flex;
   align-items: center;

@@ -1,4 +1,11 @@
-import { EventNames, Options, Reader, type ILocale, type IMarker } from '@core/kernal'
+import {
+  EventNames,
+  Options,
+  Reader,
+  type ILocale,
+  type IMarker,
+  type IStorage,
+} from '@core/kernal'
 import type { IPdfRenderer } from '@core/mediaTypes/pdf/renderer/IPdfRenderer'
 import { PdfMarker } from '@/marker/PdfMarker'
 import { Platform, type App } from 'obsidian'
@@ -19,6 +26,8 @@ export type CreatePdfReaderOptions = {
   app: App
   assets: PdfAssetUrls
   locale: ILocale
+  /** Shared plugin storage (Dexie). Must outlive individual reader sessions. */
+  storage: IStorage
   viewPreferences?: Partial<PdfViewPreferences>
   /** Runtime callback for image reference copy / paste pipeline. */
   getLinkSource?: () => PdfImageLinkSource | null
@@ -46,7 +55,10 @@ export const createPdfReader = async (
   readerOptions.enableFooter = false
   readerOptions.themeName = OBSIDIAN_THEME_NAME
 
-  const reader = new Reader(readerOptions, { locale: options.locale })
+  const reader = new Reader(readerOptions, {
+    locale: options.locale,
+    storage: options.storage,
+  })
   let marker: PdfMarker | undefined
 
   const disposeMarker = async () => {
