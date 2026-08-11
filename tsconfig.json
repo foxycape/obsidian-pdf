@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "jsx": "preserve",
+    "noFallthroughCasesInSwitch": true,
+    "types": ["node", "vite/client", "obsidian"],
+    "strict": false,
+    "noImplicitAny": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "isolatedModules": false,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/kernal": ["./vendor/core/kernal/index.ts"],
+      "@/kernal/*": ["./vendor/core/kernal/*"],
+      "@core/*": ["./vendor/core/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.vue", "src/**/*.d.ts", "tests/**/*.ts"],
+  "exclude": [
+    "node_modules",
+    "vendor/core",
+    "vite.config.ts",
+    "vite.copy-pdfjs.ts",
+    "vite.patch-pdf-viewer.ts",
+    "vite.rename-pdfjs-globals.ts"
+  ]
+}

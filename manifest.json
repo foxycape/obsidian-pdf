@@ -1,0 +1,10 @@
+{
+  "id": "foxycape-pdf",
+  "name": "Foxycape PDF",
+  "version": "3.3.6",
+  "minAppVersion": "1.5.0",
+  "description": "Embed Foxycape PDF reader in Obsidian with annotation sync.",
+  "author": "Foxycape",
+  "authorUrl": "https://www.foxycape.com",
+  "isDesktopOnly": false
+}

@@ -1,0 +1,87 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 192 >>
+stream
+BT
+/F1 28 Tf
+50 760 Td
+(PDF Sample) Tj
+/F1 16 Tf
+0 -40 Td
+(Foxycape PDF loading test) Tj
+0 -28 Td
+(Page 1 / 3) Tj
+0 -28 Td
+(Use toolbar controls to change scroll, spread, zoom and page.) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Contents 2 0 R /Resources << /Font << /F1 1 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 203 >>
+stream
+BT
+/F1 28 Tf
+50 760 Td
+(Second Page) Tj
+/F1 16 Tf
+0 -40 Td
+(Double-page / book spread can be tested here.) Tj
+0 -28 Td
+(Page 2 / 3) Tj
+0 -28 Td
+(Try zooming with mouse wheel while Ctrl is pressed.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 1 0 R >> >> >>
+endobj
+6 0 obj
+<< /Length 196 >>
+stream
+BT
+/F1 28 Tf
+50 760 Td
+(Third Page) Tj
+/F1 16 Tf
+0 -40 Td
+(Rotate and navigate with the sample controls.) Tj
+0 -28 Td
+(Page 3 / 3) Tj
+0 -28 Td
+(Open a local PDF via the file picker as well.) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Contents 6 0 R /Resources << /Font << /F1 1 0 R >> >> >>
+endobj
+8 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R] /Count 3 >>
+endobj
+9 0 obj
+<< /Type /Catalog /Pages 8 0 R >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000000322 00000 n 
+0000000448 00000 n 
+0000000702 00000 n 
+0000000828 00000 n 
+0000001075 00000 n 
+0000001201 00000 n 
+0000001270 00000 n 
+trailer
+<< /Size 10 /Root 9 0 R >>
+startxref
+1319
+%%EOF

@@ -1,0 +1,146 @@
+/*
+ * Windows 照片查看器风格：默认箭头；放大后可拖动手掌光标。
+ */
+.pswp .pswp__img {
+  cursor: default;
+}
+
+.pswp.pswp--zoomed-in .pswp__img {
+  cursor: grab;
+}
+
+.pswp.pswp--zoomed-in .pswp__img:active {
+  cursor: grabbing;
+}
+
+.pswp-custom-button {
+  color: #fff !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 44px !important;
+  min-width: 44px !important;
+  max-width: none !important;
+  height: 44px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  opacity: 1 !important;
+  -webkit-app-region: no-drag;
+  box-sizing: border-box;
+}
+
+.imageviewer-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  vertical-align: middle;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  overflow: hidden;
+}
+.imageviewer-icon--close {
+  width: 24px;
+  height: 24px;
+}
+
+.imageviewer-icon--loading {
+  animation: imageviewer-spin 0.8s linear infinite;
+}
+
+.pswp-custom-button--loading {
+  cursor: wait !important;
+}
+
+.pswp-custom-button:disabled {
+  cursor: wait !important;
+  opacity: 0.72 !important;
+}
+
+@keyframes imageviewer-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.rotate-image-animation {
+  transition: 0.5s;
+}
+
+.button-containers {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  width: auto;
+  max-width: calc(100% - 2rem);
+  background-color: rgba(0, 0, 0, 0.25);
+  padding-block: 0.25rem;
+  padding-inline: 0.625rem;
+  border-radius: 9999px;
+  flex-wrap: nowrap;
+}
+
+.button-containers .pswp__button {
+  position: static;
+  width: 44px !important;
+  height: 44px !important;
+  overflow: visible;    
+  background-color: unset;
+  box-shadow: unset;
+}
+
+@media (max-width: 576px) {
+  .pswp-custom-button,
+  .button-containers .pswp__button {
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 50px !important;
+  }
+
+  .button-containers {
+    gap: 0.25rem;
+    max-width: calc(100% - 1.5rem);
+  }
+}
+
+/* Toast lives inside .pswp so it stacks above the fullscreen viewer. */
+.foxycape-pdf-image-toast {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  z-index: 30;
+  max-width: min(90%, 360px);
+  padding-block: 10px;
+  padding-inline: 16px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.4;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-50%) translateY(-8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  box-sizing: border-box;
+}
+
+.foxycape-pdf-image-toast.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.foxycape-pdf-image-toast[data-tone='error'] {
+  background: #ed4014;
+}
+
+.mod-rtl .pswp {
+  direction: rtl;
+}

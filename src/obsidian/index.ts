@@ -1,0 +1,73 @@
+export { installPdfImageRefContextMenu } from './installPdfImageRefContextMenu'
+export { installPdfImageRefPaste } from './installPdfImageRefPaste'
+export {
+  findFirstAncestorWithSrc,
+  imageFileNameFromPath,
+  imageNamesMatch,
+  isVaultImageFile,
+  readAnchorLinktext,
+  readAncestorPdfLinktext,
+  resolveFoxycapeImageRefFromImageElement,
+  resolveFoxycapeImageRefLink,
+  type FoxycapeImageRefLinkTarget,
+} from './resolveFoxycapeImageRefLink'
+export {
+  MarkNoteCompanion,
+  buildMarkNoteAppendBlock,
+  ensureSidecarNote,
+  resolveSidecarNotePath,
+  syncMarkToSidecarNote,
+} from './markNoteSync'
+export { applyPdfDeepLink } from './pdfDeepLink'
+export {
+  PDF_IMAGE_REF_PENDING_TTL_MS,
+  PDF_IMAGE_REF_SENTINEL_PREFIX,
+  buildPasteMarkdownForImageRef,
+  buildPdfImageAssetFileName,
+  clearPendingPdfImageRef,
+  consumePendingPdfImageRef,
+  encodeMarkdownPath,
+  ensurePdfSiblingAssetFolder,
+  formatClickablePdfImageMarkdown,
+  formatScreenshotTimestamp,
+  matchesPendingImageRefSentinel,
+  pathRelativeToNote,
+  peekPendingPdfImageRef,
+  resolvePdfSiblingAssetFolder,
+  sanitizeFileNamePart,
+  savePdfImageAsset,
+  stagePdfImageRefCopy,
+  type PdfImageLinkSource,
+  type PdfImageRefKind,
+  type PendingPdfImageRef,
+  type StagePdfImageRefCopyOptions,
+} from './pdfImageRef'
+export {
+  consumePendingPdfLinkSubpath,
+  findExistingPdfLeaf,
+  installPdfLinkContextCapture,
+  installPdfLinkReuse,
+  normalizePdfSubpath,
+  resolvePdfLinkSubpath,
+  revealExistingPdfLeaf,
+} from './reusePdfLeaf'
+export {
+  FOXYCAPE_IMAGE_NAME_PARAM,
+  FOXYCAPE_RECT_PARAM,
+  LEGACY_RECT_PARAM,
+  buildPdfDeepLinkFragment,
+  buildPdfUserSpaceRectParam,
+  formatMarkQuoteLine,
+  formatRectTuple,
+  getRangePageNumber,
+  parsePdfDeepLink,
+  parseRectTuple,
+  parseSelectionTuple,
+  resolveRectParamFromSearchParams,
+  rangeToObsidianSelection,
+  toNavigablePdfSubpath,
+  type PdfDeepLink,
+  type PdfNormalizedRect,
+  type PdfSelectionBoundary,
+  type PdfUserSpaceRect,
+} from './selectionLink'

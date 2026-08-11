@@ -1,0 +1,881 @@
+/* Match Obsidian built-in PDF: zero view-content padding for this view type. */
+.workspace-leaf-content[data-type="foxycape-pdf"] .view-content {
+  padding: 0;
+  overflow: hidden;
+  /* Obsidian UI chrome often uses user-select:none; opt this view back into text selection. */
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.workspace-leaf-content[data-type="foxycape-pdf"] .pdfViewer,
+.workspace-leaf-content[data-type="foxycape-pdf"] .textLayer {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.menu-item .foxycape-menu-logo {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+/* Hide default title; page chrome occupies the center. */
+.workspace-leaf-content[data-type="foxycape-pdf"] .view-header-title {
+  display: none;
+}
+
+.workspace-leaf-content[data-type="foxycape-pdf"] .view-header-title-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.workspace-leaf-content[data-type="foxycape-pdf"] .foxycape-pdf-header-nav {
+  display: inline-flex;
+  align-items: center;
+  margin-inline-start: 2px;
+  height: 100%;
+}
+
+.workspace-leaf-content[data-type="foxycape-pdf"] .foxycape-pdf-header-page {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.workspace-leaf-content[data-type="foxycape-pdf"] .foxycape-pdf-header-zoom,
+.workspace-leaf-content[data-type="foxycape-pdf"] .foxycape-pdf-header-settings,
+.workspace-leaf-content[data-type="foxycape-pdf"] .foxycape-pdf-header-more {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+}
+
+/*
+ * When Obsidian hides the tab title bar ("Show tab title bar" off),
+ * PDF chrome mounts into this content-area fallback toolbar instead.
+ * Note: Obsidian sets --header-height: 0 in that mode, so do not use it here.
+ */
+.foxycape-pdf-fallback-toolbar {
+  --foxycape-pdf-fallback-toolbar-height: 40px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-1);
+  box-sizing: border-box;
+  height: var(--foxycape-pdf-fallback-toolbar-height);
+  min-height: var(--foxycape-pdf-fallback-toolbar-height);
+  padding-inline: var(--size-4-2);
+  border-bottom: 1px solid var(--background-modifier-border);
+  background-color: var(--background-primary);
+}
+
+.foxycape-pdf-fallback-toolbar__left,
+.foxycape-pdf-fallback-toolbar__right {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  height: 100%;
+  gap: 2px;
+}
+
+.foxycape-pdf-fallback-toolbar__center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+}
+
+.foxycape-pdf-fallback-toolbar .foxycape-pdf-header-nav {
+  margin-inline-start: 0;
+}
+
+/* Fallback more-menu: no bottom border (Find / Highlight list only). */
+.menu.foxycape-pdf-chrome-more-menu {
+  border-bottom: none;
+}
+
+/* Desktop: text label; mobile/tablet (body.is-mobile): icon only. */
+.foxycape-pdf-nav-btn__icon {
+  display: none;
+}
+
+.foxycape-pdf-nav-btn__text {
+  font-size: var(--font-ui-small);
+  white-space: nowrap;
+  line-height: 1;
+}
+
+body.is-mobile .foxycape-pdf-nav-btn__icon {
+  display: inline-flex;
+}
+
+body.is-mobile .foxycape-pdf-nav-btn__text {
+  display: none;
+}
+
+/* Phone: move settings into the more menu; hide compact zoom scale label. */
+body.is-phone .foxycape-pdf-header-settings,
+body.is-phone .foxycape-pdf-zoom-trigger {
+  display: none !important;
+}
+
+.foxycape-pdf-view {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.foxycape-pdf-body {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.foxycape-pdf-sidebar-host {
+  flex: 0 0 auto;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.foxycape-pdf-sidebar-host:empty {
+  display: none;
+}
+
+.foxycape-pdf-mark-panel-host {
+  flex: 0 0 auto;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.foxycape-pdf-mark-panel-host:empty {
+  display: none;
+}
+
+/* Mobile / tablet: float open nav + highlight panels over the PDF. */
+body.is-mobile .workspace-leaf-content[data-type="foxycape-pdf"].foxycape-pdf-sidebar-open .foxycape-pdf-sidebar-host {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: 40;
+  flex: none;
+  width: min(80vw, 320px);
+  box-shadow: var(--shadow-l);
+  margin: 20px;
+  height: auto;
+  border-radius: 12px;
+}
+
+body.is-mobile .workspace-leaf-content[data-type="foxycape-pdf"].foxycape-pdf-mark-panel-open .foxycape-pdf-mark-panel-host {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  z-index: 40;
+  flex: none;
+  width: min(80vw, 320px);
+  box-shadow: var(--shadow-l);
+  margin: 20px;
+  height: auto;
+  border-radius: 12px;
+}
+
+body.is-mobile .workspace-leaf-content[data-type="foxycape-pdf"].foxycape-pdf-sidebar-open .foxycape-pdf-left-nav,
+body.is-mobile .workspace-leaf-content[data-type="foxycape-pdf"].foxycape-pdf-mark-panel-open .foxycape-pdf-mark-panel {
+  width: 100% !important;
+  max-width: none;
+  min-width: 0;
+  height: 100%;
+}
+
+body.is-mobile .foxycape-pdf-left-nav__resizer,
+body.is-mobile .foxycape-pdf-mark-panel__resizer {
+  display: none;
+}
+
+/* Override Obsidian's default ~30px button height for mark-list text. */
+.foxycape-pdf-mark-item__text {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+
+.foxycape-pdf-mount {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.foxycape-pdf-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 1.5rem;
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.foxycape-pdf-mount .reader-wrapper,
+.foxycape-pdf-mount .reader-container {
+  height: 100%;
+  width: 100%;
+}
+
+/* While dragging the sidebar splitter, avoid selecting PDF text. */
+body.foxycape-pdf-resizing,
+body.foxycape-pdf-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+.workspace-leaf-content[data-type="foxycape-pdf"] .pdfViewer .page .canvasWrapper {
+  border: 1px solid var(--border-color) !important;
+  /* border-radius: 3px !important; */
+}
+
+.workspace-leaf-content[data-type="foxycape-pdf"] .pdfViewer .page {
+  /*default border width is 9px*/
+  /* border-radius: 9px !important; */
+}
+
+/* Selection mark toolbar — two-tier layout (light / dark only) */
+.foxycape-pdf-mark-toolbar-root {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1000;
+  overflow: visible;
+}
+
+@keyframes foxycape-pdf-toolbar-pop {
+  0% {
+    transform: scale(0.92);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.foxycape-pdf-mark-toolbar {
+  /* Follow Obsidian theme tokens so bars/buttons stay distinguishable */
+  --foxy-tb-bg: var(--background-primary);
+  --foxy-tb-fg: var(--text-normal);
+  --foxy-tb-btn-bg: var(--background-modifier-hover);
+  --foxy-tb-btn-ai-bg: var(--background-secondary);
+  --foxy-tb-shadow: var(--shadow-s);
+  --foxy-tb-more-bg: var(--background-secondary);
+  --foxy-tb-pen-bg: var(--background-modifier-hover);
+  --foxy-tb-hover: var(--background-modifier-hover);
+  --foxy-tb-menu-bg: var(--background-primary);
+  --foxy-tb-menu-border: var(--background-modifier-border);
+  --foxy-tb-border: var(--background-modifier-border);
+
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: 96%;
+  pointer-events: auto;
+  user-select: none;
+  z-index: 100;
+  color: var(--icon-color, var(--foxy-tb-fg));
+}
+
+.mod-rtl .foxycape-pdf-mark-toolbar {
+  direction: rtl;
+}
+
+.foxycape-pdf-mark-toolbar.popup-toolbar {
+  animation: foxycape-pdf-toolbar-pop 0.14s ease-out;
+}
+
+.foxycape-pdf-mark-toolbar__colors,
+.foxycape-pdf-mark-toolbar__main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--foxy-tb-bg);
+  box-shadow: var(--foxy-tb-shadow);
+  border: 1px solid var(--foxy-tb-border);
+}
+
+.foxycape-pdf-mark-toolbar__colors {
+  position: relative;
+  gap: 10px;
+  width: fit-content;
+  padding-block: 8px;
+  padding-inline: 12px;
+  border-radius: 999px;
+}
+
+.foxycape-pdf-mark-toolbar__main {
+  gap: 7px;
+  width: fit-content;
+  padding-block: 8px;
+  padding-inline: 16px;
+  border-radius: 999px;
+}
+
+.foxycape-pdf-mark-toolbar__color-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #222;
+}
+
+.foxycape-pdf-mark-toolbar__check {
+  width: 14px;
+  height: 14px;
+}
+
+.foxycape-pdf-mark-toolbar__more-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: var(--foxy-tb-more-bg);
+  color: var(--foxy-tb-fg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.foxycape-pdf-mark-toolbar__more-color .foxycape-pdf-mark-toolbar__icon {
+  width: 14px;
+  height: 14px;
+  opacity: 0.7;
+}
+
+/* Outer shell keeps 10px inset (like page picker); inner grid scrolls */
+.foxycape-pdf-mark-toolbar__palette {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  box-sizing: border-box;
+  width: min(300px, 84vw);
+  max-height: 220px;
+  overflow: hidden;
+  border-radius: var(--radius-m, 10px);
+  background: var(--foxy-tb-menu-bg);
+  border: 1px solid var(--foxy-tb-menu-border);
+  box-shadow: var(--foxy-tb-shadow);
+}
+
+.foxycape-pdf-mark-toolbar__palette-scroll {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(28px, 1fr));
+  gap: 5px;
+  max-height: 200px;
+  overflow: auto;
+  margin-block: 10px;
+  margin-inline: 10px 2px;
+}
+
+.foxycape-pdf-mark-toolbar__palette-item {
+  width: 100%;
+  aspect-ratio: 28 / 20;
+  min-height: 20px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.foxycape-pdf-mark-toolbar__btn:hover .foxycape-pdf-mark-toolbar__pen-bg svg {
+  background: transparent;
+}
+
+.foxycape-pdf-mark-toolbar__btn.is-ai {
+  background: var(--foxy-tb-btn-ai-bg);
+}
+
+.foxycape-pdf-mark-toolbar__btn.is-disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.foxycape-pdf-mark-toolbar__icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  overflow: hidden;
+  outline: none;
+  opacity: 0.9;
+}
+
+.foxycape-pdf-mark-toolbar__pen-bg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+}
+
+.foxycape-pdf-mark-toolbar__pen-bg svg {
+  background: var(--foxy-tb-pen-bg);
+}
+
+.foxycape-pdf-mark-toolbar__style-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.foxycape-pdf-mark-toolbar__style-dot {
+  position: absolute;
+  bottom: -1px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: transparent;
+}
+
+.foxycape-pdf-mark-toolbar__style-dot.is-on {
+  background-color: rgb(242, 12, 0);
+}
+
+.foxycape-pdf-mark-toolbar__more-wrap {
+  position: relative;
+}
+
+.foxycape-pdf-mark-toolbar__copy-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--clickable-icon-radius, 8px);
+}
+
+.foxycape-pdf-mark-toolbar__copy-wrap:hover,
+.foxycape-pdf-mark-toolbar__copy-wrap.is-menu-open {
+  background: var(--foxy-tb-btn-bg);
+}
+
+.foxycape-pdf-mark-toolbar__copy-btn {
+  gap: 0;
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.foxycape-pdf-mark-toolbar__copy-label {
+  font-size: var(--font-ui-small, 13px);
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--text-normal, var(--foxy-tb-fg));
+}
+
+.foxycape-pdf-mark-toolbar__copy-chevron {
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+
+.foxycape-pdf-mark-toolbar__copy-chevron-icon {
+  display: inline-flex;
+  --icon-size: 12px;
+  opacity: 0.75;
+}
+
+.foxycape-pdf-mark-toolbar__copy-chevron.is-open {
+  color: var(--icon-color-hover, var(--foxy-tb-fg));
+}
+
+.foxycape-pdf-mark-toolbar__copy-menu {
+  position: absolute;
+  inset-block-start: 100%;
+  inset-inline-start: 0;
+  z-index: 3;
+  min-width: 100%;
+  /* Keep hover bridge across the visual gap */
+  padding-block-start: 6px;
+}
+
+.foxycape-pdf-mark-toolbar__copy-menu-panel {
+  min-width: 120px;
+  padding: 4px;
+  border-radius: 8px;
+  background: var(--foxy-tb-menu-bg);
+  border: 1px solid var(--foxy-tb-menu-border);
+  box-shadow: var(--foxy-tb-shadow);
+  white-space: nowrap;
+}
+
+.foxycape-pdf-mark-toolbar__menu {
+  position: absolute;
+  inset-block-start: calc(100% + 6px);
+  inset-inline-end: 0;
+  min-width: 88px;
+  padding: 4px;
+  border-radius: 8px;
+  background: var(--foxy-tb-menu-bg);
+  border: 1px solid var(--foxy-tb-menu-border);
+  box-shadow: var(--foxy-tb-shadow);
+  z-index: 2;
+}
+
+.foxycape-pdf-mark-toolbar__menu-item {
+  display: block;
+  width: 100%;
+  padding-block: 8px;
+  padding-inline: 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--foxy-tb-fg);
+  text-align: start;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.foxycape-pdf-mark-toolbar__menu-item:hover {
+  background: var(--foxy-tb-hover);
+}
+
+/* ---- PDF search floating bar (scoped to the leaf mount, not the window) ---- */
+.foxycape-pdf-search-root {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--layer-popover, 30);
+}
+
+.foxycape-pdf-search-bar {
+  pointer-events: auto;
+  position: absolute;
+  inset-block-start: 12px;
+  inset-inline-end: 16px;
+  width: min(400px, calc(100% - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 5px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  box-shadow: var(--shadow-l);
+}
+
+.foxycape-pdf-search-bar__row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+
+/*
+ * One visual field (border/focus on container).
+ * Icons are flex siblings of the text field — never overlaid — so keywords cannot
+ * paint under the magnifier / case / clear controls (Obsidian often resets input padding).
+ */
+.foxycape-pdf-search-bar__input-container {
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: var(--input-height, 32px);
+  padding-block: 0;
+  padding-inline: 6px 2px;
+  border-radius: var(--input-radius, 6px);
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-modifier-form-field, var(--background-primary));
+}
+
+.foxycape-pdf-search-bar__input-container:focus-within {
+  border-color: var(--interactive-accent, var(--text-accent));
+  box-shadow: 0 0 0 2px var(--background-modifier-border-focus, rgba(0, 0, 0, 0.12));
+}
+
+.foxycape-pdf-search-bar__input-container.is-empty {
+  border-color: var(--text-error, var(--color-red));
+  box-shadow: 0 0 0 1px var(--background-modifier-error, rgba(233, 49, 71, 0.25));
+}
+
+.foxycape-pdf-search-bar__input-container.is-empty:focus-within {
+  border-color: var(--text-error, var(--color-red));
+  box-shadow: 0 0 0 2px var(--background-modifier-error, rgba(233, 49, 71, 0.25));
+}
+
+.foxycape-pdf-search-bar__search-icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.foxycape-pdf-search-bar__input-container .foxycape-pdf-search-bar__input,
+.foxycape-pdf-search-bar__input-container input.foxycape-pdf-search-bar__input[type="search"] {
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 0;
+  /* allow flex shrink; text scrolls inside its own cell */
+  height: 100%;
+  margin: 0 !important;
+  padding-block: 0 !important;
+  padding-inline: 4px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: var(--text-normal);
+}
+
+.foxycape-pdf-search-bar__input-container .foxycape-pdf-search-bar__input:focus {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.foxycape-pdf-search-bar__input::-webkit-search-cancel-button,
+.foxycape-pdf-search-bar__input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+.foxycape-pdf-search-bar__actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0px;
+}
+
+.foxycape-pdf-search-bar__decorator.is-active {
+  color: var(--text-accent);
+}
+
+.foxycape-pdf-search-bar__spinner {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--background-modifier-border);
+  border-top-color: var(--text-accent);
+  border-radius: 50%;
+  animation: foxycape-pdf-search-spin 0.7s linear infinite;
+}
+
+@keyframes foxycape-pdf-search-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.foxycape-pdf-search-bar__counter {
+  flex: 0 0 auto;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  padding-inline: 4px;
+  white-space: nowrap;
+}
+
+.foxycape-pdf-search-bar__btn.is-active {
+  color: var(--text-accent);
+  background: var(--background-modifier-hover);
+}
+
+.foxycape-pdf-search-options-wrap {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.foxycape-pdf-search-options-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-block: 16px;
+  padding-inline: 16px;
+  border-radius: 10px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  box-shadow: var(--shadow-l);
+}
+
+.mod-rtl .foxycape-pdf-search-options-panel {
+  direction: rtl;
+}
+
+.foxycape-pdf-search-options__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  font-size: var(--font-ui-small);
+  color: var(--text-normal);
+  user-select: none;
+}
+
+.foxycape-pdf-search-options__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.foxycape-pdf-search-options__row .checkbox-container {
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+
+.foxycape-pdf-search-list {
+  max-height: min(300px, 50vh);
+  border-radius: 8px;
+  /* border: 1px solid var(--background-modifier-border); */
+  overflow: hidden;
+}
+
+.foxycape-pdf-search-list__scroller {
+  height: min(300px, 50vh);
+}
+
+.foxycape-pdf-search-list__scroller.vue-recycle-scroller {
+  position: relative;
+}
+
+.foxycape-pdf-search-list__scroller .vue-recycle-scroller__item-wrapper {
+  box-sizing: border-box;
+}
+
+.foxycape-pdf-search-list__scroller .vue-recycle-scroller__item-view {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.foxycape-pdf-search-list__scroller-item {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  /* Spacing must live here as padding so vue-virtual-scroller measures it. */
+  padding-block: 3px;
+  padding-inline: 5px;
+}
+
+.foxycape-pdf-search-list__divider {
+  height: 0;
+  margin-block: 5px 0px;
+  margin-inline: 8%;
+  border: none;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.foxycape-pdf-search-list__header {
+  padding-block: 8px;
+  padding-inline: 10px;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.foxycape-pdf-search-list__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  min-height: 54px;
+  height: auto;
+  padding-block: 5px;
+  padding-inline: 8px;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-normal);
+  text-align: start;
+  cursor: pointer;
+  box-sizing: border-box;
+  white-space: normal;
+  line-height: normal;
+}
+
+.foxycape-pdf-search-list__item:hover,
+.foxycape-pdf-search-list__item.is-active {
+  background: var(--background-secondary);
+}
+
+.foxycape-pdf-search-list__index {
+  flex: 0 0 auto;
+  padding-block-start: 2px;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  line-height: 1.35;
+}
+
+.foxycape-pdf-search-list__item.is-active .foxycape-pdf-search-list__index {
+  color: var(--text-accent);
+}
+
+.foxycape-pdf-search-list__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.foxycape-pdf-search-list__text {
+  display: block;
+  font-size: var(--font-ui-small);
+  line-height: 1.5;
+  word-break: break-word;
+  white-space: normal;
+  color: var(--text-muted);
+}
+
+.foxycape-pdf-search-list__page {
+  display: block;
+  font-size: var(--font-ui-smaller);
+  line-height: 1.3;
+  color: var(--text-muted);
+}
+
+.foxycape-pdf-search-list__empty {
+  padding-block: 24px;
+  padding-inline: 12px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+
+.foxycape-pdf-license-applied {
+  color: var(--text-accent);
+}

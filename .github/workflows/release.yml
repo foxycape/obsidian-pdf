@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Package plugin assets
+        run: |
+          mkdir -p release-assets
+          cp dist/main.js dist/manifest.json dist/styles.css release-assets/
+          if [ -d dist/locales ]; then cp -r dist/locales release-assets/; fi
+          if [ -d dist/pdfjs ]; then cp -r dist/pdfjs release-assets/; fi
+          if [ -d dist/static ]; then cp -r dist/static release-assets/; fi
+          cd release-assets
+          zip -r ../foxycape-pdf.zip .
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release-assets/main.js
+            release-assets/manifest.json
+            release-assets/styles.css
+            foxycape-pdf.zip
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

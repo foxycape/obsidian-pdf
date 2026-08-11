@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Foxycape HTML Sample</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 24px 28px 48px;
+        font-family: "Georgia", "Songti SC", "SimSun", serif;
+        line-height: 1.75;
+        color: #222;
+        background: #fff;
+      }
+
+      h1,
+      h2 {
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        line-height: 1.35;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: 2rem;
+      }
+
+      h2 {
+        margin: 28px 0 10px;
+        font-size: 1.35rem;
+      }
+
+      p {
+        margin: 0 0 1em;
+      }
+
+      .lead {
+        color: #444;
+        font-size: 1.05rem;
+      }
+
+      ul {
+        margin: 0 0 1em;
+        padding-left: 1.4em;
+      }
+
+      code {
+        font-family: Consolas, "Courier New", monospace;
+        background: #f4f1ea;
+        padding: 0.1em 0.35em;
+        border-radius: 4px;
+      }
+
+      blockquote {
+        margin: 0 0 1em;
+        padding: 10px 14px;
+        border-left: 3px solid #0f6b5c;
+        background: #f3faf7;
+      }
+
+      figure {
+        margin: 0 0 1.25em;
+        text-align: center;
+      }
+
+      figure img,
+      figure svg {
+        max-width: 100%;
+        height: auto;
+      }
+
+      figcaption {
+        margin-top: 0.4em;
+        font-size: 0.9rem;
+        color: #666;
+      }
+
+      .inline-demo {
+        margin: 0 0 1em;
+      }
+
+      .inline-demo img {
+        vertical-align: -0.2em;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>HTML Rendering Sample</h1>
+    <p class="lead">
+      This is the sample body for <code>samples/html</code>, used to verify that Reader +
+      HtmlFileParser + HtmlRenderer can load and display an HTML file.
+    </p>
+
+    <h2>Checklist</h2>
+    <ul>
+      <li>Headings and paragraphs render completely</li>
+      <li>Scrolling feels smooth (default <code>flipMode=scroll</code>)</li>
+      <li>Choosing a local HTML file opens it again successfully</li>
+      <li>Images show placeholder first, then load when near the viewport</li>
+      <li>Inline images keep text line height; block images respect max width/height ratio</li>
+    </ul>
+
+    <h2>Sample Paragraphs</h2>
+    <p>
+      Spring water just born, spring woods just thriving; ten miles of spring breeze still fall short
+      of you. The reader should place this full paragraph into the iframe content area and keep
+      readable line spacing and margins. If you can see this sentence, the content injection path is
+      working.
+    </p>
+    <p>
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut
+      labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+      laboris nisi ut aliquip ex ea commodo consequat.
+    </p>
+
+    <blockquote>
+      If loading succeeds, the toolbar status should show “Loaded”, and readable body text should
+      appear here.
+    </blockquote>
+
+    <h2>Images (lazy load)</h2>
+    <p>
+      The images below exercise <code>HtmlImageObserver</code> + <code>HtmlImageLoader</code>:
+      placeholders first, then real sources when scrolled into view.
+    </p>
+
+    <figure>
+      <img src="logo.png" width="160" height="160" alt="Logo block image" data-width="160" data-height="160" />
+      <figcaption>Block image with known size (<code>logo.png</code>)</figcaption>
+    </figure>
+
+    <p class="inline-demo">
+      Inline icon next to text
+      <img src="photo-a.png" width="18" height="18" alt="inline icon" data-width="18" data-height="18" />
+      should stay on the same line without blowing up line height.
+    </p>
+
+    <figure>
+      <img src="photo-b.png" alt="Error-style sample photo" />
+      <figcaption>Block image without preset width/height (<code>photo-b.png</code>)</figcaption>
+    </figure>
+
+    <figure>
+      <img src="diagram.svg" width="320" height="180" alt="SVG diagram" data-width="320" data-height="180" />
+      <figcaption>Standalone SVG file (<code>diagram.svg</code>)</figcaption>
+    </figure>
+
+    <figure>
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="400" height="240" viewBox="0 0 400 240">
+        <rect width="400" height="240" fill="#e8f5f2"></rect>
+        <image xlink:href="logo.png" x="120" y="40" width="160" height="160"></image>
+        <text x="200" y="220" text-anchor="middle" fill="#0f6b5c" font-family="Segoe UI, sans-serif" font-size="14">inline SVG &lt;image&gt;</text>
+      </svg>
+      <figcaption>Inline SVG containing <code>&lt;image&gt;</code></figcaption>
+    </figure>
+
+    <h2>More Content (for scrolling)</h2>
+    <p>
+      Chapter 1: Morning light slips through the window lattice, and the letters on the page grow
+      clear. Use the mouse wheel or trackpad to scroll down and confirm scroll mode works.
+    </p>
+    <p>
+      Chapter 2: Typography is more than placing characters on a page; it also gives the eye room to
+      breathe. Paragraph spacing, heading hierarchy, and blockquotes are all part of readability.
+    </p>
+
+    <figure>
+      <img src="logo.png" alt="Second logo for preload/visibility" />
+      <figcaption>Second occurrence — useful for visibility / preload checks</figcaption>
+    </figure>
+
+    <p>
+      Chapter 3: When you pick a local HTML file from the toolbar, Reader reopens it as a Blob. That
+      bypasses the current parser path where a string URL does not download body content by default.
+    </p>
+    <p>
+      Chapter 4: To test paged mode later, set <code>htmlOptions.flipMode</code> to
+      <code>page</code> in the sample and check whether page turns and page counts behave correctly.
+    </p>
+
+    <figure>
+      <img src="photo-b.png" alt="Lower page image" />
+      <figcaption>Lower image — scroll here to trigger deferred load</figcaption>
+    </figure>
+
+    <p>
+      Chapter 5: Before finishing, try “Reload” once more to confirm the same content can be opened
+      repeatedly without leftover DOM from the previous load.
+    </p>
+
+    <p>
+      Chapter 6: After images load, open DevTools and confirm <code>data-load-state</code> becomes
+      <code>loaded</code>, and blob URLs (if any) are revoked when the document is disposed.
+    </p>
+  </body>
+</html>

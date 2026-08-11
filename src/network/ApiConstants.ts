@@ -1,0 +1,26 @@
+export const ResponseCode = {
+  InvalidApiVersion: 10,
+  InvalidToken: 11,
+  OutOfRequestTimes: 12,
+  InvalidCallId: 13,
+  LackParameter: 14,
+  InvalidTimestamp: 15,
+  InvalidParameter: 16,
+  InvalidAccessToken: 17,
+  AccessTokenExpired: 18,
+  RefreshTokenExpired: 19,
+  NoRecord: 20,
+  Exception: 21,
+  ExecuteFailed: 22,
+  InvalidPassword: 31,
+  LockedUser: 32,
+  Inactived: 33,
+  NotLogin: 34,
+  InvalidPermission: 35,
+  DisabledCloudDataSync: 40,
+  Success: 200,
+  OutofMonthlyTtsCharacterCount: 404,
+  OutofAvailableAITokenCount: 420,
+} as const
+
+export type ResponseCodeValue = (typeof ResponseCode)[keyof typeof ResponseCode]

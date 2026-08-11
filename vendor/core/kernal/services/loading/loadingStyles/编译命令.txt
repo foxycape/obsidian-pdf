@@ -1,0 +1,3 @@
+全局安装sass： npm i sass -g
+
+sass loaders.scss loader.css --style compressed  --no-source-map
