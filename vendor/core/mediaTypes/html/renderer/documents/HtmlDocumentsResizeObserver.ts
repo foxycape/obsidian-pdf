@@ -21,7 +21,6 @@ export class HtmlDocumentsResizeObserver implements IDisposable {
     }
 
     register() {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         this.rendererContainerResizeObserver = new ResizeObserver(async entries => {
             // this.logger.debug("rendererContainerResizeObserver...", 'entries', entries);
             const entry = entries[0]

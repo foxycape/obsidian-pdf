@@ -8,7 +8,6 @@ import { ResponseCode } from '@/network/ApiConstants'
 const createMockDevice = (): IDevice => ({
   getModel: () => 'test',
   getDeviceType: () => 'desktop',
-  getDevicePixelRatio: () => 1,
   getInfo: () => ({}) as ReturnType<IDevice['getInfo']>,
   getId: () => 'device-id',
 })

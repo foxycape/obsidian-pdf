@@ -105,11 +105,10 @@ export function deepcopy<T>(value: T, options?: Options): T {
 
   const copiedValue = copy(value, valueType, customizer);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const references = new WeakMap<Record<string, any>, unknown>([
     [value, copiedValue]
   ]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const visited = new WeakSet<Record<string, any>>([value]);
 
   return recursiveCopy(

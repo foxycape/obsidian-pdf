@@ -13,7 +13,6 @@ export const isBuffer: typeof Buffer.isBuffer = isBufferExists
      * @private
      */
     function isBuffer(
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       obj: Parameters<typeof Buffer.isBuffer>[0]
     ): obj is Buffer {
       return false;
@@ -33,7 +32,6 @@ export const cloneBuffer: typeof Buffer.from = isBufferExists
      * @private
      * @param value
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function cloneBuffer(value: unknown): any {
       return value;
     };

@@ -2,7 +2,6 @@ import { IDisposable } from "../IDisposable";
 import { Reader } from "../Reader";
 
 export abstract class PluginCore implements IDisposable {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     constructor(public readonly reader: Reader,options?: any) { }
     abstract get name(): string;
     abstract get title(): string;

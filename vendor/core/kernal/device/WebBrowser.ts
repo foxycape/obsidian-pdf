@@ -43,23 +43,6 @@ export class WebBrowser implements IDevice {
         return 'desktop';
     }
 
-    getDevicePixelRatio() {
-        let ratio = 0;
-        const screen = globalThis.screen;
-        const ua = navigator.userAgent.toLowerCase();
-        if (globalThis.devicePixelRatio !== undefined) {
-            ratio = globalThis.devicePixelRatio;
-        } else if (ua.indexOf("msie")) {
-            const s = screen as any;
-            if (s.deviceXDPI && s.logicalXDPI) {
-                ratio = s.deviceXDPI / s.logicalXDPI;
-            }
-        } else if (globalThis.outerWidth && globalThis.innerWidth) {
-            ratio = globalThis.outerWidth / globalThis.innerWidth;
-        }
-        return ratio;
-    }
-
     getInfo(): DeviceInfo {
         if (!this.info) {
             const deviceType = this.getDeviceType();
@@ -71,7 +54,6 @@ export class WebBrowser implements IDevice {
             deviceInfo.browserVersion = BrowserCapabilities.getBrowserVersion();
             deviceInfo.browserLanguage = this.environment.getLanguage();
             deviceInfo.cpuType = this.platform.getArch();
-            deviceInfo.devicePixelRatio = this.getDevicePixelRatio();
             deviceInfo.availableResolutionX = screen.width;
             deviceInfo.availableResolutionY = screen.height;
             deviceInfo.deviceSize = deviceType.startsWith('mobile')

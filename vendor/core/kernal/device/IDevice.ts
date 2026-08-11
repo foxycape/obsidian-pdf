@@ -6,9 +6,6 @@ export interface IDevice {
     /** Gets the device type. */
     getDeviceType(): DeviceType;
 
-    /** Gets the physical screen scale ratio (`devicePixelRatio`). */
-    getDevicePixelRatio(): number;
-
     /** Gets aggregated device information. */
     getInfo(): DeviceInfo;
 
@@ -23,7 +20,6 @@ export class DeviceInfo {
     osType: string | undefined;
     osVersion: string | undefined;
     browserLanguage: string | undefined;
-    devicePixelRatio: number | undefined;
     availableResolution: string | undefined;
     availableResolutionX: number | undefined;
     availableResolutionY: number | undefined;
