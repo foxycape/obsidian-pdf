@@ -1,5 +1,6 @@
 import { getDocumentBody } from "../../../../kernal/html/finder";
 import { getOrderedElementsIntersectingRect, resolveVisibleViewportInContentWindow } from "../../../../kernal/html/geometry";
+import { emptyElement, setElementHtml } from "../../../../kernal/html/dom";
 import { getUuid } from "../../../../kernal/common/uuid";
 import { EventNames, FlipMode, IFileParser, ILogger, WritingMode, TextFormatOptions, SpineFile, BrowserCapabilities, Direction, readerPrefixName } from "../../../../kernal";
 import type { Reader } from "../../../../kernal/Reader";
@@ -56,7 +57,7 @@ export class HtmlDocument extends BaseDocument implements IHtmlDocument {
             this.loadStatus = "loading";
             this.loadingLayer = await this.owner.services.get('loadLayer');
             this.loadingLayer?.setDoc(this);
-            this.wrapperContainer.innerHTML = "";
+            emptyElement(this.wrapperContainer);
             this.loadingLayer.removeLoadingLayer();
             this.loadingLayer.loadLoadingLayer();
 
@@ -102,7 +103,7 @@ export class HtmlDocument extends BaseDocument implements IHtmlDocument {
                 }
                 else {
                     const loadingContent = await this.buildLoadingContent();
-                    this.wrapperContainer.innerHTML = loadingContent;
+                    setElementHtml(this.wrapperContainer, loadingContent);
                     await this.processAfterLoaded();
                     await BrowserCapabilities.yieldToMain();
                 }
@@ -342,7 +343,7 @@ export class HtmlDocument extends BaseDocument implements IHtmlDocument {
         const wrapperContainer = this.getWrapperContainer();
         wrapperContainer.classList.add(HtmlSettings.FileContentContainerHeightClassName);
         wrapperContainer.removeChild(this.iframe);
-        this.wrapperContainer.innerHTML = ""
+        emptyElement(this.wrapperContainer);
         this.iframe = undefined;
         this.formattedVirtualDocument = null;
         await super.dispose();

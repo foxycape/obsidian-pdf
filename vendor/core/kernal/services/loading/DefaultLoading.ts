@@ -38,7 +38,7 @@ export class DefaultLoading implements ILoading {
             const loadingText = text ? text : this.getDefaultLoadingText();
             const textLayer = loadingContainer.querySelector(".loading-holder")
             if (textLayer && loadingText) {
-                textLayer.innerHTML = loadingText
+                textLayer.textContent = loadingText
             }
             return;
         }
@@ -49,8 +49,19 @@ export class DefaultLoading implements ILoading {
             }
             const loadingText = text ? text : this.getDefaultLoadingText();
             loadingContainer = createElement(this.container.ownerDocument, "div", loaderId, "loader");
-            loadingContainer.innerHTML = "<div class=\"" + this.curentCssName + "\"><div></div><div></div><div></div><div></div><div></div><div></div></div><div style=\"font-size: 16px;color: " + textColor + ";margin-block-start: " + this.loadingTextMarginTop + "px;\" class='loading-holder'>" + loadingText + "</div>";
 
+            const pulse = this.container.ownerDocument.createElement("div");
+            pulse.className = this.curentCssName;
+            for (let i = 0; i < 6; i++) {
+                pulse.appendChild(this.container.ownerDocument.createElement("div"));
+            }
+
+            const textLayer = this.container.ownerDocument.createElement("div");
+            textLayer.className = "loading-holder";
+            textLayer.style.cssText = `font-size: 16px;color: ${textColor};margin-block-start: ${this.loadingTextMarginTop}px;`;
+            textLayer.textContent = loadingText;
+
+            loadingContainer.append(pulse, textLayer);
             this.container.insertAdjacentElement("afterbegin", loadingContainer);
         }
     }

@@ -125,12 +125,18 @@ describe('resolveFoxycapeImageRefFromImageElement', () => {
 
   it('uses the first ancestor with src and matches name=', () => {
     const root = document.createElement('div')
-    root.innerHTML = `
-      <div src="Book.pdf#page=103&foxycape-rect=55.369,62.418,456.189,281.479&name=p103-934R.png">
-        <img src="Book/p103-934R.png#page=103&foxycape-rect=55.369,62.418,456.189,281.479" />
-      </div>
-    `
-    const img = root.querySelector('img')
+    const wrapper = document.createElement('div')
+    wrapper.setAttribute(
+      'src',
+      'Book.pdf#page=103&foxycape-rect=55.369,62.418,456.189,281.479&name=p103-934R.png',
+    )
+    const img = document.createElement('img')
+    img.setAttribute(
+      'src',
+      'Book/p103-934R.png#page=103&foxycape-rect=55.369,62.418,456.189,281.479',
+    )
+    wrapper.appendChild(img)
+    root.appendChild(wrapper)
     expect(img).toBeTruthy()
     expect(findFirstAncestorWithSrc(img!)?.getAttribute('src')).toContain(
       'Book.pdf#page=103',
@@ -145,16 +151,23 @@ describe('resolveFoxycapeImageRefFromImageElement', () => {
 
   it('stops at the first src ancestor even when it is not a matching PDF link', () => {
     const root = document.createElement('div')
-    root.innerHTML = `
-      <div src="Book.pdf#page=103&foxycape-rect=55,101,251,237&name=p103-934R.png">
-        <span src="not-a-pdf.png">
-          <img src="Book/p103-934R.png#page=103&foxycape-rect=55,101,251,237" />
-        </span>
-      </div>
-    `
-    const img = root.querySelector('img')
+    const wrapper = document.createElement('div')
+    wrapper.setAttribute(
+      'src',
+      'Book.pdf#page=103&foxycape-rect=55,101,251,237&name=p103-934R.png',
+    )
+    const span = document.createElement('span')
+    span.setAttribute('src', 'not-a-pdf.png')
+    const img = document.createElement('img')
+    img.setAttribute(
+      'src',
+      'Book/p103-934R.png#page=103&foxycape-rect=55,101,251,237',
+    )
+    span.appendChild(img)
+    wrapper.appendChild(span)
+    root.appendChild(wrapper)
     expect(
-      resolveFoxycapeImageRefFromImageElement(app, img!, 'Notes/memo.md'),
+      resolveFoxycapeImageRefFromImageElement(app, img, 'Notes/memo.md'),
     ).toBeNull()
   })
 })

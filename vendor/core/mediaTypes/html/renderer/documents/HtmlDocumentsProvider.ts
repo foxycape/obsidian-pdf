@@ -1,6 +1,7 @@
 import { isNullOrWhiteSpace } from "../../../../kernal/common/text";
 import { parseNumber } from "../../../../kernal/common/number";
 import { compareTagName } from "../../../../kernal/html/finder";
+import { emptyElement } from "../../../../kernal/html/dom";
 import { wrapperCharacters, recoverWrapperCharacters } from "../../../../kernal/html/manipulator";
 import { scrollElementIntoView, getTransformLength } from "../../../../kernal/html/style";
 import { FileLocation, IFileParser, ILogger, SpineFile, STTAG, WritingMode, asyncDebounce, BrowserCapabilities, Theme, FlipMode } from "../../../../kernal";
@@ -452,7 +453,7 @@ export class HtmlDocumentsProvider extends BaseDocumentsProvider<IHtmlDocument> 
         await this.documentPreloader.dispose();
         await super.dispose();
         if (this.readerContainer) {
-            this.readerContainer.innerHTML = "";
+            emptyElement(this.readerContainer);
         }
         this.isInit = false;
     }

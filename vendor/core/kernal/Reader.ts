@@ -3,6 +3,7 @@ import { getRandomId } from "./common/uuid";
 import { BrowserCapabilities } from "./web/BrowserCapabilities";
 import { EventNames } from "./EventNames";
 import { CoreServices, FileLoader } from "./FileLoader";
+import { emptyElement } from "./html/dom";
 import { createElement, injectCssContent } from "./html/injector";
 import { ILoading } from "./services/loading/ILoading";
 import { INotifier } from "./services/notifier/INotifier";
@@ -206,7 +207,7 @@ export class Reader implements LifecycleHooks {
         await this.applyGlobalTheme(theme);
         this.currentNotifier = await this.services.get("notifier", false);
         this.currentLoading = await this.services.get("loading", false);
-        this.readerWrapper.innerHTML = "";
+        emptyElement(this.readerWrapper);
         await this.loading?.initialize(this.readerWrapper,{
             backgroundColor: `var(${Theme.ReaderBackground})`,
             textColor: `var(${Theme.TextMutedColor})`,
@@ -528,7 +529,7 @@ export class Reader implements LifecycleHooks {
         await this.fileLoader.clear();
 
         if (this.readerWrapper) {
-            this.readerWrapper.innerHTML = "";
+            emptyElement(this.readerWrapper);
         }
         this.startLoadTime = null;
         this.currentIsLoaded = false;

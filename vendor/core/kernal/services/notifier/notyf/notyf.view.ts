@@ -12,6 +12,7 @@ import {
   NotyfEvent,
   INotyfIcon,
 } from './notyf.options';
+import { setElementHtml } from '../../../html/dom';
 
 export class NotyfView {
   public a11yContainer!: HTMLElement;
@@ -145,7 +146,7 @@ export class NotyfView {
     const wrapper = this._createHTMLElement({ tagName: 'div', className: 'notyf__wrapper' });
     const message = this._createHTMLElement({ tagName: 'div', className: 'notyf__message' });
 
-    message.innerHTML = options.message || '';
+    setElementHtml(message, options.message || '');
     const mainColor = options.background || options.backgroundColor;
 
     // Build the icon and append it to the card
@@ -153,7 +154,9 @@ export class NotyfView {
 
       const iconContainer = this._createHTMLElement({ tagName: 'div', className: 'notyf__icon' });
 
-      if (typeof iconOpts === 'string' || iconOpts instanceof String) iconContainer.innerHTML = new String(iconOpts).valueOf()
+      if (typeof iconOpts === 'string' || iconOpts instanceof String) {
+        setElementHtml(iconContainer, new String(iconOpts).valueOf());
+      }
 
       if (typeof iconOpts === 'object') {
 

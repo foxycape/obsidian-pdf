@@ -5,11 +5,15 @@ const makeHeaderTree = () => {
   const containerEl = document.createElement('div')
   const header = document.createElement('div')
   header.className = 'view-header'
-  header.innerHTML = `
-    <div class="view-header-left"></div>
-    <div class="view-header-title-container"></div>
-    <div class="view-actions"></div>
-  `
+  for (const className of [
+    'view-header-left',
+    'view-header-title-container',
+    'view-actions',
+  ]) {
+    const child = document.createElement('div')
+    child.className = className
+    header.appendChild(child)
+  }
   containerEl.appendChild(header)
   document.body.appendChild(containerEl)
   return { containerEl, header }
