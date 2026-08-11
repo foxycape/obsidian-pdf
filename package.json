@@ -1,8 +1,8 @@
 {
   "name": "@foxycape/obsidian-pdf",
-  "version": "3.3.6",
+  "version": "3.3.7",
   "private": true,
-  "description": "Foxycape PDF reader plugin for Obsidian",
+  "description": "Embed Foxycape PDF reader with highlight and annotation sync to your notes.",
   "license": "SEE LICENSE IN LICENSE.md",
   "type": "module",
   "main": "dist/main.js",
