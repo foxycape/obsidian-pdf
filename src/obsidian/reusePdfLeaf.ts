@@ -23,6 +23,20 @@ type PendingPdfLink = {
   sourcePath: string
 }
 
+type HandleLinkContextMenuFn = (
+  menu: Menu,
+  linktext: string,
+  sourcePath: string,
+  leaf?: WorkspaceLeaf,
+) => boolean
+
+type OpenLinkTextFn = (
+  linktext: string,
+  sourcePath: string,
+  newLeaf?: boolean | PaneType,
+  openViewState?: OpenViewState,
+) => Promise<void>
+
 const PDF_VIEW_TYPES = [PDF_READER_VIEW_TYPE, OBSIDIAN_PDF_VIEW_TYPE] as const
 
 const getLeafActiveTime = (leaf: WorkspaceLeaf): number =>
@@ -148,7 +162,8 @@ type PdfLinkOpenPlugin = Plugin & {
  */
 export const installPdfLinkContextCapture = (plugin: PdfLinkOpenPlugin): void => {
   const { workspace } = plugin.app
-  const originalHandleLinkContextMenu = workspace.handleLinkContextMenu.bind(workspace)
+  const originalHandleLinkContextMenu: HandleLinkContextMenuFn =
+    workspace.handleLinkContextMenu.bind(workspace)
 
   workspace.handleLinkContextMenu = (
     menu: Menu,
@@ -184,7 +199,7 @@ export const consumePendingPdfLinkSubpath = (
  */
 export const installPdfLinkReuse = (plugin: Plugin): void => {
   const { workspace } = plugin.app
-  const originalOpenLinkText = workspace.openLinkText.bind(workspace)
+  const originalOpenLinkText: OpenLinkTextFn = workspace.openLinkText.bind(workspace)
 
   workspace.openLinkText = async (
     linktext: string,
@@ -194,18 +209,21 @@ export const installPdfLinkReuse = (plugin: Plugin): void => {
   ): Promise<void> => {
     // Respect Ctrl/Cmd/middle-click / explicit new-pane requests.
     if (newLeaf) {
-      return originalOpenLinkText(linktext, sourcePath, newLeaf, openViewState)
+      await originalOpenLinkText(linktext, sourcePath, newLeaf, openViewState)
+      return
     }
 
     const { path, subpath } = parseLinktext(linktext)
     const file = plugin.app.metadataCache.getFirstLinkpathDest(path, sourcePath)
     if (!file || file.extension.toLowerCase() !== 'pdf') {
-      return originalOpenLinkText(linktext, sourcePath, newLeaf, openViewState)
+      await originalOpenLinkText(linktext, sourcePath, newLeaf, openViewState)
+      return
     }
 
     const existing = findExistingPdfLeaf(plugin.app, file)
     if (!existing) {
-      return originalOpenLinkText(linktext, sourcePath, newLeaf, openViewState)
+      await originalOpenLinkText(linktext, sourcePath, newLeaf, openViewState)
+      return
     }
 
     await revealExistingPdfLeaf(plugin.app, existing, openViewState, subpath)

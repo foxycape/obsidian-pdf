@@ -5,7 +5,6 @@ import {
   MARK_TYPE_ATTR,
 } from '@foxycape/core/kernal/mark/MarkConstants'
 import { getFixedContentRange, type Mark } from '@foxycape/core/kernal/mark/Mark'
-import type { MarkStyleName } from '@foxycape/core/kernal/mark/types'
 import { scaleGeometryCoords } from '@foxycape/core/mediaTypes/pdf/shared/geometry/selectionToFixedContentRange'
 import type { IPdfDocument } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfDocument'
 import { PDF_MARK_LAYER_CLASS, PDF_MARK_MASK_CLASS } from './PdfMarkConstants'
@@ -73,7 +72,7 @@ const paintGeometry = (
     return
   }
   const writingMode = resolveWritingMode(scaled.width, scaled.height)
-  const styleType = resolveMarkStyleType(mark.styleName as MarkStyleName, writingMode)
+  const styleType = resolveMarkStyleType(mark.styleName, writingMode)
   const mask = layer.createDiv({ cls: `${mark.styleName} ${PDF_MARK_MASK_CLASS}` })
   if (writingMode !== 'horizontal-tb') {
     mask.classList.add(styleType)

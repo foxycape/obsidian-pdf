@@ -1,4 +1,4 @@
-import { createApp, h, markRaw, reactive, toRaw, type App } from 'vue'
+import { createApp, h, markRaw, shallowReactive, type App } from 'vue'
 import type { Reader } from '@foxycape/core/kernal'
 import type {
   PdfViewPreferencePatch,
@@ -59,12 +59,12 @@ const resolveChromeHosts = (
   contentEl: HTMLElement,
 ): ChromeHosts => {
   if (isViewHeaderVisible(containerEl)) {
-    const header = containerEl.querySelector('.view-header') as HTMLElement | null
-    const left = header?.querySelector('.view-header-left') as HTMLElement | null
-    const titleContainer = header?.querySelector(
+    const header = containerEl.querySelector<HTMLElement>('.view-header')
+    const left = header?.querySelector<HTMLElement>('.view-header-left')
+    const titleContainer = header?.querySelector<HTMLElement>(
       '.view-header-title-container',
-    ) as HTMLElement | null
-    const actions = header?.querySelector('.view-actions') as HTMLElement | null
+    )
+    const actions = header?.querySelector<HTMLElement>('.view-actions')
     if (left && titleContainer && actions) {
       return {
         placement: 'header',
@@ -138,7 +138,7 @@ export const mountPdfViewChrome = (options: {
   teleportRoot.hidden = true
 
   // Reader / DOM hosts must not be Vue-proxied: pdf.js private methods break on Proxy.
-  const state = reactive<ChromeState>({
+  const state = shallowReactive<ChromeState>({
     reader: markRaw(options.reader),
     t: options.t,
     sidebarOpen: options.sidebarOpen,
@@ -159,7 +159,7 @@ export const mountPdfViewChrome = (options: {
     setup: () => () =>
       h(PdfViewChromeApp, {
         // reactive() unwraps class types; markRaw+toRaw keep the runtime instance.
-        reader: toRaw(state.reader) as Reader,
+        reader: state.reader,
         t: state.t,
         sidebarOpen: state.sidebarOpen,
         settingsOpenNonce: state.settingsOpenNonce,
@@ -179,7 +179,7 @@ export const mountPdfViewChrome = (options: {
   const sidebarApp: App = createApp({
     setup: () => () =>
       h(PdfLeftNavPanel, {
-        reader: toRaw(state.reader) as Reader,
+        reader: state.reader,
         t: state.t,
         open: state.sidebarOpen,
         onRequestClose: state.onRequestCloseSidebar,

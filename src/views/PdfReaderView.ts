@@ -725,7 +725,7 @@ export class PdfReaderView extends FileView {
     if (!this.plugin.settings.enableAutoCreateHighlightNotes) {
       return
     }
-    const mark = payload.items?.[0] as Mark | undefined
+    const mark = payload.items[0]
     const pdfFile = this.file
     if (!mark || !pdfFile) {
       return

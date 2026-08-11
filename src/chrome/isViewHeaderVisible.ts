@@ -3,7 +3,7 @@
  * Hidden when Appearance → "Show tab title bar" is off (or via CSS/themes).
  */
 export const isViewHeaderVisible = (containerEl: HTMLElement): boolean => {
-  const header = containerEl.querySelector('.view-header') as HTMLElement | null
+  const header = containerEl.querySelector<HTMLElement>('.view-header')
   if (!header) {
     return false
   }

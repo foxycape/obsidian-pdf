@@ -23,6 +23,28 @@ type ApiResult = {
   [key: string]: unknown
 }
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  value !== null && typeof value === 'object' && !Array.isArray(value)
+
+const recordFromMap = (map: Map<unknown, unknown>): Record<string, unknown> => {
+  const record: Record<string, unknown> = {}
+  for (const [key, value] of map.entries()) {
+    record[String(key)] = value
+  }
+  return record
+}
+
+const copyRequestHeaders = (headers: unknown): Record<string, string> => {
+  if (!isRecord(headers)) {
+    return {}
+  }
+  const result: Record<string, string> = {}
+  for (const [key, value] of Object.entries(headers)) {
+    result[key] = String(value)
+  }
+  return result
+}
+
 /**
  * Signed API client implementing {@link IApiClient}.
  * Uses `@foxycape/core` for HTTP transport, crypto, device id, and helpers.
@@ -80,7 +102,7 @@ export class ApiClient implements IApiClient {
 
     const requestOptions: HttpClientOptions = {
       ...(options ?? {}),
-      headers: { ...(options?.headers ?? {}) },
+      headers: copyRequestHeaders(options?.headers),
       responseType: options?.responseType ?? 'json',
     }
     if (!bodyData || typeof bodyData !== 'object') {
@@ -99,8 +121,8 @@ export class ApiClient implements IApiClient {
     if (requestOptions.requestBodyType === 'raw') {
       body = bodyData
       if (isApiHost) {
-        for (const key of Object.keys(systemParameters)) {
-          requestOptions.headers![key] = String(systemParameters[key])
+        for (const [key, value] of Object.entries(systemParameters)) {
+          requestOptions.headers![key] = String(value)
         }
       }
     } else {
@@ -160,17 +182,18 @@ export class ApiClient implements IApiClient {
     }
 
     const isApiHost = this.isSameHost(url, this.apiSettings.endPoint)
-    let parametersData: Record<string, unknown> =
+    const parametersData: Record<string, unknown> =
       data instanceof Map
-        ? Object.fromEntries(data)
-        : data && typeof data === 'object'
-          ? { ...(data as Record<string, unknown>) }
+        ? recordFromMap(data)
+        : isRecord(data)
+          ? { ...data }
           : {}
 
-    const requestOptions: HttpClientOptions = Object.assign({}, options ?? {}, {
-      headers: { ...(options?.headers ?? {}) },
+    const requestOptions: HttpClientOptions = {
+      ...(options ?? {}),
+      headers: copyRequestHeaders(options?.headers),
       responseType: options?.responseType ?? 'json',
-    })
+    }
 
     let parameters: Record<string, unknown>
     if (isApiHost) {
@@ -204,11 +227,11 @@ export class ApiClient implements IApiClient {
   }
 
   async sign(methodParameters: unknown): Promise<Record<string, unknown>> {
-    let parameters: Record<string, unknown> =
+    const parameters: Record<string, unknown> =
       methodParameters instanceof Map
-        ? Object.fromEntries(methodParameters)
-        : methodParameters && typeof methodParameters === 'object'
-          ? { ...(methodParameters as Record<string, unknown>) }
+        ? recordFromMap(methodParameters)
+        : isRecord(methodParameters)
+          ? { ...methodParameters }
           : {}
     await this.handleMethodParameters(parameters)
     await this.ensureEnvCompleted()
@@ -246,7 +269,7 @@ export class ApiClient implements IApiClient {
     const newData: Record<string, unknown> = {}
     if (data instanceof Map) {
       for (const [key, value] of data.entries()) {
-        newData[key] = typeof value === 'string' ? this.handleText(value) : value
+        newData[String(key)] = typeof value === 'string' ? this.handleText(value) : value
       }
       return newData
     }

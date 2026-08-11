@@ -17,7 +17,7 @@ export class ObsidianHttpClient implements IHttpClient {
     const response = await requestUrl({
       url,
       method: 'GET',
-      headers: this.normalizeHeaders(options?.headers),
+      headers: this.normalizeHeadersFromOptions(options?.headers),
       throw: false,
     })
     this.throwIfFailed(response)
@@ -84,7 +84,7 @@ export class ObsidianHttpClient implements IHttpClient {
     contentType?: string
     headers?: Record<string, string>
   } => {
-    const headers = this.normalizeHeaders(options?.headers) ?? {}
+    const headers = this.normalizeHeadersFromOptions(options?.headers) ?? {}
 
     if (data == null) {
       return { headers }
@@ -158,10 +158,14 @@ export class ObsidianHttpClient implements IHttpClient {
     }
   }
 
-  private parseResponse = (response: RequestUrlResponse, responseType: ResponseType) => {
+  private parseResponse = (
+    response: RequestUrlResponse,
+    responseType: ResponseType,
+  ): unknown => {
     if (responseType === 'json') {
       try {
-        return response.json
+        const json: unknown = response.json
+        return json
       } catch {
         return {}
       }
@@ -177,7 +181,8 @@ export class ObsidianHttpClient implements IHttpClient {
     }
     const text = response.text
     try {
-      return JSON.parse(text)
+      const parsed: unknown = JSON.parse(text)
+      return parsed
     } catch {
       return text
     }
@@ -199,8 +204,26 @@ export class ObsidianHttpClient implements IHttpClient {
     throw new Error(`HTTP error! status: ${response.status},message: ${response.text}`)
   }
 
+  private normalizeHeadersFromOptions = (
+    headers: unknown,
+  ): Record<string, string> | undefined => {
+    if (headers == null) {
+      return undefined
+    }
+    if (headers instanceof Headers) {
+      return this.normalizeHeaders(headers)
+    }
+    if (Array.isArray(headers)) {
+      return this.normalizeHeaders(headers)
+    }
+    if (typeof headers === 'object') {
+      return this.normalizeHeaders(headers as Record<string, string>)
+    }
+    return undefined
+  }
+
   private normalizeHeaders = (
-    headers?: Record<string, string> | HeadersInit,
+    headers: Record<string, string> | HeadersInit,
   ): Record<string, string> | undefined => {
     if (!headers) {
       return undefined

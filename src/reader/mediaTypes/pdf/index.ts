@@ -1,4 +1,6 @@
 import type { Reader } from '@foxycape/core/kernal'
+import type { IFileDecrypter } from '@foxycape/core/kernal/services/file/IFileDecrypter'
+import type { IFileProvider } from '@foxycape/core/kernal/services/file/IFileProvider'
 import { PdfFileParser } from '@foxycape/core/mediaTypes/pdf/fileParser/PdfFileParser'
 import { PdfOptions } from '@foxycape/core/mediaTypes/pdf/PdfOptions'
 import { CustomPdfOptions } from './CustomPdfOptions'
@@ -45,16 +47,21 @@ export const registerPdfMediaType = (
       const fileDecrypter = await reader.services.get('fileDecrypter', false)
       const fileProvider = await reader.services.get('fileProvider', false)
       const storage = await reader.services.get('storage', true)
+      const context = reader.context
+
+      if (!crypto || !fileUrlParser || !httpClient || !context) {
+        throw new Error('Foxycape PDF: required reader services are unavailable')
+      }
 
       return new PdfFileParser(
-        crypto!,
-        fileDecrypter as never,
-        fileProvider as never,
-        fileUrlParser!,
-        httpClient!,
+        crypto,
+        fileDecrypter as IFileDecrypter,
+        fileProvider as IFileProvider,
+        fileUrlParser,
+        httpClient,
         reader.events,
         reader.locale,
-        reader.context!,
+        context,
         storage ?? null,
         url,
         extension,

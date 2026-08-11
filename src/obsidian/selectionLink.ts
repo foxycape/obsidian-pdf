@@ -53,7 +53,7 @@ const findPageElement = (node: Node | null): HTMLElement | null => {
     ) {
       return el as HTMLElement
     }
-    el = el.parentElement ?? (el.parentNode as Node | null)
+    el = el.parentElement ?? el.parentNode
   }
   return null
 }
@@ -97,7 +97,7 @@ const resolveBoundaryInElement = (
     }
     return (span.textContent?.length ?? 0) > 0
   })
-  const span = el.closest('.textLayer span') as HTMLElement | null
+  const span = el.closest('.textLayer span')
   if (!span) {
     return null
   }
@@ -282,7 +282,10 @@ export const resolveRectParamFromSearchParams = (
 ): string | undefined => {
   // Prefer our namespaced key; fall back to legacy `rect=`.
   const preferred = params.get(FOXYCAPE_RECT_PARAM) ?? params.get(LEGACY_RECT_PARAM)
-  return parseRectTuple(preferred ?? undefined) ? preferred! : undefined
+  if (preferred && parseRectTuple(preferred)) {
+    return preferred
+  }
+  return undefined
 }
 
 export const parsePdfDeepLink = (subpath: string | null | undefined): PdfDeepLink => {

@@ -9,7 +9,6 @@ import {
   type PdfConvertedMatch,
 } from '@/search/matchGeometry'
 import {
-  injectSearchHighlightStyles,
   paintSearchHitOnPage,
   removeAllSearchOverlays,
 } from '@/search/PdfSearchOverlay'
@@ -84,7 +83,6 @@ const flashPageRects = async (
   }
   const root = renderer.getRendererContainer()
   removeAllSearchOverlays(root)
-  injectSearchHighlightStyles(pageEl.ownerDocument)
   const match: PdfSearchMatch = {
     id: DEEP_LINK_HIT_ID,
     index: 0,
@@ -164,10 +162,18 @@ const pdfUserSpaceRectToPageCss = (
   x2: number,
   y2: number,
 ): { x: number; y: number; width: number; height: number } | null => {
-  const convert = pageView?.viewport?.convertToViewportRectangle
+  const viewport = pageView?.viewport
+  const convert = viewport?.convertToViewportRectangle
   if (typeof convert === 'function') {
-    const converted = convert.call(pageView!.viewport, [x1, y1, x2, y2])
-    if (Array.isArray(converted) && converted.length >= 4) {
+    const converted: unknown = convert.call(viewport, [x1, y1, x2, y2])
+    if (
+      Array.isArray(converted) &&
+      converted.length >= 4 &&
+      typeof converted[0] === 'number' &&
+      typeof converted[1] === 'number' &&
+      typeof converted[2] === 'number' &&
+      typeof converted[3] === 'number'
+    ) {
       const vx1 = Math.min(converted[0], converted[2])
       const vy1 = Math.min(converted[1], converted[3])
       const vx2 = Math.max(converted[0], converted[2])

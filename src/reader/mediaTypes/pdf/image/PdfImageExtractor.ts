@@ -1,6 +1,7 @@
 import type { ExtractImageOptions, IDisposable, ILogger, ImageDescriptor } from '@foxycape/core/kernal'
 import { BrowserCapabilities } from '@foxycape/core/kernal'
 import * as pdfjsLib from '@foxycape/core/pdfjs/legacy/build/pdf.mjs'
+import { asAugmentedCanvasContext } from '../canvasContextHooks'
 import { handleOnlyImages } from './pdfImageHandler'
 
 export type PdfImagePageResolver = {
@@ -9,8 +10,38 @@ export type PdfImagePageResolver = {
   logger?: ILogger
 }
 
-const cloneDescriptors = (items: ImageDescriptor[]) =>
-  items.map((item) => structuredClone(item) as ImageDescriptor)
+type PdfJsRawImageData = {
+  width: number
+  height: number
+  kind: 1 | 2 | 3
+  data: Uint8Array | Uint8ClampedArray
+  bitmap?: ImageBitmap
+}
+
+type PdfJsImageObject = PdfJsRawImageData | ImageBitmap
+
+const isPdfJsRawImageData = (value: unknown): value is PdfJsRawImageData => {
+  if (typeof value !== 'object' || value == null) {
+    return false
+  }
+  const record = value as Record<string, unknown>
+  return (
+    typeof record.width === 'number' &&
+    typeof record.height === 'number' &&
+    typeof record.kind === 'number' &&
+    record.data instanceof Uint8Array ||
+    record.data instanceof Uint8ClampedArray
+  )
+}
+
+const isPdfJsImageObject = (value: unknown): value is PdfJsImageObject => {
+  return typeof ImageBitmap !== 'undefined' && value instanceof ImageBitmap
+    ? true
+    : isPdfJsRawImageData(value)
+}
+
+const cloneDescriptors = (items: ImageDescriptor[]): ImageDescriptor[] =>
+  items.map((item) => structuredClone(item))
 
 export class PdfImageExtractor implements IDisposable {
   private images: ImageDescriptor[] | undefined
@@ -131,7 +162,7 @@ export class PdfImageExtractor implements IDisposable {
       return context
     }
 
-    const canvasContext = context as CanvasRenderingContext2D & { page?: number }
+    const canvasContext = asAugmentedCanvasContext(context)
     canvasContext.page = page.pageNumber
     handleOnlyImages(
       canvasContext,
@@ -167,16 +198,22 @@ export class PdfImageExtractor implements IDisposable {
     }
 
     const imageData = await this.getObject(page, objId)
-    if (imageData?.bitmap) {
+    if (isPdfJsRawImageData(imageData) && imageData.bitmap) {
       return imageData.bitmap
     }
-    if (imageData) {
+    if (isPdfJsRawImageData(imageData)) {
       return this.createCanvasFromImageData(imageData)
+    }
+    if (typeof ImageBitmap !== 'undefined' && imageData instanceof ImageBitmap) {
+      return imageData
     }
     return null
   }
 
-  private async getObject(page: pdfjsLib.PDFPageProxy, objId: string) {
+  private async getObject(
+    page: pdfjsLib.PDFPageProxy,
+    objId: string,
+  ): Promise<PdfJsImageObject | null> {
     if (typeof objId !== 'string') {
       return null
     }
@@ -192,8 +229,9 @@ export class PdfImageExtractor implements IDisposable {
     for (let i = 0; i < operators.fnArray.length; i++) {
       if (operators.fnArray[i] === pdfjsLib.OPS.paintImageXObject) {
         const currentImageArray = operators.argsArray[i]
-        if (currentImageArray?.[0]?.endsWith?.(imageId)) {
-          fixedObjId = currentImageArray[0]
+        const objName = Array.isArray(currentImageArray) ? currentImageArray[0] : undefined
+        if (typeof objName === 'string' && objName.endsWith(imageId)) {
+          fixedObjId = objName
           break
         }
       }
@@ -205,19 +243,18 @@ export class PdfImageExtractor implements IDisposable {
     try {
       const objPool = fixedObjId.startsWith('g_') ? page.commonObjs : page.objs
       if (objPool.has(fixedObjId)) {
-        return objPool.get(fixedObjId)
+        const data: unknown = objPool.get(fixedObjId)
+        return isPdfJsImageObject(data) ? data : null
       }
     } catch (error) {
       this.resolver.logger?.warn?.('get object error', error)
     }
 
-    return new Promise<any>((resolve, reject) => {
+    return new Promise<PdfJsImageObject | null>((resolve, reject) => {
       try {
-        const loadObject = fixedObjId!.startsWith('g_')
-          ? page.commonObjs.get.bind(page.commonObjs)
-          : page.objs.get.bind(page.objs)
-        loadObject(fixedObjId!, (data: unknown) => {
-          resolve(data)
+        const objPool = fixedObjId.startsWith('g_') ? page.commonObjs : page.objs
+        objPool.get(fixedObjId, (data: unknown) => {
+          resolve(isPdfJsImageObject(data) ? data : null)
         })
       } catch (error) {
         reject(error instanceof Error ? error : new Error(String(error)))
@@ -233,7 +270,7 @@ export class PdfImageExtractor implements IDisposable {
 
   private readonly FULL_CHUNK_HEIGHT = 16
 
-  createCanvasFromImageData(imgData: any) {
+  createCanvasFromImageData(imgData: PdfJsRawImageData) {
     const canvas = createEl('canvas')
     canvas.width = imgData.width
     canvas.height = imgData.height

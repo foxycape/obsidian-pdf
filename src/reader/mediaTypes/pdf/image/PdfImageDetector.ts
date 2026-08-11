@@ -15,10 +15,11 @@ export class PdfImageDetector implements IPdfImageDetector {
   ) {}
 
   async detect(e: MouseEvent | TouchEvent, doc?: IPdfDocument): Promise<PdfImageDetectResult> {
-    doc = (doc ?? (await this.findPageDocument(e.target as HTMLElement))) as IPdfDocument | null
-    if (!doc) {
+    const resolvedDoc = doc ?? (await this.findPageDocument(e.target as HTMLElement))
+    if (!resolvedDoc) {
       return { doc: null, found: false }
     }
+    doc = resolvedDoc
 
     let offsetX: number
     let offsetY: number
@@ -84,10 +85,22 @@ export class PdfImageDetector implements IPdfImageDetector {
 
     for (let i = imageDescriptors.length - 1; i >= 0; i--) {
       const image = imageDescriptors[i]
-      const x = image.x! / devicePixelRatio
-      const y = image.y! / devicePixelRatio
-      const scaledWidth = image.scaledWidth! / devicePixelRatio
-      const scaledHeight = image.scaledHeight! / devicePixelRatio
+      const rawX = image.x
+      const rawY = image.y
+      const rawScaledWidth = image.scaledWidth
+      const rawScaledHeight = image.scaledHeight
+      if (
+        rawX == null ||
+        rawY == null ||
+        rawScaledWidth == null ||
+        rawScaledHeight == null
+      ) {
+        continue
+      }
+      const x = rawX / devicePixelRatio
+      const y = rawY / devicePixelRatio
+      const scaledWidth = rawScaledWidth / devicePixelRatio
+      const scaledHeight = rawScaledHeight / devicePixelRatio
 
       if (
         offsetX > x &&
@@ -138,7 +151,7 @@ export class PdfImageDetector implements IPdfImageDetector {
       return null
     }
 
-    return this.renderer.getDocument((startPageNumber - 1).toString()) as IPdfDocument
+    return this.renderer.getDocument((startPageNumber - 1).toString())
   }
 
   async dispose(): Promise<void> {

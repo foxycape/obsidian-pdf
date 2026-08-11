@@ -1,4 +1,4 @@
-import type { MarkStyle, MarkStyleName, MarkType } from '@foxycape/core/kernal/mark/types'
+import type { MarkStyle, MarkStyleName } from '@foxycape/core/kernal/mark/types'
 import { DEFAULT_MARK_COLORS } from './PdfMarkConstants'
 
 export type MarkWritingMode = 'horizontal-tb' | 'vertical-lr' | 'vertical-rl'
@@ -207,7 +207,7 @@ export const getDefaultMarkStyles = (): MarkStyle[] => {
     },
   ]
   return items.map((item) => ({
-    markType: 'drawline' as MarkType,
+    markType: 'drawline',
     styleName: item.styleName,
     classValue: '',
     displayColor: DEFAULT_MARK_COLORS[item.styleName],

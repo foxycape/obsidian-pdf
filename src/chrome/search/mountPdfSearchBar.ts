@@ -1,4 +1,4 @@
-import { createApp, h, markRaw, reactive, type App } from 'vue'
+import { createApp, h, markRaw, shallowReactive, type App } from 'vue'
 import type { Reader } from '@foxycape/core/kernal'
 import { PdfSearcher, type IPdfSearcher } from '@/search'
 import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
@@ -37,7 +37,7 @@ export const mountPdfSearchBar = (options: {
   const root = options.hostEl.createDiv({ cls: 'foxycape-pdf-search-root' })
 
   let searcher = createSearcher(options.reader)
-  const state = reactive<SearchBarState>({
+  const state = shallowReactive<SearchBarState>({
     reader: markRaw(options.reader),
     searcher: markRaw(searcher),
     open: false,
@@ -46,7 +46,7 @@ export const mountPdfSearchBar = (options: {
 
   const app: App = createApp({
     setup: () => () =>
-      h(PdfSearchBar as any, {
+      h(PdfSearchBar, {
         reader: state.reader,
         searcher: state.searcher,
         open: state.open,

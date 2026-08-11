@@ -1,4 +1,11 @@
-import { PluginSettingTab, Setting, type App, type ButtonComponent, type TextComponent } from 'obsidian'
+import {
+  PluginSettingTab,
+  Setting,
+  type App,
+  type ButtonComponent,
+  type SettingDefinitionItem,
+  type TextComponent,
+} from 'obsidian'
 import { debounce } from '@foxycape/core/kernal/Debounce'
 import {
   LICENSE_INPUT_DEBOUNCE_MS,
@@ -7,6 +14,8 @@ import {
 } from '@/license'
 import type { FoxycapePdfPlugin } from '@/plugin/FoxycapePdfPlugin'
 import { showConfirmModal } from '@/ui/ConfirmModal'
+
+type FoxycapePdfSettingKey = 'useAsDefaultPdfViewer'
 
 export class FoxycapePdfSettingTab extends PluginSettingTab {
   private licenseStatusEl: HTMLElement | null = null
@@ -26,6 +35,56 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
     private readonly plugin: FoxycapePdfPlugin,
   ) {
     super(app, plugin)
+  }
+
+  /**
+   * Declarative settings (Obsidian 1.13+). License UI stays imperative via `render`.
+   * `display()` remains for older clients that ignore this array.
+   */
+  getSettingDefinitions(): SettingDefinitionItem<FoxycapePdfSettingKey>[] {
+    return [
+      {
+        type: 'group',
+        heading: this.plugin.t('plugin_settings_title', 'Foxycape PDF'),
+        items: [
+          {
+            name: this.plugin.t(
+              'plugin_settings_use_as_default_name',
+              'Use as default PDF viewer',
+            ),
+            desc: this.plugin.t(
+              'plugin_settings_use_as_default_desc',
+              'When enabled, opening a .pdf file uses Foxycape PDF instead of Obsidian’s built-in viewer. You can still open with Foxycape from the command palette or file menu when this is off.',
+            ),
+            control: {
+              type: 'toggle',
+              key: 'useAsDefaultPdfViewer',
+            },
+          },
+        ],
+      },
+      {
+        type: 'group',
+        heading: this.plugin.t('plugin_settings_license_heading', 'License'),
+        items: [
+          {
+            name: this.plugin.t('plugin_settings_license_name', 'License key'),
+            desc: '',
+            render: (_setting, group) => {
+              void this.plugin.syncLocaleIfNeeded().then(() => {
+                this.renderLicenseSection(group.listEl)
+              })
+            },
+          },
+        ],
+      },
+    ]
+  }
+
+  setControlValue(key: string, value: unknown): void | Promise<void> {
+    if (key === 'useAsDefaultPdfViewer' && typeof value === 'boolean') {
+      return this.plugin.setUseAsDefaultPdfViewer(value)
+    }
   }
 
   display = () => {
@@ -123,6 +182,7 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
     this.refreshLicenseInputReadonly()
     this.refreshLicenseActionButton()
     this.refreshLicenseStatus()
+    this.update()
   }
 
   private promptUnbindLicense = () => {
@@ -167,6 +227,7 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
       this.refreshLicenseInputReadonly()
       this.refreshLicenseActionButton()
       this.refreshLicenseStatus()
+      this.update()
       return
     }
 
@@ -194,7 +255,7 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
 
   private refreshLicenseActionButton = () => {
     const button = this.licenseActionButton
-    if (!button) {
+    if (button === null) {
       return
     }
 

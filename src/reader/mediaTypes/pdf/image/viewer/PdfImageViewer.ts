@@ -73,7 +73,7 @@ export class PdfImageViewer {
     this.isFullscreen = viewerOptions.fullscreen ?? true
     this.target =
       rootElement ??
-      (typeof document !== 'undefined' ? document.body : (null as unknown as HTMLElement))
+      (typeof document !== 'undefined' ? document.body : createDiv())
 
     this.resizeObserver = new ResizeObserver(() => {
       this.updateViewerSize()
@@ -264,10 +264,11 @@ export class PdfImageViewer {
 
     this.lightbox.on('loadComplete', ({ slide }) => {
       if (!slide?.content?.element) return
-      const element = slide.content.element as HTMLElement
+      const element = slide.content.element
       element.removeAttribute('degree')
       delete element.dataset.pdfFlipTransform
-      const flipMatrix = getFlipOnlyMatrix(slide.content.data?.matrix)
+      const slideData = slide.content.data as ImageSlideData | undefined
+      const flipMatrix = getFlipOnlyMatrix(slideData?.matrix)
       if (flipMatrix?.toStyle) {
         element.dataset.pdfFlipTransform = flipMatrix.toStyle()
         element.style.transform = flipMatrix.toStyle()
@@ -347,7 +348,10 @@ export class PdfImageViewer {
   ) => {
     const buttons = container.querySelectorAll('button')
     buttons.forEach((button) => {
-      const actionButton = button as HTMLButtonElement
+      if (!(button instanceof HTMLButtonElement)) {
+        return
+      }
+      const actionButton = button
       actionButton.disabled = loading
       if (loading && actionButton === activeButton) {
         this.setButtonIconHtml(actionButton, ICONS.loader)
@@ -431,7 +435,8 @@ export class PdfImageViewer {
   }
 
   private getCurrentImageDescriptor = (pswp: PhotoSwipe) => {
-    const imageId = pswp.currSlide?.data?.imageId as string | undefined
+    const slideData = pswp.currSlide?.data as ImageSlideData | undefined
+    const imageId = slideData?.imageId
     if (!imageId) return null
     return this.imageDescriptors.find((item) => item.id === imageId) ?? null
   }

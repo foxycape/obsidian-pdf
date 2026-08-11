@@ -15,6 +15,7 @@ import {
 import { injectCssContent, existsElement } from '@foxycape/core/kernal/html/injector'
 import { parseNumber } from '@foxycape/core/kernal/common/number'
 import type { IPdfDocument } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfDocument'
+import type * as pdfjsLib from '@foxycape/core/pdfjs/legacy/build/pdf.mjs'
 import { Notice, setIcon } from 'obsidian'
 import {
   clearPendingPdfImageRef,
@@ -34,10 +35,19 @@ import lensCss from './lens.css?raw'
 
 type ImageExportAction = 'download' | 'copy' | 'copyReference'
 
-type PdfPageRenderView = {
+type PdfPageWithView = {
+  view?: number[]
+}
+
+type PdfPageViewLike = {
   canvas?: HTMLCanvasElement
+  rotation?: number
+  pdfPage?: PdfPageWithView
+}
+
+type PdfPageRenderView = PdfPageViewLike & {
   id: number
-  pdfPage: { view: number[] }
+  pdfPage: PdfPageWithView
 }
 
 const LENS_BUTTON_SIZE_PX = 32
@@ -82,9 +92,13 @@ export class PdfInternalImageController implements IDisposable {
       get numberOfPages() {
         return renderer.numberOfPages
       },
-      getPage: async (pageNumber) => {
+      getPage: async (pageNumber): Promise<pdfjsLib.PDFPageProxy | null> => {
         const pageView = renderer.getPageView(pageNumber)
-        return pageView?.pdfPage ?? null
+        const pdfPage = pageView?.pdfPage
+        if (!pdfPage || typeof pdfPage !== 'object') {
+          return null
+        }
+        return pdfPage as pdfjsLib.PDFPageProxy
       },
       logger: reader.loggerFactory?.getLogger?.('PdfImageExtractor'),
     })
@@ -307,7 +321,7 @@ export class PdfInternalImageController implements IDisposable {
       return
     }
     canvasContext.page = pageView.id
-    handleOnlyImages(canvasContext, pageView.pdfPage.view[2], pageView.pdfPage.view[3], {
+    handleOnlyImages(canvasContext, pageView.pdfPage.view?.[2] ?? 0, pageView.pdfPage.view?.[3] ?? 0, {
       pageView,
       handleDrawImage: true,
       imageMinWidth: this.options.imageMinWidth,
@@ -345,7 +359,7 @@ export class PdfInternalImageController implements IDisposable {
     }
     const canvasContext = asAugmentedCanvasContext(rawContext)
     const imageDescriptors = canvasContext.imageDescriptors ?? []
-    const doc = this.renderer.getDocument((pageNumber - 1).toString()) as IPdfDocument | undefined
+    const doc = this.renderer.getDocument((pageNumber - 1).toString())
     if (!doc) {
       return
     }
@@ -470,7 +484,7 @@ export class PdfInternalImageController implements IDisposable {
 
   private resolvePointerOffset = (e: MouseEvent, doc: IPdfDocument) => {
     const pageView = this.renderer.getPageView(doc.pageNumber)
-    const canvas = pageView?.canvas as HTMLCanvasElement | undefined
+    const canvas = pageView?.canvas
     if (!canvas) {
       return null
     }
@@ -502,7 +516,7 @@ export class PdfInternalImageController implements IDisposable {
     if (!pageNumber) {
       return null
     }
-    return this.renderer.getDocument((pageNumber - 1).toString()) as IPdfDocument
+    return this.renderer.getDocument((pageNumber - 1).toString())
   }
 
   private checkContainsImage = (e: PointerEvent, doc?: IPdfDocument) => {
@@ -560,7 +574,7 @@ export class PdfInternalImageController implements IDisposable {
     // Image x/y/scaled* are in canvas backing-store pixels; place toolbar in surface
     // content coordinates (surface is the scroll container).
     const pageView = this.renderer.getPageView(doc.pageNumber)
-    const canvas = pageView?.canvas as HTMLCanvasElement | undefined
+    const canvas = pageView?.canvas
     if (!canvas) {
       return null
     }
@@ -758,8 +772,8 @@ export class PdfInternalImageController implements IDisposable {
     descriptor: ImageDescriptor,
   ): string | undefined => {
     const pageView = this.renderer.getPageView(pageNumber)
-    const canvas = pageView?.canvas as HTMLCanvasElement | undefined
-    const view = pageView?.pdfPage?.view as number[] | undefined
+    const canvas = pageView?.canvas
+    const view = pageView?.pdfPage?.view
     if (!canvas || !view || view.length < 4) {
       return undefined
     }

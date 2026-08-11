@@ -5,7 +5,6 @@ export const PDF_SEARCH_LAYER_CLASS = 'foxycape-pdf-search-layer'
 export const PDF_SEARCH_HIT_CLASS = 'foxycape-pdf-search-hit'
 export const PDF_SEARCH_HIT_ACTIVE_CLASS = 'foxycape-pdf-search-hit-active'
 export const PDF_SEARCH_HIT_ID_ATTR = 'data-search-hit-id'
-export const PDF_SEARCH_STYLE_ELEMENT_ID = 'foxycape-pdf-search-styles'
 
 const ensureSearchLayer = (pageEl: HTMLElement): HTMLElement => {
   let layer = pageEl.querySelector<HTMLElement>(`:scope > .${PDF_SEARCH_LAYER_CLASS}`)
@@ -22,37 +21,6 @@ const ensureSearchLayer = (pageEl: HTMLElement): HTMLElement => {
     height: `${pageEl.clientHeight}px`,
   })
   return layer
-}
-
-export const injectSearchHighlightStyles = (doc: Document, replace = false) => {
-  const existing = doc.getElementById(PDF_SEARCH_STYLE_ELEMENT_ID)
-  if (existing && !replace) {
-    return
-  }
-  const css = `
-.${PDF_SEARCH_LAYER_CLASS}{
-  position:absolute;
-  left:0;top:0;
-  pointer-events:none;
-  z-index:3;
-}
-.${PDF_SEARCH_HIT_CLASS}{
-  position:absolute;
-  background:rgba(255, 212, 0, 0.45);
-  border-radius:2px;
-  mix-blend-mode:multiply;
-}
-.${PDF_SEARCH_HIT_ACTIVE_CLASS}{
-  background:rgba(255, 140, 0, 0.65);
-}
-`
-  if (existing) {
-    existing.textContent = css
-    return
-  }
-  const style = doc.head.createEl('style')
-  style.id = PDF_SEARCH_STYLE_ELEMENT_ID
-  style.textContent = css
 }
 
 const removeHitFromPage = (pageEl: HTMLElement, hitId: string) => {
@@ -81,7 +49,6 @@ export const paintSearchHitOnPage = (
   if (!pageEl || rects.length === 0) {
     return
   }
-  injectSearchHighlightStyles(pageEl.ownerDocument)
   removeHitFromPage(pageEl, match.id)
   const layer = ensureSearchLayer(pageEl)
   for (const rect of rects) {

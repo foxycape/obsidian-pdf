@@ -254,9 +254,9 @@ export const usePdfMarkToolbar = (options: {
       return
     }
     const root = options.reader.getRenderer()?.getRendererContainer()
-    const el = root?.querySelector(
+    const el = root?.querySelector<HTMLElement>(
       `[${MARK_HIGHLIGHT_ID_ATTR}="${CSS.escape(mark.markId)}"]`,
-    ) as HTMLElement | null
+    )
     if (el) {
       positionNearRect(el.getBoundingClientRect())
     }
@@ -418,9 +418,7 @@ export const usePdfMarkToolbar = (options: {
         if (closingMarkId && mark.markId === closingMarkId) {
           return
         }
-        const host = target.closest(
-          `[${MARK_HIGHLIGHT_ID_ATTR}]`,
-        ) as HTMLElement | null
+        const host = target.closest<HTMLElement>(`[${MARK_HIGHLIGHT_ID_ATTR}]`)
         await showForMark(mark, host?.getBoundingClientRect())
         return
       }
@@ -503,8 +501,11 @@ export const usePdfMarkToolbar = (options: {
     hide(true)
   }
 
+  const resolveToolbarStyle = (): MarkStyleName =>
+    state.activeStyle || lastStyle || 'mark_pen'
+
   const setColor = async (color: string) => {
-    const style = (state.activeStyle || lastStyle || 'mark_pen') as MarkStyleName
+    const style = resolveToolbarStyle()
     const normalized = normalizeMarkColor(color)
     state.activeColor = normalized
     state.showColorPalette = false
@@ -514,7 +515,7 @@ export const usePdfMarkToolbar = (options: {
 
   /** Pick from the full palette: new colors go to front; existing ones keep position */
   const pickMoreColor = async (color: string) => {
-    const style = (state.activeStyle || lastStyle || 'mark_pen') as MarkStyleName
+    const style = resolveToolbarStyle()
     const normalized = normalizeMarkColor(color)
     state.defaultColor = styleDefaultColor(style)
     state.activeColor = normalized
@@ -577,16 +578,31 @@ export const usePdfMarkToolbar = (options: {
       await navigator.clipboard.writeText(text)
       return true
     } catch {
-      // Fallback for environments that block clipboard API during key handlers.
+      try {
+        if (typeof ClipboardItem !== 'undefined') {
+          const item = new ClipboardItem({
+            'text/plain': new Blob([text], { type: 'text/plain' }),
+          })
+          await navigator.clipboard.write([item])
+          return true
+        }
+      } catch {
+        // ignore
+      }
+      // Retry after focus/select — works when the first write lacked user activation.
       try {
         if (doc?.body) {
           const ta = doc.body.createEl('textarea')
           ta.value = text
           ta.classList.add('foxycape-pdf-clipboard-proxy')
+          ta.focus({ preventScroll: true })
           ta.select()
-          doc.execCommand('copy')
-          ta.remove()
-          return true
+          try {
+            await navigator.clipboard.writeText(text)
+            return true
+          } finally {
+            ta.remove()
+          }
         }
       } catch {
         // ignore

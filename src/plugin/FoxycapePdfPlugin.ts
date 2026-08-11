@@ -198,9 +198,10 @@ export class FoxycapePdfPlugin extends Plugin {
   }
 
   loadSettings = async () => {
+    const loaded = (await this.loadData()) as Partial<FoxycapePdfSettings> | null
     this.settings = {
       ...DEFAULT_SETTINGS,
-      ...(await this.loadData()),
+      ...(loaded ?? {}),
     }
   }
 

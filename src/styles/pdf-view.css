@@ -906,7 +906,7 @@ body.foxycape-pdf-resizing * {
   position: relative;
 }
 
-/* Search hit overlays (also injected at runtime for iframe-safe docs). */
+/* Search hit overlays (loaded via plugin styles.css — do not inject <style>). */
 .foxycape-pdf-search-layer {
   position: absolute;
   left: 0;
@@ -924,4 +924,25 @@ body.foxycape-pdf-resizing * {
 
 .foxycape-pdf-search-hit-active {
   background: rgba(255, 140, 0, 0.65);
+}
+
+/* Temporary flash when navigating to a mark / deep-link rect. */
+@keyframes foxycape-pdf-goto-bg {
+  0% {
+    background-color: transparent;
+    background-image: none;
+  }
+  50% {
+    background-color: var(--goto-target-animation-color, rgba(255, 150, 50, 0.2));
+    background-image: none;
+  }
+  100% {
+    background-color: transparent;
+    background-image: none;
+  }
+}
+
+.foxycape-pdf-goto-animation {
+  animation: foxycape-pdf-goto-bg 2000ms ease-in-out !important;
+  border-color: transparent !important;
 }

@@ -2,6 +2,7 @@ import type { IDisposable, Reader, Theme } from '@foxycape/core/kernal'
 import {
   asAugmentedCanvasContext,
   callOriginalDrawImage,
+  storeBoundOriginal,
   type DrawImageArgs,
   type PdfAugmentedCanvasContext,
 } from './canvasContextHooks'
@@ -86,7 +87,7 @@ export class PdfRenderHandler implements IDisposable {
     const ctx = asAugmentedCanvasContext(canvasContext)
 
     if (opts.handleFillText) {
-      ctx.originalFillText = canvasContext.fillText.bind(canvasContext)
+      storeBoundOriginal(ctx, 'originalFillText', canvasContext.fillText.bind(canvasContext))
       canvasContext.fillText = ((...args: Parameters<CanvasRenderingContext2D['fillText']>) => {
         if (!this.isColorRemapEnabled()) {
           ctx.originalFillText?.(...args)
@@ -103,7 +104,7 @@ export class PdfRenderHandler implements IDisposable {
     }
 
     if (opts.handleStrokeText) {
-      ctx.originalStrokeText = canvasContext.strokeText.bind(canvasContext)
+      storeBoundOriginal(ctx, 'originalStrokeText', canvasContext.strokeText.bind(canvasContext))
       canvasContext.strokeText = ((
         ...args: Parameters<CanvasRenderingContext2D['strokeText']>
       ) => {
@@ -122,7 +123,7 @@ export class PdfRenderHandler implements IDisposable {
     }
 
     if (opts.handleFill) {
-      ctx.originalFill = canvasContext.fill.bind(canvasContext)
+      storeBoundOriginal(ctx, 'originalFill', canvasContext.fill.bind(canvasContext))
       canvasContext.fill = ((...args: Parameters<CanvasRenderingContext2D['fill']>) => {
         if (!this.isColorRemapEnabled()) {
           ctx.originalFill?.(...args)
@@ -143,7 +144,7 @@ export class PdfRenderHandler implements IDisposable {
     }
 
     if (opts.handleFillRect) {
-      ctx.originalFillRect = canvasContext.fillRect.bind(canvasContext)
+      storeBoundOriginal(ctx, 'originalFillRect', canvasContext.fillRect.bind(canvasContext))
       canvasContext.fillRect = ((
         ...args: Parameters<CanvasRenderingContext2D['fillRect']>
       ) => {
@@ -166,7 +167,7 @@ export class PdfRenderHandler implements IDisposable {
     }
 
     if (opts.handleStroke) {
-      ctx.originalStroke = canvasContext.stroke.bind(canvasContext)
+      storeBoundOriginal(ctx, 'originalStroke', canvasContext.stroke.bind(canvasContext))
       canvasContext.stroke = ((...args: Parameters<CanvasRenderingContext2D['stroke']>) => {
         if (!this.isColorRemapEnabled()) {
           ctx.originalStroke?.(...args)
@@ -185,7 +186,7 @@ export class PdfRenderHandler implements IDisposable {
     }
 
     if (opts.handleStrokeRect) {
-      ctx.originalStrokeRect = canvasContext.strokeRect.bind(canvasContext)
+      storeBoundOriginal(ctx, 'originalStrokeRect', canvasContext.strokeRect.bind(canvasContext))
       canvasContext.strokeRect = ((
         ...args: Parameters<CanvasRenderingContext2D['strokeRect']>
       ) => {
@@ -206,7 +207,7 @@ export class PdfRenderHandler implements IDisposable {
     }
 
     if (opts.handleDrawImage) {
-      ctx.originalDrawImage = canvasContext.drawImage.bind(canvasContext)
+      storeBoundOriginal(ctx, 'originalDrawImage', canvasContext.drawImage.bind(canvasContext))
       canvasContext.drawImage = ((...args: DrawImageArgs) => {
         this.handleImages(
           ctx,

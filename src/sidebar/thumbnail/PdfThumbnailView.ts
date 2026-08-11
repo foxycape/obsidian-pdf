@@ -222,9 +222,9 @@ export class PdfThumbnailView {
       'aria-label',
       `Thumbnail of Page ${label !== null ? label : this.id}`,
     )
-    const pageLabelElement = this.anchor.querySelector(
+    const pageLabelElement = this.anchor.querySelector<HTMLElement>(
       '.thumbnail-page-label',
-    ) as HTMLElement | null
+    )
     if (pageLabelElement) {
       pageLabelElement.textContent = String(this.id)
     }

@@ -2,6 +2,7 @@ import type { IDisposable, Reader, Theme } from '@foxycape/core/kernal'
 import {
   asAugmentedCanvasContext,
   callOriginalDrawImage,
+  storeBoundOriginal,
   type DrawImageArgs,
   type PdfAugmentedCanvasContext,
 } from './canvasContextHooks'
@@ -124,7 +125,7 @@ export class PdfThemeColorRemapper implements IDisposable {
       this.wrapPaint(ctx, 'strokeRect', 'strokeStyle')
     }
     if (opts.handleDrawImage) {
-      ctx.originalDrawImage = canvasContext.drawImage.bind(canvasContext)
+      storeBoundOriginal(ctx, 'originalDrawImage', canvasContext.drawImage.bind(canvasContext))
       canvasContext.drawImage = ((...args: DrawImageArgs) => {
         this.handleDrawImage(
           ctx,
@@ -192,7 +193,9 @@ export class PdfThemeColorRemapper implements IDisposable {
   ) => {
     const originalKey = ORIGINAL_PAINT_KEYS[methodName]
     type Args = Parameters<CanvasRenderingContext2D[M]>
-    const original = (ctx[methodName] as (...args: Args) => void).bind(ctx)
+    type PaintFn = (...args: Args) => void
+    const canvasMethod = CanvasRenderingContext2D.prototype[methodName] as PaintFn
+    const original = canvasMethod.bind(ctx) as PaintFn
     ctx[originalKey] = original as PdfAugmentedCanvasContext[typeof originalKey]
 
     ctx[methodName] = ((...args: Args) => {
@@ -322,10 +325,10 @@ export class PdfThemeColorRemapper implements IDisposable {
     }
     if (typeof OffscreenCanvas !== 'undefined' && source instanceof OffscreenCanvas) {
       const c = source.getContext('2d')
-      if (!c || typeof (c as OffscreenCanvasRenderingContext2D).getImageData !== 'function') {
-        return null
+      if (c && 'getImageData' in c) {
+        return c.getImageData(0, 0, width, height)
       }
-      return (c as OffscreenCanvasRenderingContext2D).getImageData(0, 0, width, height)
+      return null
     }
 
     // ImageBitmap / HTMLImageElement: copy to a temp canvas for sampling.

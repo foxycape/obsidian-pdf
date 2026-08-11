@@ -4,7 +4,7 @@ import { EventNames } from '@foxycape/core/kernal/EventNames'
 import { injectCssContent } from '@foxycape/core/kernal/html/injector'
 import type { ILogger } from '@foxycape/core/kernal/logger/ILogger'
 import type { IMarker } from '@foxycape/core/kernal/mark/IMarker'
-import { MARK_HIGHLIGHT_ID_ATTR } from '@foxycape/core/kernal/mark/MarkConstants'
+import { MARK_HIGHLIGHT_ID_ATTR, MARK_TYPE_ATTR } from '@foxycape/core/kernal/mark/MarkConstants'
 import {
   createMark as buildMark,
   getFixedContentRange,
@@ -198,8 +198,9 @@ export class PdfMarker implements IMarker {
 
   async getMarks(query?: QueryMarkOptions): Promise<Mark[]> {
     let marks = Array.from(this.cache.values())
-    if (query?.types?.length) {
-      marks = marks.filter((m) => query.types!.includes(m.type))
+    const types = query?.types
+    if (types?.length) {
+      marks = marks.filter((m) => types.includes(m.type))
     }
     if (query?.keyword) {
       const keyword = query.keyword.toLowerCase()
@@ -238,7 +239,7 @@ export class PdfMarker implements IMarker {
       return
     }
     const doc =
-      this.getDocByPageNumber(pageNumber) ?? (this.renderer.getDocuments() as IPdfDocument[])[0]
+      this.getDocByPageNumber(pageNumber) ?? this.renderer.getDocuments()[0]
     if (doc && this.renderer.pagingNavigator) {
       await this.renderer.pagingNavigator.gotoPage(doc, pageNumber)
     }
@@ -259,10 +260,10 @@ export class PdfMarker implements IMarker {
 
   async findMark(target: FindMarkTarget): Promise<{ id: string; type: MarkType } | undefined> {
     if (target.element) {
-      const host = target.element.closest(`[${MARK_HIGHLIGHT_ID_ATTR}]`) as HTMLElement | null
+      const host = target.element.closest<HTMLElement>(`[${MARK_HIGHLIGHT_ID_ATTR}]`)
       if (host) {
         const id = host.getAttribute(MARK_HIGHLIGHT_ID_ATTR)
-        const type = (host.getAttribute('data-mark-type') as MarkType) || 'drawline'
+        const type = host.getAttribute(MARK_TYPE_ATTR) ?? 'drawline'
         if (id) {
           return { id, type }
         }
@@ -340,7 +341,7 @@ export class PdfMarker implements IMarker {
   }
 
   private async restoreLoadedPages() {
-    const docs = this.renderer.getLoadedDocuments() as IPdfDocument[]
+    const docs = this.renderer.getLoadedDocuments()
     for (const doc of docs) {
       const marks = await this.getMarks({ pageNumber: doc.pageNumber })
       for (const mark of marks) {
@@ -372,7 +373,7 @@ export class PdfMarker implements IMarker {
   }
 
   private getDocByPageNumber(pageNumber: number): IPdfDocument | undefined {
-    const docs = this.renderer.getDocuments() as IPdfDocument[]
+    const docs = this.renderer.getDocuments()
     return docs.find((d) => d.pageNumber === pageNumber)
   }
 

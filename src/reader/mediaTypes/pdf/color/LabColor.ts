@@ -41,7 +41,9 @@ export class LabColor {
   static readonly white = new LabColor([1, 1, 1])
 
   get rgb(): number[] {
-    this._rgb = this._rgb ?? sRGB.fromLab(this._lab!)
+    if (this._rgb == null) {
+      this._rgb = sRGB.fromLab(this._lab ?? [0, 0, 0])
+    }
     return this._rgb
   }
 
@@ -154,121 +156,129 @@ const Matrices = {
     [-0.028369706963208136, 1.0099954580058226, 0.021041398966943008],
     [0.012314001688319899, -0.020507696433477912, 1.3303659366080753],
   ],
-
-  multiply(A: number[][] | number[], B: number[][] | number[]): number[] | number[][] {
-    let a = A as number[][]
-    let b = B as number[][]
-    const m = Array.isArray(A[0]) ? A.length : 1
-    if (!Array.isArray(A[0])) {
-      a = [A as number[]]
-    }
-    if (!Array.isArray(B[0])) {
-      b = (B as number[]).map((x) => [x])
-    }
-    const p = b[0].length
-    const bCols = b[0].map((_, i) => b.map((row) => row[i]))
-    let product: number[][] = a.map((row) =>
-      bCols.map((col) =>
-        row.reduce((sum, c, i) => sum + c * (col[i] || 0), 0),
-      ),
-    )
-    if (m === 1) {
-      product = [product[0]]
-      const flat = product[0]
-      if (p === 1) {
-        return [flat[0]]
-      }
-      return flat
-    }
-    if (p === 1) {
-      return product.map((row) => row[0])
-    }
-    return product
-  },
 }
 
+function multiplyMatrices(A: number[], B: number[]): number[]
+function multiplyMatrices(A: number[][], B: number[]): number[]
+function multiplyMatrices(A: number[][], B: number[][]): number[][]
+function multiplyMatrices(
+  A: number[] | number[][],
+  B: number[] | number[][],
+): number[] | number[][] {
+  let a: number[][]
+  let b: number[][]
+  const m = Array.isArray(A[0]) ? A.length : 1
+  if (!Array.isArray(A[0])) {
+    a = [A as number[]]
+  } else {
+    a = A as number[][]
+  }
+  if (!Array.isArray(B[0])) {
+    b = (B as number[]).map((x) => [x])
+  } else {
+    b = B as number[][]
+  }
+  const p = b[0].length
+  const bCols = b[0].map((_, i) => b.map((row) => row[i]))
+  let product: number[][] = a.map((row) =>
+    bCols.map((col) =>
+      row.reduce((sum, c, i) => sum + c * (col[i] || 0), 0),
+    ),
+  )
+  if (m === 1) {
+    product = [product[0]]
+    const flat = product[0]
+    if (p === 1) {
+      return [flat[0]]
+    }
+    return flat
+  }
+  if (p === 1) {
+    return product.map((row) => row[0])
+  }
+  return product
+}
+
+const multiplyMatrixVector = (matrix: number[][], vector: number[]): number[] => {
+  return multiplyMatrices(matrix, vector)
+}
+
+const CIE_FRACS = {
+  ε: 216 / 24389,
+  ε3: 24 / 116,
+  κ: 24389 / 27,
+} as const
+
+const D50_WHITE: readonly number[] = [
+  0.3457 / 0.3585,
+  1.0,
+  (1.0 - 0.3457 - 0.3585) / 0.3585,
+]
+
+const toXYZ_M = multiplyMatrices(
+  Matrices.D65_to_D50,
+  Matrices.lin_sRGB_to_XYZ,
+)
+
+const fromXYZ_M = multiplyMatrices(
+  Matrices.XYZ_to_lin_sRGB,
+  Matrices.D50_to_D65,
+)
+
+const toLinear = (RGB: number[]): number[] => {
+  return RGB.map((val) => {
+    const sign = val < 0 ? -1 : 1
+    const abs = Math.abs(val)
+    if (abs < 0.04045) {
+      return val / 12.92
+    }
+    return sign * ((abs + 0.055) / 1.055) ** 2.4
+  })
+}
+
+const toXYZ = (linRGB: number[]): number[] => multiplyMatrixVector(toXYZ_M, linRGB)
+
+const XYZtoLab = (XYZ: number[]): number[] => {
+  const { κ, ε } = CIE_FRACS
+  const xyz = XYZ.map((value, i) => value / (D50_WHITE[i] ?? 1))
+  const f = xyz.map((value) =>
+    value > ε ? Math.cbrt(value) : (κ * value + 16) / 116,
+  )
+  return [116 * f[1] - 16, 500 * (f[0] - f[1]), 200 * (f[1] - f[2])]
+}
+
+const toLab = (RGB: number[]): number[] => XYZtoLab(toXYZ(toLinear(RGB)))
+
+const LabToXYZ = (Lab: number[]): number[] => {
+  const { κ, ε3 } = CIE_FRACS
+  const f: number[] = []
+  f[1] = (Lab[0] + 16) / 116
+  f[0] = Lab[1] / 500 + f[1]
+  f[2] = f[1] - Lab[2] / 200
+  const xyz = [
+    f[0] > ε3 ? f[0] ** 3 : (116 * f[0] - 16) / κ,
+    Lab[0] > 8 ? ((Lab[0] + 16) / 116) ** 3 : Lab[0] / κ,
+    f[2] > ε3 ? f[2] ** 3 : (116 * f[2] - 16) / κ,
+  ]
+  return xyz.map((value, i) => value * (D50_WHITE[i] ?? 1))
+}
+
+const fromXYZ = (XYZ: number[]): number[] => multiplyMatrixVector(fromXYZ_M, XYZ)
+
+const toGamma = (RGB: number[]): number[] => {
+  return RGB.map((val) => {
+    const sign = val < 0 ? -1 : 1
+    const abs = Math.abs(val)
+    if (abs > 0.0031308) {
+      return sign * (1.055 * abs ** (1 / 2.4) - 0.055)
+    }
+    return 12.92 * val
+  })
+}
+
+const fromLab = (Lab: number[]): number[] => toGamma(fromXYZ(LabToXYZ(Lab)))
+
 const sRGB = {
-  toXYZ_M: Matrices.multiply(
-    Matrices.D65_to_D50,
-    Matrices.lin_sRGB_to_XYZ,
-  ) as number[][],
-  fromXYZ_M: Matrices.multiply(
-    Matrices.XYZ_to_lin_sRGB,
-    Matrices.D50_to_D65,
-  ) as number[][],
-  whites: {
-    D50: [
-      0.3457 / 0.3585,
-      1.0,
-      (1.0 - 0.3457 - 0.3585) / 0.3585,
-    ],
-  },
-  CIE_fracs: {
-    ε: 216 / 24389,
-    ε3: 24 / 116,
-    κ: 24389 / 27,
-  },
-
-  toLab(RGB: number[]): number[] {
-    return this.XYZtoLab(this.toXYZ(this.toLinear(RGB)))
-  },
-
-  toLinear(RGB: number[]): number[] {
-    return RGB.map((val) => {
-      const sign = val < 0 ? -1 : 1
-      const abs = Math.abs(val)
-      if (abs < 0.04045) {
-        return val / 12.92
-      }
-      return sign * ((abs + 0.055) / 1.055) ** 2.4
-    })
-  },
-
-  toXYZ(linRGB: number[]): number[] {
-    return Matrices.multiply(this.toXYZ_M, linRGB) as number[]
-  },
-
-  XYZtoLab(XYZ: number[]): number[] {
-    const white = this.whites.D50
-    const { κ, ε } = this.CIE_fracs
-    const xyz = XYZ.map((value, i) => value / white[i])
-    const f = xyz.map((value) =>
-      value > ε ? Math.cbrt(value) : (κ * value + 16) / 116,
-    )
-    return [116 * f[1] - 16, 500 * (f[0] - f[1]), 200 * (f[1] - f[2])]
-  },
-
-  fromLab(Lab: number[]): number[] {
-    return this.toGamma(this.fromXYZ(this.LabToXYZ(Lab)))
-  },
-
-  LabToXYZ(Lab: number[]): number[] {
-    const white = this.whites.D50
-    const { κ, ε3 } = this.CIE_fracs
-    const f: number[] = []
-    f[1] = (Lab[0] + 16) / 116
-    f[0] = Lab[1] / 500 + f[1]
-    f[2] = f[1] - Lab[2] / 200
-    const xyz = [
-      f[0] > ε3 ? f[0] ** 3 : (116 * f[0] - 16) / κ,
-      Lab[0] > 8 ? ((Lab[0] + 16) / 116) ** 3 : Lab[0] / κ,
-      f[2] > ε3 ? f[2] ** 3 : (116 * f[2] - 16) / κ,
-    ]
-    return xyz.map((value, i) => value * white[i])
-  },
-
-  fromXYZ(XYZ: number[]): number[] {
-    return Matrices.multiply(this.fromXYZ_M, XYZ) as number[]
-  },
-
-  toGamma(RGB: number[]): number[] {
-    return RGB.map((val) => {
-      const sign = val < 0 ? -1 : 1
-      const abs = Math.abs(val)
-      if (abs > 0.0031308) {
-        return sign * (1.055 * abs ** (1 / 2.4) - 0.055)
-      }
-      return 12.92 * val
-    })
-  },
+  toLab,
+  fromLab,
 }

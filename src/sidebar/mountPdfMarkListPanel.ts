@@ -1,4 +1,4 @@
-import { createApp, h, markRaw, reactive, type App } from 'vue'
+import { createApp, h, markRaw, shallowReactive, type App } from 'vue'
 import type { IMarker, Reader } from '@foxycape/core/kernal'
 import { injectToolbarIcons } from '@/chrome/mark/injectToolbarIcons'
 import PdfMarkListPanel from './PdfMarkListPanel.vue'
@@ -27,7 +27,7 @@ export const mountPdfMarkListPanel = (options: {
 }): PdfMarkListPanelMount => {
   injectToolbarIcons(options.hostEl.ownerDocument)
 
-  const state = reactive<PanelState>({
+  const state = shallowReactive<PanelState>({
     reader: markRaw(options.reader),
     getMarker: options.getMarker,
     open: options.open,
@@ -38,12 +38,12 @@ export const mountPdfMarkListPanel = (options: {
   const app: App = createApp({
     setup: () => () =>
       h(PdfMarkListPanel, {
-        reader: state.reader as Reader,
+        reader: state.reader,
         getMarker: state.getMarker,
         open: state.open,
         t: state.t,
         onClose: state.onClose,
-      } as any),
+      }),
   })
   app.mount(options.hostEl)
 

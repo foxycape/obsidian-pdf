@@ -1,17 +1,19 @@
+import type { PDFPageProxy } from '@foxycape/core/pdfjs/types/src/display/api'
 import { EventNames } from '@foxycape/core/kernal'
 import { scrollElementIntoView } from '@foxycape/core/kernal/html/style'
 import type { IPdfDocument } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfDocument'
 import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
 import type { IPdfSearcher } from './IPdfSearcher'
 import {
-  buildLayerText,
-  buildShowTextSnippet,
-  buildTextLayerMapping,
-  resolveMatchRectsFromDom,
+    buildLayerText,
+    buildShowTextSnippet,
+    buildTextLayerMapping,
+    readPageViewTextItems,
+    resolveMatchRectsFromDom,
+    type PdfSearchPageView,
 } from './matchGeometry'
 import {
   clearActiveSearchHits,
-  injectSearchHighlightStyles,
   paintSearchHitOnPage,
   removeAllSearchOverlays,
   setSearchHitActive,
@@ -33,6 +35,13 @@ const emptyResult = (keyword = ""): PdfSearchResult => ({
     index: -1,
     items: [],
 });
+
+const isPdfPageProxy = (value: unknown): value is PDFPageProxy => {
+    if (typeof value !== "object" || value === null) {
+        return false;
+    }
+    return typeof Reflect.get(value, "getTextContent") === "function";
+};
 
 export class PdfSearcher implements IPdfSearcher {
     private result: PdfSearchResult = emptyResult();
@@ -98,8 +107,6 @@ export class PdfSearcher implements IPdfSearcher {
         };
 
         const eventBus = this.renderer.getEventBus();
-        const container = this.renderer.getRendererContainer();
-        injectSearchHighlightStyles(container.ownerDocument);
 
         return new Promise<PdfSearchResult>((resolve) => {
             if (this.pendingResolve?.timer) {
@@ -272,7 +279,7 @@ export class PdfSearcher implements IPdfSearcher {
         for (const item of this.result.items) {
             item.rects = undefined;
         }
-        const visible = this.renderer.getVisibleDocuments() as IPdfDocument[];
+        const visible = this.renderer.getVisibleDocuments();
         for (const doc of visible) {
             await this.paintPageMatches(doc.pageNumber);
         }
@@ -373,7 +380,7 @@ export class PdfSearcher implements IPdfSearcher {
         this.pendingResolve = undefined;
 
         // Paint currently visible pages.
-        const visible = this.renderer.getLoadedDocuments?.() as IPdfDocument[] | undefined;
+        const visible = this.renderer.getLoadedDocuments();
         const pages = visible?.length
             ? visible.map((d) => d.pageNumber)
             : [this.renderer.currentPage];
@@ -429,9 +436,20 @@ export class PdfSearcher implements IPdfSearcher {
     }
 
     private getPageDoc(pageNumber: number): IPdfDocument | undefined {
-        return this.renderer.getDocuments().find((d) => (d as IPdfDocument).pageNumber === pageNumber) as
-            | IPdfDocument
-            | undefined;
+        return this.renderer.getDocuments().find((d) => d.pageNumber === pageNumber);
+    }
+
+    private getSearchPageView(pageNumber: number): PdfSearchPageView | undefined {
+        const pageView = this.renderer.getPageView(pageNumber);
+        if (!pageView) {
+            return undefined;
+        }
+        return {
+            div: pageView.div,
+            pdfPage: isPdfPageProxy(pageView.pdfPage) ? pageView.pdfPage : undefined,
+            _textHighlighter: pageView._textHighlighter,
+            textLayer: pageView.textLayer ?? undefined,
+        };
     }
 
     private hasTextLayerDom(pageEl: HTMLElement | undefined): boolean {
@@ -447,7 +465,7 @@ export class PdfSearcher implements IPdfSearcher {
     private async waitForTextLayer(pageNumber: number, timeoutMs = 2500): Promise<boolean> {
         const deadline = Date.now() + timeoutMs;
         while (Date.now() < deadline) {
-            const pageView = this.renderer.getPageView(pageNumber) as { div?: HTMLElement } | undefined;
+            const pageView = this.getSearchPageView(pageNumber);
             if (this.hasTextLayerDom(pageView?.div)) {
                 return true;
             }
@@ -455,9 +473,7 @@ export class PdfSearcher implements IPdfSearcher {
                 window.setTimeout(resolve, 40);
             });
         }
-        return this.hasTextLayerDom(
-            (this.renderer.getPageView(pageNumber) as { div?: HTMLElement } | undefined)?.div,
-        );
+        return this.hasTextLayerDom(this.getSearchPageView(pageNumber)?.div);
     }
 
     private async getPageLayerText(pageNumber: number): Promise<string> {
@@ -465,16 +481,8 @@ export class PdfSearcher implements IPdfSearcher {
         if (cached != null) {
             return cached;
         }
-        const pageView = this.renderer.getPageView(pageNumber) as
-            | {
-                  pdfPage?: any;
-                  _textHighlighter?: { textContentItemsStr?: string[] };
-                  textLayer?: { highlighter?: { textContentItemsStr?: string[] } };
-              }
-            | undefined;
-        const fromHighlighter =
-            pageView?._textHighlighter?.textContentItemsStr ??
-            pageView?.textLayer?.highlighter?.textContentItemsStr;
+        const pageView = this.getSearchPageView(pageNumber);
+        const fromHighlighter = readPageViewTextItems(pageView);
         if (fromHighlighter?.length) {
             const layerText = buildLayerText(fromHighlighter);
             this.pageLayerTextCache.set(pageNumber, layerText);
@@ -509,8 +517,8 @@ export class PdfSearcher implements IPdfSearcher {
         if (item.rects?.length) {
             return;
         }
-        const pageView = this.renderer.getPageView(item.pageNumber) as any;
-        const pageEl = pageView?.div as HTMLElement | undefined;
+        const pageView = this.getSearchPageView(item.pageNumber);
+        const pageEl = pageView?.div;
         if (!pageEl || !this.hasTextLayerDom(pageEl)) {
             return;
         }

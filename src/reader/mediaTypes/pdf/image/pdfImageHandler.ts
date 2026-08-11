@@ -36,8 +36,8 @@ export const buildPdfImageDest = (
   }
   const widthScale = pageOriginWidth / canvasWidth
   const heightScale = pageOriginHeight / canvasHeight
-  const x = imageDescriptor.x! * widthScale
-  const y = pageOriginHeight - imageDescriptor.y! * heightScale
+  const x = (imageDescriptor.x ?? 0) * widthScale
+  const y = pageOriginHeight - (imageDescriptor.y ?? 0) * heightScale
   imageDescriptor.pdfDest =
     '[{"num":' + ref + ',"gen":' + gen + '},{"name":"XYZ"},' + x + ',' + y + ',0]'
 }
@@ -169,20 +169,20 @@ export const handleOnlyImages = (
   const ctx = asAugmentedCanvasContext(canvasContext)
   const opts = Object.assign(new PdfRenderHandleOptions(), handleOptions)
   if (disableOtherInstructions) {
-    storeBoundOriginal(ctx, 'originalFillText', canvasContext.fillText)
+    storeBoundOriginal(ctx, 'originalFillText', canvasContext.fillText.bind(canvasContext))
     canvasContext.fillText = () => {}
-    storeBoundOriginal(ctx, 'originalStrokeText', canvasContext.strokeText)
+    storeBoundOriginal(ctx, 'originalStrokeText', canvasContext.strokeText.bind(canvasContext))
     canvasContext.strokeText = () => {}
-    storeBoundOriginal(ctx, 'originalFill', canvasContext.fill)
-    canvasContext.fill = (() => {}) as typeof canvasContext.fill
-    storeBoundOriginal(ctx, 'originalFillRect', canvasContext.fillRect)
+    storeBoundOriginal(ctx, 'originalFill', canvasContext.fill.bind(canvasContext))
+    canvasContext.fill = () => {}
+    storeBoundOriginal(ctx, 'originalFillRect', canvasContext.fillRect.bind(canvasContext))
     canvasContext.fillRect = () => {}
-    storeBoundOriginal(ctx, 'originalStroke', canvasContext.stroke)
-    canvasContext.stroke = (() => {}) as typeof canvasContext.stroke
-    storeBoundOriginal(ctx, 'originalStrokeRect', canvasContext.strokeRect)
+    storeBoundOriginal(ctx, 'originalStroke', canvasContext.stroke.bind(canvasContext))
+    canvasContext.stroke = () => {}
+    storeBoundOriginal(ctx, 'originalStrokeRect', canvasContext.strokeRect.bind(canvasContext))
     canvasContext.strokeRect = () => {}
   }
-  storeBoundOriginal(ctx, 'originalDrawImage', canvasContext.drawImage)
+  storeBoundOriginal(ctx, 'originalDrawImage', canvasContext.drawImage.bind(canvasContext))
   canvasContext.drawImage = ((...args: DrawImageArgs) => {
     buildImageDescriptors(canvasContext, pageOriginWidth, pageOriginHeight, opts, ...args)
     callOriginalDrawImage(ctx, args)

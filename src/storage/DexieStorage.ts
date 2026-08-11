@@ -38,18 +38,22 @@ export class DexieStorage implements IStorage {
   }
 
   async getString(tableName: string, key: string): Promise<string> {
-    return (await this.get<string>(tableName, key)) as string
+    const value = await this.get<string>(tableName, key)
+    return value ?? ''
   }
 
   async get<T>(tableName: string, key: string): Promise<T> {
     const normalizedTable = this.formatTableName(tableName)
     const normalizedKey = this.formatKey(key)
     if (!normalizedTable || !normalizedKey) {
-      return null as T
+      return this.emptyValue<T>()
     }
 
     const row = await this.db.kv.get([normalizedTable, normalizedKey])
-    return (row?.data ?? null) as T
+    if (row?.data === undefined) {
+      return this.emptyValue<T>()
+    }
+    return row.data as T
   }
 
   async find<T>(
@@ -64,7 +68,11 @@ export class DexieStorage implements IStorage {
       }
       index += 1
     }
-    return null as T
+    return this.emptyValue<T>()
+  }
+
+  private emptyValue<T>(): T {
+    return null as unknown as T
   }
 
   async filter<T>(

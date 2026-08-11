@@ -20,7 +20,7 @@ export type PdfAugmentedCanvasContext = CanvasRenderingContext2D & {
 /** Rest args for hooked drawImage (overloads collapse poorly under Parameters<>). */
 export type DrawImageArgs = [CanvasImageSource, ...number[]]
 
-const HANDLED_KEY = 'handled' as const
+const HANDLED_KEY: keyof Pick<PdfAugmentedCanvasContext, 'handled'> = 'handled'
 
 export const asAugmentedCanvasContext = (
   ctx: CanvasRenderingContext2D,
@@ -30,10 +30,10 @@ export const markCanvasContextHandled = (
   canvasContext: CanvasRenderingContext2D,
 ): boolean => {
   const ctx = asAugmentedCanvasContext(canvasContext)
-  if (ctx.handled) {
+  if (ctx[HANDLED_KEY]) {
     return true
   }
-  ctx.handled = 1
+  ctx[HANDLED_KEY] = 1
   return false
 }
 
@@ -58,5 +58,5 @@ export const callOriginalDrawImage = (
   if (!original) {
     return
   }
-  ;(original as (...drawArgs: DrawImageArgs) => void)(...args)
+  original.apply(ctx, args as Parameters<typeof original>)
 }

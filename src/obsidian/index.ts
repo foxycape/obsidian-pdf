@@ -5,7 +5,6 @@ export {
   imageFileNameFromPath,
   imageNamesMatch,
   isVaultImageFile,
-  readAnchorLinktext,
   readAncestorPdfLinktext,
   resolveFoxycapeImageRefFromImageElement,
   resolveFoxycapeImageRefLink,
@@ -67,7 +66,6 @@ export {
   rangeToObsidianSelection,
   toNavigablePdfSubpath,
   type PdfDeepLink,
-  type PdfNormalizedRect,
   type PdfSelectionBoundary,
   type PdfUserSpaceRect,
 } from './selectionLink'

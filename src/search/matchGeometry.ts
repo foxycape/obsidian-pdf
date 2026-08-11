@@ -26,6 +26,32 @@ type PageTextMappingSource = {
     textContentItemsStr?: string[] | null;
 };
 
+export type PdfSearchPageView = {
+    div?: HTMLElement;
+    pdfPage?: PDFPageProxy;
+    _textHighlighter?: PageTextMappingSource;
+    textLayer?: { highlighter?: PageTextMappingSource };
+};
+
+const isPageTextMappingSource = (value: unknown): value is PageTextMappingSource =>
+    typeof value === "object" &&
+    value !== null &&
+    ("textDivs" in value || "textContentItemsStr" in value);
+
+export const readPageViewTextItems = (
+    pageView: PdfSearchPageView | undefined,
+): string[] | undefined => {
+    const fromPrivate = pageView?._textHighlighter
+    if (isPageTextMappingSource(fromPrivate)) {
+        return fromPrivate.textContentItemsStr ?? undefined
+    }
+    const fromTextLayer = pageView?.textLayer?.highlighter
+    if (isPageTextMappingSource(fromTextLayer)) {
+        return fromTextLayer.textContentItemsStr ?? undefined
+    }
+    return undefined
+};
+
 const isTextItem = (item: unknown): item is TextItem =>
     typeof item === "object" && item !== null && typeof (item as TextItem).str === "string";
 
@@ -225,7 +251,7 @@ export const collectPageTextElements = (
     pageEl: HTMLElement,
     mapping: PdfTextLayerMapping,
     pageNumber: number,
-    pageView?: { _textHighlighter?: PageTextMappingSource; textLayer?: { highlighter?: PageTextMappingSource } },
+    pageView?: PdfSearchPageView,
 ): {
     texts: string[];
     elements: Array<Element | null>;
@@ -238,15 +264,22 @@ export const collectPageTextElements = (
     if (highlighter?.textDivs?.length && highlighter.textContentItemsStr?.length) {
         return {
             texts: highlighter.textContentItemsStr,
-            elements: highlighter.textDivs.map((n) =>
-                n && n.nodeType === Node.ELEMENT_NODE
-                    ? (n as Element)
-                    : ((n as Node | null)?.parentElement ?? null),
-            ),
+            elements: highlighter.textDivs.map((n): Element | null => {
+                if (!n) {
+                    return null
+                }
+                if (n instanceof Element) {
+                    return n
+                }
+                return n.parentElement ?? null
+            }),
         };
     }
 
-    const elements: Array<Element | null> = new Array(mapping.texts.length).fill(null);
+    const elements: Array<Element | null> = Array.from(
+        { length: mapping.texts.length },
+        () => null,
+    );
     const svgRoot = pageEl.querySelector("svg.custom-text-layer");
     if (svgRoot) {
         for (let i = 0; i < mapping.texts.length; i++) {
@@ -309,7 +342,7 @@ export const resolveMatchRectsFromDom = async (
     pageNumber: number,
     matchStart: number,
     matchLength: number,
-    pageView?: { _textHighlighter?: PageTextMappingSource; textLayer?: { highlighter?: PageTextMappingSource } },
+    pageView?: PdfSearchPageView,
 ): Promise<{
     rects: PdfSearchRect[];
     mapping: PdfTextLayerMapping;
