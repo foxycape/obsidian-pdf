@@ -1,5 +1,0 @@
-﻿<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="400" height="240" viewBox="0 0 400 240">
-  <rect width="400" height="240" fill="#e8f5f2"/>
-  <image xlink:href="logo.png" x="120" y="40" width="160" height="160"/>
-  <text x="200" y="220" text-anchor="middle" fill="#0f6b5c" font-family="Segoe UI, sans-serif" font-size="14">SVG with embedded image</text>
-</svg>
