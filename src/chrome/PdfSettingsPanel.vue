@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import type { Reader } from '@core/kernal'
+import type { Reader } from '@foxycape/core/kernal'
 import type {
   PdfScrollMode,
   PdfSpreadMode,
-} from '@core/mediaTypes/pdf/renderer/layout/IPdfRendererLayout'
+} from '@foxycape/core/mediaTypes/pdf/renderer/layout/IPdfRendererLayout'
 import ClickableIconButton from '@/ui/ClickableIconButton.vue'
 import type {
   PdfThemeColorRemapMode,

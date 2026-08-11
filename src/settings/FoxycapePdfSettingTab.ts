@@ -1,5 +1,5 @@
 import { PluginSettingTab, Setting, type App, type ButtonComponent, type TextComponent } from 'obsidian'
-import { debounce } from '@core/kernal/Debounce'
+import { debounce } from '@foxycape/core/kernal/Debounce'
 import {
   LICENSE_INPUT_DEBOUNCE_MS,
   LICENSE_PURCHASE_URL,

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import type { Reader } from '@core/kernal'
+import type { Reader } from '@foxycape/core/kernal'
 import { getCustomPdfRenderer } from '@/chrome/usePdfRenderer'
 import { PdfRenderingQueue } from './thumbnail/PdfRenderingQueue'
 import { PdfThumbnailViewer } from './thumbnail/PdfThumbnailViewer'

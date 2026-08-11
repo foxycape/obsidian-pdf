@@ -1,4 +1,4 @@
-import type { Reader } from '@core/kernal'
+import type { Reader } from '@foxycape/core/kernal'
 import type { CustomPdfRenderer } from '@/reader/mediaTypes/pdf/CustomPdfRenderer'
 
 export const getCustomPdfRenderer = (reader: Reader | null | undefined) => {

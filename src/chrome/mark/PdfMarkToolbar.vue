@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { IMarker, MarkStyleName, Reader } from '@core/kernal'
+import type { IMarker, MarkStyleName, Reader } from '@foxycape/core/kernal'
 import { computed, onMounted, shallowRef } from 'vue'
 import ObsidianIcon from '@/ui/ObsidianIcon.vue'
 import { injectToolbarIcons } from './injectToolbarIcons'

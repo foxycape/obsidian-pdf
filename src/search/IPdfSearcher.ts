@@ -1,4 +1,4 @@
-import type { IDisposable } from '@core/kernal'
+import type { IDisposable } from '@foxycape/core/kernal'
 import type {
   PdfSearchMatch,
   PdfSearchMatchOptions,

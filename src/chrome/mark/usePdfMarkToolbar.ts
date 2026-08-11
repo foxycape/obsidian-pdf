@@ -6,9 +6,9 @@ import {
   type Mark,
   type MarkStyleName,
   type Reader,
-} from '@core/kernal'
-import { getRange } from '@core/kernal/html/selection'
-import { MARK_HIGHLIGHT_ID_ATTR } from '@core/kernal/mark/MarkConstants'
+} from '@foxycape/core/kernal'
+import { getRange } from '@foxycape/core/kernal/html/selection'
+import { MARK_HIGHLIGHT_ID_ATTR } from '@foxycape/core/kernal/mark/MarkConstants'
 import { DEFAULT_MARK_COLORS } from '@/marker/PdfMarkConstants'
 import {
   buildPdfDeepLinkFragment,
@@ -16,8 +16,8 @@ import {
   getRangePageNumber,
   rangeToObsidianSelection,
 } from '@/obsidian/selectionLink'
-import { PdfSelection } from '@core/mediaTypes/pdf/shared/selection'
-import type { IPdfSelection } from '@core/mediaTypes/pdf/shared/selection/IPdfSelection'
+import { PdfSelection } from '@foxycape/core/mediaTypes/pdf/shared/selection'
+import type { IPdfSelection } from '@foxycape/core/mediaTypes/pdf/shared/selection/IPdfSelection'
 import type { App, TFile } from 'obsidian'
 import { nextTick, onBeforeUnmount, reactive, ref, type Ref } from 'vue'
 import {

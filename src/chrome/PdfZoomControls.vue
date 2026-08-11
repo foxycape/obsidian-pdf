@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import type { Reader } from '@core/kernal'
-import { EventNames } from '@core/kernal'
+import type { Reader } from '@foxycape/core/kernal'
+import { EventNames } from '@foxycape/core/kernal'
 import ClickableIconButton from '@/ui/ClickableIconButton.vue'
 import ObsidianIcon from '@/ui/ObsidianIcon.vue'
 import { getPdfRenderer } from './usePdfRenderer'

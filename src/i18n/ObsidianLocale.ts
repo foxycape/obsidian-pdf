@@ -2,7 +2,7 @@ import {
   Language,
   type ILocale,
   type LocaleChangeListener,
-} from '@core/kernal'
+} from '@foxycape/core/kernal'
 import type { Plugin } from 'obsidian'
 import supportedLanguagesJson from './supported_languages.json'
 import { clearLocaleCache, loadLocaleResources } from './loadLocaleResources'

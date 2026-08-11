@@ -7,7 +7,7 @@ import {
   type NavPoint,
   type PageChangeOptions,
   type Reader,
-} from '@core/kernal'
+} from '@foxycape/core/kernal'
 import { getPdfRenderer } from '@/chrome/usePdfRenderer'
 import PdfTocNode, { type TocNode } from './PdfTocNode.vue'
 

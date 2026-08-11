@@ -1,6 +1,6 @@
-import { EventNames } from '@core/kernal/EventNames'
-import { Theme } from '@core/kernal/Theme'
-import type { IPdfRenderer } from '@core/mediaTypes/pdf/renderer/IPdfRenderer'
+import { EventNames } from '@foxycape/core/kernal/EventNames'
+import { Theme } from '@foxycape/core/kernal/Theme'
+import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
 
 /** Temporary flash when navigating to a mark / deep-link rect. */
 export const PDF_GOTO_ANIMATION_CLASS = 'foxycape-pdf-goto-animation'

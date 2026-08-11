@@ -12,9 +12,12 @@
     "test": "vitest run",
     "typecheck": "vue-tsc --noEmit -p tsconfig.json",
     "link": "node scripts/link-plugin.mjs",
+    "core:link": "npm install file:./vendor/core --no-save",
+    "core:use-published": "npm install @foxycape/core@^1.1.4 --save",
     "i18n:generate": "node ./scripts/generate-locales.mjs"
   },
   "dependencies": {
+    "@foxycape/core": "^1.1.4",
     "dexie": "4.4.4",
     "events": "^3.3.0",
     "hotkeys-js": "^4.0.4",

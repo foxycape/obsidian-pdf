@@ -1,6 +1,6 @@
-import type { IMarker } from '@core/kernal/mark/IMarker'
-import type { IPdfDocument } from '@core/mediaTypes/pdf/renderer/IPdfDocument'
-import type { IPdfRenderer } from '@core/mediaTypes/pdf/renderer/IPdfRenderer'
+import type { IMarker } from '@foxycape/core/kernal/mark/IMarker'
+import type { IPdfDocument } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfDocument'
+import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
 import {
   playGotoHighlightAnimation,
   waitForPageRendered,

@@ -1,6 +1,7 @@
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createObsidianPluginConfig } from './scripts/vite/createObsidianPluginConfig'
+import { resolveFoxycapeCore } from './scripts/resolveFoxycapeCore'
 import type { Plugin } from 'vite'
 import { copyLocaleAssetsPlugin } from './vite.copy-locales'
 import { copyPdfjsAssetsPlugin } from './vite.copy-pdfjs'
@@ -16,7 +17,7 @@ import {
 } from './vite.strip-localforage'
 
 const packageDir = fileURLToPath(new URL('.', import.meta.url))
-const corePdfjsDir = resolve(packageDir, 'vendor/core/pdfjs')
+const { pdfjsDir: corePdfjsDir } = resolveFoxycapeCore(packageDir)
 const localesSrcDir = resolve(packageDir, 'src/i18n/locales')
 const signerSrcFile = resolve(packageDir, 'static/signer.js')
 const outDir = resolve(packageDir, 'dist')

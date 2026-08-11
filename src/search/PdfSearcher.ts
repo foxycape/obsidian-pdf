@@ -1,7 +1,7 @@
-import { EventNames } from '@core/kernal'
-import { scrollElementIntoView } from '@core/kernal/html/style'
-import type { IPdfDocument } from '@core/mediaTypes/pdf/renderer/IPdfDocument'
-import type { IPdfRenderer } from '@core/mediaTypes/pdf/renderer/IPdfRenderer'
+import { EventNames } from '@foxycape/core/kernal'
+import { scrollElementIntoView } from '@foxycape/core/kernal/html/style'
+import type { IPdfDocument } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfDocument'
+import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
 import type { IPdfSearcher } from './IPdfSearcher'
 import {
   buildLayerText,

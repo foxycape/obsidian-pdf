@@ -9,8 +9,8 @@ import {
   Theme,
   type IMarker,
   type Reader,
-} from '@core/kernal'
-import type { Mark } from '@core/kernal/mark/Mark'
+} from '@foxycape/core/kernal'
+import type { Mark } from '@foxycape/core/kernal/mark/Mark'
 import type { MarkDataChangePayload } from '@/marker/PdfMarker'
 import ClickableIconButton from '@/ui/ClickableIconButton.vue'
 import ObsidianIcon from '@/ui/ObsidianIcon.vue'

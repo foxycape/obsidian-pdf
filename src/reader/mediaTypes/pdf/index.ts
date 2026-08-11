@@ -1,6 +1,6 @@
-import type { Reader } from '@core/kernal'
-import { PdfFileParser } from '@core/mediaTypes/pdf/fileParser/PdfFileParser'
-import { PdfOptions } from '@core/mediaTypes/pdf/PdfOptions'
+import type { Reader } from '@foxycape/core/kernal'
+import { PdfFileParser } from '@foxycape/core/mediaTypes/pdf/fileParser/PdfFileParser'
+import { PdfOptions } from '@foxycape/core/mediaTypes/pdf/PdfOptions'
 import { CustomPdfOptions } from './CustomPdfOptions'
 import { CustomPdfRenderer } from './CustomPdfRenderer'
 

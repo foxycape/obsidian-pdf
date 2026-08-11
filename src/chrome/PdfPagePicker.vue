@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import type { Reader } from '@core/kernal'
-import { EventNames, type PageChangeOptions } from '@core/kernal'
+import type { Reader } from '@foxycape/core/kernal'
+import { EventNames, type PageChangeOptions } from '@foxycape/core/kernal'
 import { getPdfRenderer } from './usePdfRenderer'
 
 const props = defineProps<{

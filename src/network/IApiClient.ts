@@ -1,4 +1,4 @@
-import type { HttpClientOptions, IHttpClient } from '@core/kernal/network/IHttpClient'
+import type { HttpClientOptions, IHttpClient } from '@foxycape/core/kernal/network/IHttpClient'
 
 export type FileInfo = {
   file: Blob

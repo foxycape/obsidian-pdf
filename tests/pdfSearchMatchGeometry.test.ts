@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { TextItem } from '@core/pdfjs/types/src/display/api'
+import type { TextItem } from '@foxycape/core/pdfjs/types/src/display/api'
 import {
   buildLayerText,
   buildShowTextSnippet,

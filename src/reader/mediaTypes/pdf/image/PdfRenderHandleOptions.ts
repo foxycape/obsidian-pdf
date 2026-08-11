@@ -1,4 +1,4 @@
-import type { ImageDescriptor } from '@core/kernal'
+import type { ImageDescriptor } from '@foxycape/core/kernal'
 
 export class PdfRenderHandleOptions {
   pageView?: unknown

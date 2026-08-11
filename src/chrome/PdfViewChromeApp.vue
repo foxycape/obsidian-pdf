@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { Reader } from '@core/kernal'
+import type { Reader } from '@foxycape/core/kernal'
 import type {
   PdfViewPreferencePatch,
   PdfViewPreferences,

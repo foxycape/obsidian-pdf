@@ -2,7 +2,7 @@ import {
   Theme,
   type ColorMode,
   type IThemeProvider,
-} from '@core/kernal'
+} from '@foxycape/core/kernal'
 import type { App, EventRef } from 'obsidian'
 import {
   ensureCssColorAlpha,

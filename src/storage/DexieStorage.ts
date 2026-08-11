@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie'
-import type { DataStorageOptions, IStorage } from '@core/kernal/storage/IStorage'
+import type { DataStorageOptions, IStorage } from '@foxycape/core/kernal/storage/IStorage'
 
 type KvRow = {
   tableName: string

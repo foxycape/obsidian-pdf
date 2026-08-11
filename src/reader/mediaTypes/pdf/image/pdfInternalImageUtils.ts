@@ -1,4 +1,4 @@
-import type { ImageDescriptor, SimpleMatrix } from '@core/kernal'
+import type { ImageDescriptor, SimpleMatrix } from '@foxycape/core/kernal'
 
 export const FULL_PAGE_IMAGE_SIZE_TOLERANCE_PX = 5
 

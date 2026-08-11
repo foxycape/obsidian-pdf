@@ -5,4 +5,4 @@
  * 1) import Foxycape `pdf.mjs` directly (not host `globalThis.pdfjsLib`)
  * 2) use private globals `__foxycapePdfjs*` instead of shared host names
  */
-export * from '@core/pdfjs/legacy/web/pdf_viewer.mjs'
+export * from '@foxycape/core/pdfjs/legacy/web/pdf_viewer.mjs'

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import type { Reader } from '@core/kernal'
-import { debounce, EventNames } from '@core/kernal'
+import type { Reader } from '@foxycape/core/kernal'
+import { debounce, EventNames } from '@foxycape/core/kernal'
 import type {
   IPdfSearcher,
   PdfSearchMatch,

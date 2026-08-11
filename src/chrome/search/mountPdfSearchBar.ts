@@ -1,7 +1,7 @@
 import { createApp, h, markRaw, reactive, type App } from 'vue'
-import type { Reader } from '@core/kernal'
+import type { Reader } from '@foxycape/core/kernal'
 import { PdfSearcher, type IPdfSearcher } from '@/search'
-import type { IPdfRenderer } from '@core/mediaTypes/pdf/renderer/IPdfRenderer'
+import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
 import PdfSearchBar from './PdfSearchBar.vue'
 import { getPdfRenderer } from '../usePdfRenderer'
 

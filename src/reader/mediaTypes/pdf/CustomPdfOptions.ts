@@ -1,4 +1,4 @@
-import { PdfOptions } from '@core/mediaTypes/pdf/PdfOptions'
+import { PdfOptions } from '@foxycape/core/mediaTypes/pdf/PdfOptions'
 import type { PdfImageLinkSource } from '@/obsidian/pdfImageRef'
 
 /** When theme color remap is enabled, which color modes it applies to. */

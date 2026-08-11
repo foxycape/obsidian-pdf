@@ -1,6 +1,6 @@
-import type { ExtractImageOptions, IDisposable, ILogger, ImageDescriptor } from '@core/kernal'
-import { BrowserCapabilities } from '@core/kernal'
-import * as pdfjsLib from '@core/pdfjs/legacy/build/pdf.mjs'
+import type { ExtractImageOptions, IDisposable, ILogger, ImageDescriptor } from '@foxycape/core/kernal'
+import { BrowserCapabilities } from '@foxycape/core/kernal'
+import * as pdfjsLib from '@foxycape/core/pdfjs/legacy/build/pdf.mjs'
 import { handleOnlyImages } from './pdfImageHandler'
 
 export type PdfImagePageResolver = {

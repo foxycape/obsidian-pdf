@@ -1,6 +1,6 @@
-import type { IDevice } from '@core/kernal'
-import { WebBrowser, WebEnvironment, WebPlatform } from '@core/kernal'
-import { WebCrypto } from '@core/kernal/crypto/WebCrypto'
+import type { IDevice } from '@foxycape/core/kernal'
+import { WebBrowser, WebEnvironment, WebPlatform } from '@foxycape/core/kernal'
+import { WebCrypto } from '@foxycape/core/kernal/crypto/WebCrypto'
 import {
   ApiClient,
   type ApiSettings,

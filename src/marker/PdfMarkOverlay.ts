@@ -1,13 +1,13 @@
-import type { ContentGeometry } from '@core/kernal/ContentRange'
+import type { ContentGeometry } from '@foxycape/core/kernal/ContentRange'
 import {
   MARK_HIGHLIGHT_ID_ATTR,
   MARK_STYLE_ATTR,
   MARK_TYPE_ATTR,
-} from '@core/kernal/mark/MarkConstants'
-import { getFixedContentRange, type Mark } from '@core/kernal/mark/Mark'
-import type { MarkStyleName } from '@core/kernal/mark/types'
-import { scaleGeometryCoords } from '@core/mediaTypes/pdf/shared/geometry/selectionToFixedContentRange'
-import type { IPdfDocument } from '@core/mediaTypes/pdf/renderer/IPdfDocument'
+} from '@foxycape/core/kernal/mark/MarkConstants'
+import { getFixedContentRange, type Mark } from '@foxycape/core/kernal/mark/Mark'
+import type { MarkStyleName } from '@foxycape/core/kernal/mark/types'
+import { scaleGeometryCoords } from '@foxycape/core/mediaTypes/pdf/shared/geometry/selectionToFixedContentRange'
+import type { IPdfDocument } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfDocument'
 import { PDF_MARK_LAYER_CLASS, PDF_MARK_MASK_CLASS } from './PdfMarkConstants'
 import {
   getCustomColorStyleText,

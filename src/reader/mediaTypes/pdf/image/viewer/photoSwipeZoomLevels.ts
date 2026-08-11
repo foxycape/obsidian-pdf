@@ -1,5 +1,5 @@
 import type { ActionType, PhotoSwipeOptions } from 'photoswipe'
-import { BrowserCapabilities } from '@core/kernal'
+import { BrowserCapabilities } from '@foxycape/core/kernal'
 
 /** Double-tap target: 100% natural size. */
 export const getPhotoSwipeSecondaryZoomLevel = () => 1

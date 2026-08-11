@@ -1,5 +1,5 @@
 import { createApp, h, markRaw, type App } from 'vue'
-import type { IMarker, Reader } from '@core/kernal'
+import type { IMarker, Reader } from '@foxycape/core/kernal'
 import { injectToolbarIcons } from './injectToolbarIcons'
 import PdfMarkToolbar from './PdfMarkToolbar.vue'
 import type { PdfMarkToolbarLinkSource } from './usePdfMarkToolbar'

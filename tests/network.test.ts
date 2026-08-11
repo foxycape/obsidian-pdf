@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import type { IDevice } from '@core/kernal'
-import type { ICrypto } from '@core/kernal/crypto/ICrypto'
-import type { HttpClientOptions, IHttpClient } from '@core/kernal/network/IHttpClient'
+import type { IDevice } from '@foxycape/core/kernal'
+import type { ICrypto } from '@foxycape/core/kernal/crypto/ICrypto'
+import type { HttpClientOptions, IHttpClient } from '@foxycape/core/kernal/network/IHttpClient'
 import { ApiClient } from '@/network/ApiClient'
 import { ResponseCode } from '@/network/ApiConstants'
 

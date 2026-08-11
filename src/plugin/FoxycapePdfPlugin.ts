@@ -1,5 +1,5 @@
 import { Notice, Plugin, TFile } from 'obsidian'
-import type { IDevice } from '@core/kernal'
+import type { IDevice } from '@foxycape/core/kernal'
 import type { IApiClient } from '@/network'
 import { createPluginApiClient } from '@/api/createPluginApiClient'
 import { DeviceService } from '@/api/DeviceService'

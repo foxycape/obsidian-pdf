@@ -1,7 +1,7 @@
 import type {
   PDFPageProxy,
   RenderTask,
-} from '@core/pdfjs/types/src/display/api'
+} from '@foxycape/core/pdfjs/types/src/display/api'
 import { PdfRenderingQueue, RenderingStates } from './PdfRenderingQueue'
 
 const THUMBNAIL_CANVAS_BORDER_WIDTH = 1

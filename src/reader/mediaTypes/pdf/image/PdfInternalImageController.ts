@@ -5,16 +5,16 @@ import {
   type ImageDescriptor,
   type IDisposable,
   type Reader,
-} from '@core/kernal'
-import { getFileName } from '@core/kernal/common/path'
-import { compareTagName } from '@core/kernal/html/finder'
+} from '@foxycape/core/kernal'
+import { getFileName } from '@foxycape/core/kernal/common/path'
+import { compareTagName } from '@foxycape/core/kernal/html/finder'
 import {
   copyImage as copyImageToClipboard,
   getBlob,
-} from '@core/kernal/html/image'
-import { injectCssContent, existsElement } from '@core/kernal/html/injector'
-import { parseNumber } from '@core/kernal/common/number'
-import type { IPdfDocument } from '@core/mediaTypes/pdf/renderer/IPdfDocument'
+} from '@foxycape/core/kernal/html/image'
+import { injectCssContent, existsElement } from '@foxycape/core/kernal/html/injector'
+import { parseNumber } from '@foxycape/core/kernal/common/number'
+import type { IPdfDocument } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfDocument'
 import { Notice, setIcon } from 'obsidian'
 import {
   clearPendingPdfImageRef,

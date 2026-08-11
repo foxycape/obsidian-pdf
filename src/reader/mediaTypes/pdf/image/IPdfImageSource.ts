@@ -1,4 +1,4 @@
-import type { ExtractImageOptions, ImageDescriptor } from '@core/kernal'
+import type { ExtractImageOptions, ImageDescriptor } from '@foxycape/core/kernal'
 
 /**
  * Narrow image extraction API implemented by CustomPdfRenderer (not on IPdfRenderer).

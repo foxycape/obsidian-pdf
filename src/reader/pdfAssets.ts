@@ -1,5 +1,5 @@
 import { normalizePath, type Plugin } from 'obsidian'
-import { ensurePdfWebWorker } from '@core/mediaTypes/pdf/ensurePdfWebWorker'
+import { ensurePdfWebWorker } from '@foxycape/core/mediaTypes/pdf/ensurePdfWebWorker'
 
 export type PdfAssetUrls = {
   workerSrc: string

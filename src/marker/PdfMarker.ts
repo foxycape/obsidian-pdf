@@ -1,30 +1,30 @@
-import { computeUniqueId } from '@core/kernal/common/uuid'
-import type { FixedContentRange } from '@core/kernal/ContentRange'
-import { EventNames } from '@core/kernal/EventNames'
-import { injectCssContent } from '@core/kernal/html/injector'
-import type { ILogger } from '@core/kernal/logger/ILogger'
-import type { IMarker } from '@core/kernal/mark/IMarker'
-import { MARK_HIGHLIGHT_ID_ATTR } from '@core/kernal/mark/MarkConstants'
+import { computeUniqueId } from '@foxycape/core/kernal/common/uuid'
+import type { FixedContentRange } from '@foxycape/core/kernal/ContentRange'
+import { EventNames } from '@foxycape/core/kernal/EventNames'
+import { injectCssContent } from '@foxycape/core/kernal/html/injector'
+import type { ILogger } from '@foxycape/core/kernal/logger/ILogger'
+import type { IMarker } from '@foxycape/core/kernal/mark/IMarker'
+import { MARK_HIGHLIGHT_ID_ATTR } from '@foxycape/core/kernal/mark/MarkConstants'
 import {
   createMark as buildMark,
   getFixedContentRange,
   type Mark,
-} from '@core/kernal/mark/Mark'
+} from '@foxycape/core/kernal/mark/Mark'
 import type {
   CreateMarkOptions,
   FindMarkTarget,
   MarkStyle,
   MarkType,
   QueryMarkOptions,
-} from '@core/kernal/mark/types'
-import type { IStorage } from '@core/kernal/storage/IStorage'
+} from '@foxycape/core/kernal/mark/types'
+import type { IStorage } from '@foxycape/core/kernal/storage/IStorage'
 import {
   getPageLayoutRef,
   selectionToFixedContentRange,
-} from '@core/mediaTypes/pdf/shared/geometry/selectionToFixedContentRange'
-import { getSelectionText } from '@core/mediaTypes/pdf/shared/geometry/textRects'
-import type { IPdfDocument } from '@core/mediaTypes/pdf/renderer/IPdfDocument'
-import type { IPdfRenderer } from '@core/mediaTypes/pdf/renderer/IPdfRenderer'
+} from '@foxycape/core/mediaTypes/pdf/shared/geometry/selectionToFixedContentRange'
+import { getSelectionText } from '@foxycape/core/mediaTypes/pdf/shared/geometry/textRects'
+import type { IPdfDocument } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfDocument'
+import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
 import { rangeToObsidianSelection } from '@/obsidian/selectionLink'
 import {
   playGotoHighlightAnimation,

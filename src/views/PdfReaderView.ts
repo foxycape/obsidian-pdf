@@ -7,8 +7,8 @@ import {
   type TFile,
   type WorkspaceLeaf,
 } from 'obsidian'
-import { EventNames, formatFileSize, type IMarker, type Reader } from '@core/kernal'
-import type { Mark } from '@core/kernal/mark/Mark'
+import { EventNames, formatFileSize, type IMarker, type Reader } from '@foxycape/core/kernal'
+import type { Mark } from '@foxycape/core/kernal/mark/Mark'
 import type { FoxycapePdfPlugin } from '@/plugin/FoxycapePdfPlugin'
 import { createPdfReader } from '@/reader/createPdfReader'
 import { resolvePdfAssetUrls } from '@/reader/pdfAssets'
@@ -37,7 +37,7 @@ import { MarkNoteCompanion, syncMarkToSidecarNote } from '@/obsidian/markNoteSyn
 import { applyPdfDeepLink } from '@/obsidian/pdfDeepLink'
 import { PDF_READER_VIEW_TYPE } from '@/settings/types'
 import { isObsidianMobile } from '@/ui/isObsidianMobile'
-import type { IPdfRenderer } from '@core/mediaTypes/pdf/renderer/IPdfRenderer'
+import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
 
 export { PDF_READER_VIEW_TYPE }
 

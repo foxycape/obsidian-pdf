@@ -1,5 +1,5 @@
-import type { TextItem, PDFPageProxy } from '@core/pdfjs/types/src/display/api'
-import { getPageLayoutRef } from '@core/mediaTypes/pdf/shared/geometry/selectionToFixedContentRange'
+import type { TextItem, PDFPageProxy } from '@foxycape/core/pdfjs/types/src/display/api'
+import { getPageLayoutRef } from '@foxycape/core/mediaTypes/pdf/shared/geometry/selectionToFixedContentRange'
 import type { PdfSearchRect } from './types'
 
 export type PdfMatchBoundary = {

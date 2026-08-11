@@ -1,4 +1,4 @@
-import type { Reader } from '@core/kernal'
+import type { Reader } from '@foxycape/core/kernal'
 
 export type PdfViewChromeProps = {
   reader: Reader

@@ -2,18 +2,18 @@ import {
   AnimationClassName,
   type ImageDescriptor,
   type Reader
-} from '@core/kernal'
-import { getRandomId } from '@core/kernal/common/uuid'
-import { getFileName } from '@core/kernal/common/path'
-import { isNullOrWhiteSpace } from '@core/kernal/common/text'
-import { compareTagName } from '@core/kernal/html/finder'
+} from '@foxycape/core/kernal'
+import { getRandomId } from '@foxycape/core/kernal/common/uuid'
+import { getFileName } from '@foxycape/core/kernal/common/path'
+import { isNullOrWhiteSpace } from '@foxycape/core/kernal/common/text'
+import { compareTagName } from '@foxycape/core/kernal/html/finder'
 import {
   copyImage as copyImageToClipboard,
   createBlobUrl,
   getBlob,
   getImageSize
-} from '@core/kernal/html/image'
-import { existsElement, injectCssContent, removeElement } from '@core/kernal/html/injector'
+} from '@foxycape/core/kernal/html/image'
+import { existsElement, injectCssContent, removeElement } from '@foxycape/core/kernal/html/injector'
 import PhotoSwipe from 'photoswipe'
 import PhotoSwipeLightbox from 'photoswipe/lightbox'
 import { sanitizeHTMLToDom } from 'obsidian'

@@ -1,5 +1,5 @@
 import { createApp, h, markRaw, reactive, type App } from 'vue'
-import type { IMarker, Reader } from '@core/kernal'
+import type { IMarker, Reader } from '@foxycape/core/kernal'
 import { injectToolbarIcons } from '@/chrome/mark/injectToolbarIcons'
 import PdfMarkListPanel from './PdfMarkListPanel.vue'
 

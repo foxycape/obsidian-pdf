@@ -1,14 +1,14 @@
-import { formatDate } from '@core/kernal/common/date'
-import { convertJsonToCamelcase } from '@core/kernal/common/object'
-import { isNullOrWhiteSpace, startsWith } from '@core/kernal/common/text'
-import { checkIsAbsoluteUrl, stringifyParamters } from '@core/kernal/common/url'
-import { getUuid } from '@core/kernal/common/uuid'
-import { injectExternalJS } from '@core/kernal/html/injector'
-import type { HttpClientOptions, IHttpClient } from '@core/kernal/network/IHttpClient'
-import { BrowserCapabilities } from '@core/kernal/web/BrowserCapabilities'
+import { formatDate } from '@foxycape/core/kernal/common/date'
+import { convertJsonToCamelcase } from '@foxycape/core/kernal/common/object'
+import { isNullOrWhiteSpace, startsWith } from '@foxycape/core/kernal/common/text'
+import { checkIsAbsoluteUrl, stringifyParamters } from '@foxycape/core/kernal/common/url'
+import { getUuid } from '@foxycape/core/kernal/common/uuid'
+import { injectExternalJS } from '@foxycape/core/kernal/html/injector'
+import type { HttpClientOptions, IHttpClient } from '@foxycape/core/kernal/network/IHttpClient'
+import { BrowserCapabilities } from '@foxycape/core/kernal/web/BrowserCapabilities'
 import type { ApiSettings, FileInfo, IApiClient } from './IApiClient'
-import { IDevice } from '@core/kernal'
-import { ICrypto } from '@core/kernal/crypto/ICrypto'
+import { IDevice } from '@foxycape/core/kernal'
+import { ICrypto } from '@foxycape/core/kernal/crypto/ICrypto'
 
 type WasmWindow = Window & {
   Module?: { asm?: unknown }
@@ -25,7 +25,7 @@ type ApiResult = {
 
 /**
  * Signed API client implementing {@link IApiClient}.
- * Uses `@core` for HTTP transport, crypto, device id, and helpers.
+ * Uses `@foxycape/core` for HTTP transport, crypto, device id, and helpers.
  */
 export class ApiClient implements IApiClient {
   private readonly currentHttpClient: IHttpClient

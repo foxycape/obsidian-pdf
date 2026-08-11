@@ -1,4 +1,4 @@
-import type { PDFDocumentProxy, PDFPageProxy } from '@core/pdfjs/types/src/display/api'
+import type { PDFDocumentProxy, PDFPageProxy } from '@foxycape/core/pdfjs/types/src/display/api'
 import { PdfRenderingQueue, RenderingStates } from './PdfRenderingQueue'
 import { PdfThumbnailView } from './PdfThumbnailView'
 

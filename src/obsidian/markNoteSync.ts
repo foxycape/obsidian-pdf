@@ -1,5 +1,5 @@
 import { MarkdownView, Notice, TFile, type App, type WorkspaceLeaf } from 'obsidian'
-import type { Mark } from '@core/kernal/mark/Mark'
+import type { Mark } from '@foxycape/core/kernal/mark/Mark'
 import {
   buildPdfDeepLinkFragment,
   formatMarkQuoteLine,

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from 'vue'
-import type { Reader } from '@core/kernal'
+import type { Reader } from '@foxycape/core/kernal'
 import { isObsidianMobile } from '@/ui/isObsidianMobile'
 import PdfTocTree from './PdfTocTree.vue'
 import PdfThumbnailPanel from './PdfThumbnailPanel.vue'

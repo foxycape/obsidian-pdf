@@ -1,10 +1,10 @@
-export { HttpClient } from '@core/kernal/network/HttpClient'
+export { HttpClient } from '@foxycape/core/kernal/network/HttpClient'
 export type {
   HttpClientOptions,
   IHttpClient,
   RequestBodyType,
   ResponseType,
-} from '@core/kernal/network/IHttpClient'
+} from '@foxycape/core/kernal/network/IHttpClient'
 
 export { ApiClient } from './ApiClient'
 export { ResponseCode, type ResponseCodeValue } from './ApiConstants'

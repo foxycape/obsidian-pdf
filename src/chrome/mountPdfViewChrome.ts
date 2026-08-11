@@ -1,5 +1,5 @@
 import { createApp, h, markRaw, reactive, type App } from 'vue'
-import type { Reader } from '@core/kernal'
+import type { Reader } from '@foxycape/core/kernal'
 import type {
   PdfViewPreferencePatch,
   PdfViewPreferences,

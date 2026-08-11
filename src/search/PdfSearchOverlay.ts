@@ -1,4 +1,4 @@
-import type { IPdfDocument } from '@core/mediaTypes/pdf/renderer/IPdfDocument'
+import type { IPdfDocument } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfDocument'
 import type { PdfSearchMatch, PdfSearchRect } from './types'
 
 export const PDF_SEARCH_LAYER_CLASS = 'foxycape-pdf-search-layer'

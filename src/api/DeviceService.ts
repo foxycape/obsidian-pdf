@@ -1,4 +1,4 @@
-import type { IDevice } from '@core/kernal'
+import type { IDevice } from '@foxycape/core/kernal'
 import type { FoxycapePdfPlugin } from '@/plugin/FoxycapePdfPlugin'
 import { DEVICE_REGIST_PATH } from '@/license/constants'
 
@@ -33,7 +33,7 @@ export class DeviceService {
       osType: info.osType,
       osVersion: info.osVersion,
       browserLanguage: info.browserLanguage,
-      devicePixelRatio: info.devicePixelRatio,
+      devicePixelRatio: globalThis.devicePixelRatio,
       availableResolutionX: info.availableResolutionX,
       availableResolutionY: info.availableResolutionY,
       availableResolution:

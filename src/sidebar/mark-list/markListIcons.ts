@@ -1,4 +1,4 @@
-import type { MarkStyleName } from '@core/kernal/mark/types'
+import type { MarkStyleName } from '@foxycape/core/kernal/mark/types'
 import fontFillSvg from './icons/font-fill.svg?raw'
 import fontStraightLineSvg from './icons/font-straight-line.svg?raw'
 import fontWavyLineSvg from './icons/font-wavy-line.svg?raw'

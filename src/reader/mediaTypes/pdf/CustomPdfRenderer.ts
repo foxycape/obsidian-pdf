@@ -4,11 +4,11 @@ import type {
   ImageDescriptor,
   Reader,
   Theme,
-} from '@core/kernal'
-import { EventNames } from '@core/kernal'
-import type { PDFDocumentProxy } from '@core/pdfjs/types/src/display/api'
-import type { MultiPDFViewer } from '@core/mediaTypes/pdf/renderer/MultiPdfViewer'
-import { PdfRenderer } from '@core/mediaTypes/pdf/renderer/PdfRenderer'
+} from '@foxycape/core/kernal'
+import { EventNames } from '@foxycape/core/kernal'
+import type { PDFDocumentProxy } from '@foxycape/core/pdfjs/types/src/display/api'
+import type { MultiPDFViewer } from '@foxycape/core/mediaTypes/pdf/renderer/MultiPdfViewer'
+import { PdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/PdfRenderer'
 import { CustomPdfOptions, type PdfViewPreferencePatch } from './CustomPdfOptions'
 import type { IPdfImageSource } from './image/IPdfImageSource'
 import { PdfInternalImageController } from './image/PdfInternalImageController'

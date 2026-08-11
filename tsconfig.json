@@ -19,9 +19,14 @@
     "isolatedModules": false,
     "paths": {
       "@/*": ["./src/*"],
-      "@/kernal": ["./vendor/core/kernal/index.ts"],
-      "@/kernal/*": ["./vendor/core/kernal/*"],
-      "@core/*": ["./vendor/core/*"]
+      "@foxycape/core": [
+        "./vendor/core/kernal/index.ts",
+        "./node_modules/@foxycape/core/dist/kernal/index.d.ts"
+      ],
+      "@foxycape/core/*": [
+        "./vendor/core/*",
+        "./node_modules/@foxycape/core/dist/*"
+      ]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.vue", "src/**/*.d.ts", "tests/**/*.ts"],

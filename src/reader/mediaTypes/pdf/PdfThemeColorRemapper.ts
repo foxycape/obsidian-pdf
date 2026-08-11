@@ -1,4 +1,4 @@
-import type { IDisposable, Reader, Theme } from '@core/kernal'
+import type { IDisposable, Reader, Theme } from '@foxycape/core/kernal'
 import { LabColor } from './color/LabColor'
 import type { CustomPdfOptions } from './CustomPdfOptions'
 import {

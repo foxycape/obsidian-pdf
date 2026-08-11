@@ -1,4 +1,4 @@
-import type { ImageDescriptor } from '@core/kernal'
+import type { ImageDescriptor } from '@foxycape/core/kernal'
 import type { PdfImageLinkSource } from '@/obsidian/pdfImageRef'
 
 export type PdfImageViewerTexts = {

@@ -5,8 +5,8 @@ import {
   type ILocale,
   type IMarker,
   type IStorage,
-} from '@core/kernal'
-import type { IPdfRenderer } from '@core/mediaTypes/pdf/renderer/IPdfRenderer'
+} from '@foxycape/core/kernal'
+import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
 import { PdfMarker } from '@/marker/PdfMarker'
 import { Platform, type App } from 'obsidian'
 import {

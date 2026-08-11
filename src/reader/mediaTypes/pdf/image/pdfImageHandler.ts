@@ -1,5 +1,5 @@
-import { ImageDescriptor, SimpleMatrix } from '@core/kernal'
-import * as pdfjsLib from '@core/pdfjs/legacy/build/pdf.mjs'
+import { ImageDescriptor, SimpleMatrix } from '@foxycape/core/kernal'
+import * as pdfjsLib from '@foxycape/core/pdfjs/legacy/build/pdf.mjs'
 import { PdfRenderHandleOptions } from './PdfRenderHandleOptions'
 
 export const buildPdfImageDest = (
