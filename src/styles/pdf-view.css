@@ -121,9 +121,9 @@ body.is-mobile .foxycape-pdf-nav-btn__text {
 }
 
 /* Phone: move settings into the more menu; hide compact zoom scale label. */
-body.is-phone .foxycape-pdf-header-settings,
-body.is-phone .foxycape-pdf-zoom-trigger {
-  display: none !important;
+body.is-phone .workspace-leaf-content[data-type="foxycape-pdf"] .foxycape-pdf-header-settings,
+body.is-phone .workspace-leaf-content[data-type="foxycape-pdf"] .foxycape-pdf-zoom-trigger {
+  display: none;
 }
 
 .foxycape-pdf-view {
@@ -195,7 +195,8 @@ body.is-mobile .workspace-leaf-content[data-type="foxycape-pdf"].foxycape-pdf-ma
 
 body.is-mobile .workspace-leaf-content[data-type="foxycape-pdf"].foxycape-pdf-sidebar-open .foxycape-pdf-left-nav,
 body.is-mobile .workspace-leaf-content[data-type="foxycape-pdf"].foxycape-pdf-mark-panel-open .foxycape-pdf-mark-panel {
-  width: 100% !important;
+  /* Width comes from --foxycape-pdf-panel-width; override here for floating mobile panels. */
+  width: 100%;
   max-width: none;
   min-width: 0;
   height: 100%;
@@ -207,10 +208,10 @@ body.is-mobile .foxycape-pdf-mark-panel__resizer {
 }
 
 /* Override Obsidian's default ~30px button height for mark-list text. */
-.foxycape-pdf-mark-item__text {
-  height: auto !important;
-  min-height: 0 !important;
-  max-height: none !important;
+.workspace-leaf-content[data-type="foxycape-pdf"] button.foxycape-pdf-mark-item__text {
+  height: auto;
+  min-height: 0;
+  max-height: none;
 }
 
 .foxycape-pdf-mount {
@@ -243,20 +244,28 @@ body.is-mobile .foxycape-pdf-mark-panel__resizer {
 }
 
 /* While dragging the sidebar splitter, avoid selecting PDF text. */
-body.foxycape-pdf-resizing,
+body.foxycape-pdf-resizing {
+  cursor: col-resize;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 body.foxycape-pdf-resizing * {
-  cursor: col-resize !important;
-  user-select: none !important;
+  cursor: inherit;
+  -webkit-user-select: inherit;
+  user-select: inherit;
+}
+
+/* Beat the view's opt-in text selection on .pdfViewer / .textLayer. */
+body.foxycape-pdf-resizing .workspace-leaf-content[data-type="foxycape-pdf"] .pdfViewer,
+body.foxycape-pdf-resizing .workspace-leaf-content[data-type="foxycape-pdf"] .textLayer {
+  cursor: col-resize;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .workspace-leaf-content[data-type="foxycape-pdf"] .pdfViewer .page .canvasWrapper {
-  border: 1px solid var(--border-color) !important;
-  /* border-radius: 3px !important; */
-}
-
-.workspace-leaf-content[data-type="foxycape-pdf"] .pdfViewer .page {
-  /*default border width is 9px*/
-  /* border-radius: 9px !important; */
+  border: 1px solid var(--border-color);
 }
 
 /* Selection mark toolbar — two-tier layout (light / dark only) */
@@ -644,29 +653,38 @@ body.foxycape-pdf-resizing * {
   pointer-events: none;
 }
 
-.foxycape-pdf-search-bar__input-container .foxycape-pdf-search-bar__input,
-.foxycape-pdf-search-bar__input-container input.foxycape-pdf-search-bar__input[type="search"] {
+.workspace-leaf-content[data-type="foxycape-pdf"]
+  .foxycape-pdf-search-bar__input-container
+  .foxycape-pdf-search-bar__input,
+.workspace-leaf-content[data-type="foxycape-pdf"]
+  .foxycape-pdf-search-bar__input-container
+  input.foxycape-pdf-search-bar__input[type="search"] {
   box-sizing: border-box;
   flex: 1 1 auto;
   min-width: 0;
   width: 0;
   /* allow flex shrink; text scrolls inside its own cell */
   height: 100%;
-  margin: 0 !important;
-  padding-block: 0 !important;
-  padding-inline: 4px !important;
-  border: none !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  outline: none !important;
+  margin: 0;
+  padding-block: 0;
+  padding-inline: 4px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
   color: var(--text-normal);
 }
 
-.foxycape-pdf-search-bar__input-container .foxycape-pdf-search-bar__input:focus {
-  border: none !important;
-  box-shadow: none !important;
-  outline: none !important;
+.workspace-leaf-content[data-type="foxycape-pdf"]
+  .foxycape-pdf-search-bar__input-container
+  .foxycape-pdf-search-bar__input:focus,
+.workspace-leaf-content[data-type="foxycape-pdf"]
+  .foxycape-pdf-search-bar__input-container
+  input.foxycape-pdf-search-bar__input[type="search"]:focus {
+  border: none;
+  box-shadow: none;
+  outline: none;
 }
 
 .foxycape-pdf-search-bar__input::-webkit-search-cancel-button,
@@ -882,7 +900,7 @@ body.foxycape-pdf-resizing * {
 
 /* Off-DOM helpers (icon sprites, color probes, clipboard fallback). */
 .foxycape-pdf-visually-hidden {
-  display: none !important;
+  display: none;
 }
 
 .foxycape-pdf-offscreen-probe {
@@ -942,7 +960,7 @@ body.foxycape-pdf-resizing * {
   }
 }
 
-.foxycape-pdf-goto-animation {
-  animation: foxycape-pdf-goto-bg 2000ms ease-in-out !important;
-  border-color: transparent !important;
+.workspace-leaf-content[data-type="foxycape-pdf"] .foxycape-pdf-goto-animation {
+  animation: foxycape-pdf-goto-bg 2000ms ease-in-out;
+  border-color: transparent;
 }

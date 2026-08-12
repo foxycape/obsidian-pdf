@@ -3,6 +3,7 @@ import {
   Setting,
   type App,
   type ButtonComponent,
+  type SettingDefinitionItem,
   type TextComponent,
 } from 'obsidian'
 import { debounce } from '@foxycape/core/kernal/Debounce'
@@ -34,19 +35,50 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
     super(app, plugin)
   }
 
+  /**
+   * Obsidian 1.13+: renders the tab and indexes settings for global search.
+   * Keep in sync with {@link display} for older app versions.
+   */
+  getSettingDefinitions = (): SettingDefinitionItem[] => [
+    {
+      name: this.plugin.t(
+        'plugin_settings_use_as_default_name',
+        'Use as default PDF viewer',
+      ),
+      desc: this.plugin.t(
+        'plugin_settings_use_as_default_desc',
+        'When enabled, opening a .pdf file uses Foxycape PDF instead of Obsidian’s built-in viewer. You can still open with Foxycape from the command palette or file menu when this is off.',
+      ),
+      render: (setting) => {
+        this.bindDefaultViewerToggle(setting)
+      },
+    },
+    {
+      type: 'group',
+      heading: this.plugin.t('plugin_settings_license_heading', 'License'),
+      items: [
+        {
+          name: this.plugin.t('plugin_settings_license_name', 'License key'),
+          render: (setting) => {
+            this.bindLicenseSetting(setting)
+          },
+        },
+      ],
+    },
+  ]
+
+  /** Pre-1.13 fallback; skipped when getSettingDefinitions() returns a non-empty array. */
   display = () => {
     void this.plugin.syncLocaleIfNeeded().then(() => {
       const { containerEl } = this
       containerEl.empty()
-      this.licenseStatusEl = null
-      this.licenseInput = null
-      this.licenseActionButton = null
+      this.clearLicenseUiRefs()
 
       new Setting(containerEl)
         .setName(this.plugin.t('plugin_settings_title', 'Foxycape PDF'))
         .setHeading()
 
-      new Setting(containerEl)
+      const defaultViewerSetting = new Setting(containerEl)
         .setName(
           this.plugin.t(
             'plugin_settings_use_as_default_name',
@@ -59,26 +91,38 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
             'When enabled, opening a .pdf file uses Foxycape PDF instead of Obsidian’s built-in viewer. You can still open with Foxycape from the command palette or file menu when this is off.',
           ),
         )
-        .addToggle((toggle) => {
-          toggle.setValue(this.plugin.settings.useAsDefaultPdfViewer).onChange((value) => {
-            void this.plugin.setUseAsDefaultPdfViewer(value)
-          })
-        })
+      this.bindDefaultViewerToggle(defaultViewerSetting)
 
-      this.renderLicenseSection(containerEl)
+      new Setting(containerEl)
+        .setName(this.plugin.t('plugin_settings_license_heading', 'License'))
+        .setHeading()
+
+      const licenseSetting = new Setting(containerEl)
+        .setName(
+          this.plugin.t('plugin_settings_license_name', 'License key'),
+        )
+        .setDesc('')
+      this.bindLicenseSetting(licenseSetting)
     })
   }
 
-  private renderLicenseSection = (containerEl: HTMLElement) => {
-    new Setting(containerEl)
-      .setName(this.plugin.t('plugin_settings_license_heading', 'License'))
-      .setHeading()
+  private clearLicenseUiRefs = () => {
+    this.licenseStatusEl = null
+    this.licenseInput = null
+    this.licenseActionButton = null
+  }
 
-    const licenseSetting = new Setting(containerEl)
-      .setName(
-        this.plugin.t('plugin_settings_license_name', 'License key'),
-      )
-      .setDesc('')
+  private bindDefaultViewerToggle = (setting: Setting) => {
+    setting.addToggle((toggle) => {
+      toggle.setValue(this.plugin.settings.useAsDefaultPdfViewer).onChange((value) => {
+        void this.plugin.setUseAsDefaultPdfViewer(value)
+      })
+    })
+  }
+
+  private bindLicenseSetting = (setting: Setting) => {
+    this.clearLicenseUiRefs()
+    setting
       .addText((text) => {
         this.licenseInput = text
         text
@@ -113,7 +157,7 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
         })
       })
 
-    this.licenseStatusEl = licenseSetting.descEl
+    this.licenseStatusEl = setting.descEl
     this.refreshLicenseInputReadonly()
     this.refreshLicenseActionButton()
     this.refreshLicenseStatus()

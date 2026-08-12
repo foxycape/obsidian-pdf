@@ -94,7 +94,7 @@ onBeforeUnmount(() => {
     ref="rootEl"
     v-show="open"
     class="foxycape-pdf-left-nav"
-    :style="{ width: `${panelWidth}px` }"
+    :style="{ '--foxycape-pdf-panel-width': `${panelWidth}px` }"
   >
     <div class="nav-header foxycape-pdf-left-nav__header">
       <div class="foxycape-pdf-left-nav__tabs">
@@ -143,6 +143,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: var(--foxycape-pdf-panel-width);
   min-width: 180px;
   max-width: 480px;
   background: var(--background-secondary);

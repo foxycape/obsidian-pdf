@@ -589,7 +589,7 @@ export const usePdfMarkToolbar = (options: {
       } catch {
         // ignore
       }
-      // Retry after focus/select — works when the first write lacked user activation.
+      // Retry after focus/select ï¿½ works when the first write lacked user activation.
       try {
         if (doc?.body) {
           const ta = doc.body.createEl('textarea')
@@ -694,7 +694,7 @@ export const usePdfMarkToolbar = (options: {
         linkSource.pdfFile,
         '',
         subpath,
-        '?',
+        'â†—',
       )
       const payload = formatMarkQuoteLine(quoteText, markdownLink)
       const ok = await writeClipboard(payload)
@@ -717,7 +717,7 @@ export const usePdfMarkToolbar = (options: {
     state.showCopyMenu = false
   }
 
-  /** Ctrl/Cmd+C ?formatted copy via PdfTextAssistant (not raw browser selection). */
+  /** Ctrl/Cmd+C formatted copy via PdfTextAssistant (not raw browser selection). */
   const onCtrlWithCKeyCopy = async (e?: Event) => {
     const doc = getOwnerDocument()
     const range = activeRange ?? (doc ? getActiveRange(doc) : null)

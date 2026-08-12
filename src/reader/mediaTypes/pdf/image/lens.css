@@ -32,9 +32,9 @@
   flex: 0 0 auto;
 }
 
-.foxycape-pdf-image-lens:hover {
-  background-color: var(--interactive-hover) !important;
-  color: var(--text-accent) !important;
+.clickable-icon.foxycape-pdf-image-lens:hover {
+  background-color: var(--interactive-hover);
+  color: var(--text-accent);
 }
 
 .foxycape-pdf-image-lens.is-loading {

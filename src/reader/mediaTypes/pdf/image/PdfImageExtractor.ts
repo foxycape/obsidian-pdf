@@ -10,6 +10,7 @@ export type PdfImagePageResolver = {
   logger?: ILogger
 }
 
+/** Raw pixel buffer from pdf.js when OffscreenCanvas is unavailable. */
 type PdfJsRawImageData = {
   width: number
   height: number
@@ -18,7 +19,34 @@ type PdfJsRawImageData = {
   bitmap?: ImageBitmap
 }
 
-type PdfJsImageObject = PdfJsRawImageData | ImageBitmap
+/**
+ * Modern pdf.js (OffscreenCanvas path) resolves images as bitmap wrappers:
+ * `{ width, height, bitmap, data: null }` — often without `kind`.
+ */
+type PdfJsBitmapImageData = {
+  width: number
+  height: number
+  bitmap: ImageBitmap
+  data?: Uint8Array | Uint8ClampedArray | null
+  kind?: number
+}
+
+type PdfJsImageObject = PdfJsRawImageData | PdfJsBitmapImageData | ImageBitmap
+
+const isImageBitmap = (value: unknown): value is ImageBitmap =>
+  typeof ImageBitmap !== 'undefined' && value instanceof ImageBitmap
+
+const isPdfJsBitmapImageData = (value: unknown): value is PdfJsBitmapImageData => {
+  if (typeof value !== 'object' || value == null) {
+    return false
+  }
+  const record = value as Record<string, unknown>
+  return (
+    typeof record.width === 'number' &&
+    typeof record.height === 'number' &&
+    isImageBitmap(record.bitmap)
+  )
+}
 
 const isPdfJsRawImageData = (value: unknown): value is PdfJsRawImageData => {
   if (typeof value !== 'object' || value == null) {
@@ -29,15 +57,14 @@ const isPdfJsRawImageData = (value: unknown): value is PdfJsRawImageData => {
     typeof record.width === 'number' &&
     typeof record.height === 'number' &&
     typeof record.kind === 'number' &&
-    record.data instanceof Uint8Array ||
-    record.data instanceof Uint8ClampedArray
+    (record.data instanceof Uint8Array || record.data instanceof Uint8ClampedArray)
   )
 }
 
 const isPdfJsImageObject = (value: unknown): value is PdfJsImageObject => {
-  return typeof ImageBitmap !== 'undefined' && value instanceof ImageBitmap
-    ? true
-    : isPdfJsRawImageData(value)
+  return (
+    isImageBitmap(value) || isPdfJsBitmapImageData(value) || isPdfJsRawImageData(value)
+  )
 }
 
 const cloneDescriptors = (items: ImageDescriptor[]): ImageDescriptor[] =>
@@ -198,14 +225,22 @@ export class PdfImageExtractor implements IDisposable {
     }
 
     const imageData = await this.getObject(page, objId)
-    if (isPdfJsRawImageData(imageData) && imageData.bitmap) {
-      return imageData.bitmap
+    if (!imageData) {
+      return null
+    }
+    // Prefer bitmap (OffscreenCanvas path); copy to canvas so page objs cleanup
+    // cannot close the ImageBitmap while the viewer is still encoding a blob.
+    if (isImageBitmap(imageData)) {
+      return this.createCanvasFromBitmap(imageData)
+    }
+    if (isPdfJsBitmapImageData(imageData)) {
+      return this.createCanvasFromBitmap(imageData.bitmap)
     }
     if (isPdfJsRawImageData(imageData)) {
+      if (imageData.bitmap) {
+        return this.createCanvasFromBitmap(imageData.bitmap)
+      }
       return this.createCanvasFromImageData(imageData)
-    }
-    if (typeof ImageBitmap !== 'undefined' && imageData instanceof ImageBitmap) {
-      return imageData
     }
     return null
   }
@@ -272,6 +307,15 @@ export class PdfImageExtractor implements IDisposable {
   }
 
   private readonly FULL_CHUNK_HEIGHT = 16
+
+  private createCanvasFromBitmap(bitmap: ImageBitmap) {
+    const canvas = createEl('canvas')
+    canvas.width = bitmap.width
+    canvas.height = bitmap.height
+    const ctx = canvas.getContext('2d')
+    ctx?.drawImage(bitmap, 0, 0)
+    return canvas
+  }
 
   createCanvasFromImageData(imgData: PdfJsRawImageData) {
     const canvas = createEl('canvas')

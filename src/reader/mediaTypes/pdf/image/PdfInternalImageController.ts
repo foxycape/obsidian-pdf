@@ -95,10 +95,19 @@ export class PdfInternalImageController implements IDisposable {
       getPage: async (pageNumber): Promise<pdfjsLib.PDFPageProxy | null> => {
         const pageView = renderer.getPageView(pageNumber)
         const pdfPage: unknown = pageView?.pdfPage
-        if (!pdfPage || typeof pdfPage !== 'object') {
+        if (pdfPage && typeof pdfPage === 'object') {
+          return pdfPage as pdfjsLib.PDFPageProxy
+        }
+        // Fallback when the page view was recycled but the document is still open.
+        const pdfDocument = renderer.getPdfDocument?.()
+        if (!pdfDocument || pageNumber < 1 || pageNumber > pdfDocument.numPages) {
           return null
         }
-        return pdfPage as pdfjsLib.PDFPageProxy
+        try {
+          return await pdfDocument.getPage(pageNumber)
+        } catch {
+          return null
+        }
       },
       logger: reader.loggerFactory?.getLogger?.('PdfImageExtractor'),
     })

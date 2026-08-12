@@ -81,7 +81,7 @@ export class PdfReaderView extends FileView {
     })
   }
 
-  /** Ctrl/Cmd+C ??formatted PDF text copy (paragraph-aware). */
+  /** Ctrl/Cmd+C formatted PDF text copy (paragraph-aware). */
   requestFormattedCopy(evt?: KeyboardEvent) {
     if (this.reader) {
       this.reader.events.emit(EventNames.CtrlWithCKeyCopy, evt)

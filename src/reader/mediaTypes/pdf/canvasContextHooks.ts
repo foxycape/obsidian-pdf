@@ -37,17 +37,33 @@ export const markCanvasContextHandled = (
   return false
 }
 
-export const storeBoundOriginal = <K extends keyof PdfAugmentedCanvasContext>(
+type OriginalMethodKey =
+  | 'originalFill'
+  | 'originalFillRect'
+  | 'originalFillText'
+  | 'originalStroke'
+  | 'originalStrokeRect'
+  | 'originalStrokeText'
+  | 'originalDrawImage'
+
+const ORIGINAL_METHOD_NAMES = {
+  originalFill: 'fill',
+  originalFillRect: 'fillRect',
+  originalFillText: 'fillText',
+  originalStroke: 'stroke',
+  originalStrokeRect: 'strokeRect',
+  originalStrokeText: 'strokeText',
+  originalDrawImage: 'drawImage',
+} as const satisfies Record<OriginalMethodKey, keyof CanvasRenderingContext2D>
+
+/** Capture a canvas method onto `ctx` already bound to that context. */
+export const storeBoundOriginal = (
   ctx: PdfAugmentedCanvasContext,
-  originalKey: K,
-  method: PdfAugmentedCanvasContext[K],
+  originalKey: OriginalMethodKey,
 ): void => {
-  if (typeof method !== 'function') {
-    return
-  }
-  ;(ctx as unknown as Record<string, unknown>)[originalKey as string] = (
-    method as (...args: unknown[]) => unknown
-  ).bind(ctx)
+  const methodName = ORIGINAL_METHOD_NAMES[originalKey]
+  ;(ctx as unknown as Record<string, unknown>)[originalKey] =
+    CanvasRenderingContext2D.prototype[methodName].bind(ctx)
 }
 
 export const callOriginalDrawImage = (

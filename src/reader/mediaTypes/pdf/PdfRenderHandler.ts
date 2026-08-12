@@ -87,7 +87,7 @@ export class PdfRenderHandler implements IDisposable {
     const ctx = asAugmentedCanvasContext(canvasContext)
 
     if (opts.handleFillText) {
-      storeBoundOriginal(ctx, 'originalFillText', canvasContext.fillText)
+      storeBoundOriginal(ctx, 'originalFillText')
       canvasContext.fillText = (...args: Parameters<CanvasRenderingContext2D['fillText']>) => {
         if (!this.isColorRemapEnabled()) {
           ctx.originalFillText?.(...args)
@@ -104,7 +104,7 @@ export class PdfRenderHandler implements IDisposable {
     }
 
     if (opts.handleStrokeText) {
-      storeBoundOriginal(ctx, 'originalStrokeText', canvasContext.strokeText)
+      storeBoundOriginal(ctx, 'originalStrokeText')
       canvasContext.strokeText = (
         ...args: Parameters<CanvasRenderingContext2D['strokeText']>
       ) => {
@@ -123,11 +123,12 @@ export class PdfRenderHandler implements IDisposable {
     }
 
     if (opts.handleFill) {
-      storeBoundOriginal(ctx, 'originalFill', canvasContext.fill)
-      // Overloads collapse under Parameters<>; assert via unknown.
-      canvasContext.fill = ((...args: never[]) => {
+      storeBoundOriginal(ctx, 'originalFill')
+      // Overloads collapse under Parameters<>; call via apply.
+      canvasContext.fill = (...args: never[]) => {
+        const original = ctx.originalFill
         if (!this.isColorRemapEnabled()) {
-          ctx.originalFill?.(...args)
+          original?.apply(ctx, args)
           return
         }
         canvasContext.save()
@@ -137,15 +138,15 @@ export class PdfRenderHandler implements IDisposable {
               ? 'orange'
               : this.resolvePdfFillBackground()
           }
-          ctx.originalFill?.(...args)
+          original?.apply(ctx, args)
         } finally {
           canvasContext.restore()
         }
-      }) as unknown as typeof canvasContext.fill
+      }
     }
 
     if (opts.handleFillRect) {
-      storeBoundOriginal(ctx, 'originalFillRect', canvasContext.fillRect)
+      storeBoundOriginal(ctx, 'originalFillRect')
       canvasContext.fillRect = (
         ...args: Parameters<CanvasRenderingContext2D['fillRect']>
       ) => {
@@ -168,11 +169,12 @@ export class PdfRenderHandler implements IDisposable {
     }
 
     if (opts.handleStroke) {
-      storeBoundOriginal(ctx, 'originalStroke', canvasContext.stroke)
-      // Overloads collapse under Parameters<>; assert via unknown.
-      canvasContext.stroke = ((...args: never[]) => {
+      storeBoundOriginal(ctx, 'originalStroke')
+      // Overloads collapse under Parameters<>; call via apply.
+      canvasContext.stroke = (...args: never[]) => {
+        const original = ctx.originalStroke
         if (!this.isColorRemapEnabled()) {
-          ctx.originalStroke?.(...args)
+          original?.apply(ctx, args)
           return
         }
         canvasContext.save()
@@ -180,15 +182,15 @@ export class PdfRenderHandler implements IDisposable {
           canvasContext.strokeStyle = debug
             ? 'blue'
             : this.resolvePdfFillBackground()
-          ctx.originalStroke?.(...args)
+          original?.apply(ctx, args)
         } finally {
           canvasContext.restore()
         }
-      }) as unknown as typeof canvasContext.stroke
+      }
     }
 
     if (opts.handleStrokeRect) {
-      storeBoundOriginal(ctx, 'originalStrokeRect', canvasContext.strokeRect)
+      storeBoundOriginal(ctx, 'originalStrokeRect')
       canvasContext.strokeRect = (
         ...args: Parameters<CanvasRenderingContext2D['strokeRect']>
       ) => {
@@ -209,7 +211,7 @@ export class PdfRenderHandler implements IDisposable {
     }
 
     if (opts.handleDrawImage) {
-      storeBoundOriginal(ctx, 'originalDrawImage', canvasContext.drawImage)
+      storeBoundOriginal(ctx, 'originalDrawImage')
       canvasContext.drawImage = (...args: DrawImageArgs) => {
         this.handleImages(
           ctx,

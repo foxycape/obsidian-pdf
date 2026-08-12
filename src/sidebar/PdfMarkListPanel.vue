@@ -74,7 +74,7 @@ onBeforeUnmount(() => {
     ref="rootEl"
     v-show="open"
     class="foxycape-pdf-mark-panel"
-    :style="{ width: `${panelWidth}px` }"
+    :style="{ '--foxycape-pdf-panel-width': `${panelWidth}px` }"
   >
     <div
       class="foxycape-pdf-mark-panel__resizer"
@@ -100,6 +100,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: var(--foxycape-pdf-panel-width);
   min-width: 180px;
   max-width: 480px;
   background: var(--background-secondary);
