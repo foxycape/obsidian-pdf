@@ -1,6 +1,6 @@
 {
   "name": "@foxycape/obsidian-pdf",
-  "version": "3.4.0",
+  "version": "3.4.1",
   "private": true,
   "description": "Embed Foxycape PDF reader with highlight and annotation sync to your notes.",
   "license": "SEE LICENSE IN LICENSE.md",

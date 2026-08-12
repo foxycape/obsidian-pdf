@@ -80,6 +80,11 @@ export const createObsidianPluginConfig = (
 
   return defineConfig({
     plugins: [vue(), tailwindcss(), copyPluginManifestPlugin(packageDir, outDir)],
+    // Mobile WebView has no Node `process`. Vue's esm-bundler build still
+    // references process.env.NODE_ENV; replace it at build time so enable works.
+    define: {
+      'process.env.NODE_ENV': JSON.stringify('production'),
+    },
     resolve: {
       alias: [
         ...createFoxycapeCoreAliases(packageDir),

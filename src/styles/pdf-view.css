@@ -966,6 +966,12 @@ body.foxycape-pdf-resizing .workspace-leaf-content[data-type="foxycape-pdf"] .te
 }
 
 /* First-time runtime assets download modal */
+body.is-mobile .modal.foxycape-pdf-assets-modal-dialog {
+  width: calc(100% - 2rem);
+  max-width: calc(100% - 2rem);
+  margin-inline: 1rem;
+}
+
 .foxycape-pdf-assets-modal .foxycape-pdf-assets-modal-desc {
   margin: 0 0 0.75rem;
   color: var(--text-muted);

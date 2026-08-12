@@ -52,6 +52,7 @@ export class RuntimeAssetsModal extends Modal {
   onOpen() {
     const { contentEl } = this
     contentEl.empty()
+    this.modalEl.addClass('foxycape-pdf-assets-modal-dialog')
     contentEl.addClass('foxycape-pdf-assets-modal')
 
     contentEl.createEl('h2', {

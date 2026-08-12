@@ -27,7 +27,7 @@ export class CustomPdfOptions extends PdfOptions {
    * Remap PDF page canvas colors to the reader theme (CIELAB greyscale mapping).
    * Color images stay original; grayscale images invert in dark theme.
    */
-  enablePdfThemeColorRemap = false
+  enablePdfThemeColorRemap = true
 
   /**
    * When to apply theme color remap.
