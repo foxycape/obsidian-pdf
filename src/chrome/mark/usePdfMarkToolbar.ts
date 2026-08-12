@@ -16,7 +16,7 @@ import {
   getRangePageNumber,
   rangeToObsidianSelection,
 } from '@/obsidian/selectionLink'
-import { PdfSelection } from '@foxycape/core/mediaTypes/pdf/shared/selection'
+import { PdfSelection } from '@foxycape/core/mediaTypes/pdf/shared/selection/PdfSelection'
 import type { IPdfSelection } from '@foxycape/core/mediaTypes/pdf/shared/selection/IPdfSelection'
 import type { App, TFile } from 'obsidian'
 import { nextTick, onBeforeUnmount, reactive, ref, type Ref } from 'vue'
