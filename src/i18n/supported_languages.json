@@ -6,93 +6,15 @@
     "dir": "ltr"
   },
   {
-    "code": "af",
-    "title": "Afrikaans",
-    "nativeTitle": "Afrikaans",
-    "dir": "ltr"
-  },
-  {
-    "code": "am",
-    "title": "Amharic",
-    "nativeTitle": "አማርኛ",
-    "dir": "ltr"
-  },
-  {
     "code": "ar",
     "title": "Arabic",
     "nativeTitle": "العربية",
     "dir": "rtl"
   },
   {
-    "code": "az",
-    "title": "Azerbaijani",
-    "nativeTitle": "Azərbaycanca",
-    "dir": "ltr"
-  },
-  {
-    "code": "be",
-    "title": "Belarusian",
-    "nativeTitle": "Беларуская",
-    "dir": "ltr"
-  },
-  {
-    "code": "bg",
-    "title": "Bulgarian",
-    "nativeTitle": "Български",
-    "dir": "ltr"
-  },
-  {
-    "code": "bn",
-    "title": "Bengali",
-    "nativeTitle": "বাংলা",
-    "dir": "ltr"
-  },
-  {
-    "code": "ca",
-    "title": "Catalan",
-    "nativeTitle": "Català",
-    "dir": "ltr"
-  },
-  {
-    "code": "cs",
-    "title": "Czech",
-    "nativeTitle": "Čeština",
-    "dir": "ltr"
-  },
-  {
-    "code": "da",
-    "title": "Danish",
-    "nativeTitle": "Dansk",
-    "dir": "ltr"
-  },
-  {
     "code": "de",
     "title": "German",
     "nativeTitle": "Deutsch",
-    "dir": "ltr"
-  },
-  {
-    "code": "dv",
-    "title": "Divehi",
-    "nativeTitle": "ދިވެހި",
-    "dir": "rtl"
-  },
-  {
-    "code": "el",
-    "title": "Greek",
-    "nativeTitle": "Ελληνικά",
-    "dir": "ltr"
-  },
-  {
-    "code": "en-GB",
-    "title": "English (UK)",
-    "nativeTitle": "English (UK)",
-    "dir": "ltr"
-  },
-  {
-    "code": "eo",
-    "title": "Esperanto",
-    "nativeTitle": "Esperanto",
     "dir": "ltr"
   },
   {
@@ -102,63 +24,9 @@
     "dir": "ltr"
   },
   {
-    "code": "eu",
-    "title": "Basque",
-    "nativeTitle": "Euskara",
-    "dir": "ltr"
-  },
-  {
-    "code": "fa",
-    "title": "Persian",
-    "nativeTitle": "فارسی",
-    "dir": "rtl"
-  },
-  {
-    "code": "fi",
-    "title": "Finnish",
-    "nativeTitle": "Suomi",
-    "dir": "ltr"
-  },
-  {
     "code": "fr",
     "title": "French",
     "nativeTitle": "Français",
-    "dir": "ltr"
-  },
-  {
-    "code": "ga",
-    "title": "Irish",
-    "nativeTitle": "Gaeilge",
-    "dir": "ltr"
-  },
-  {
-    "code": "gl",
-    "title": "Galician",
-    "nativeTitle": "Galego",
-    "dir": "ltr"
-  },
-  {
-    "code": "he",
-    "title": "Hebrew",
-    "nativeTitle": "עברית",
-    "dir": "rtl"
-  },
-  {
-    "code": "hi",
-    "title": "Hindi",
-    "nativeTitle": "हिन्दी",
-    "dir": "ltr"
-  },
-  {
-    "code": "hr",
-    "title": "Croatian",
-    "nativeTitle": "Hrvatski",
-    "dir": "ltr"
-  },
-  {
-    "code": "hu",
-    "title": "Hungarian",
-    "nativeTitle": "Magyar",
     "dir": "ltr"
   },
   {
@@ -180,105 +48,15 @@
     "dir": "ltr"
   },
   {
-    "code": "ka",
-    "title": "Georgian",
-    "nativeTitle": "ქართული",
-    "dir": "ltr"
-  },
-  {
-    "code": "kh",
-    "title": "Khmer",
-    "nativeTitle": "ភាសាខ្មែរ",
-    "dir": "ltr"
-  },
-  {
-    "code": "kn",
-    "title": "Kannada",
-    "nativeTitle": "ಕನ್ನಡ",
-    "dir": "ltr"
-  },
-  {
     "code": "ko",
     "title": "Korean",
     "nativeTitle": "한국어",
     "dir": "ltr"
   },
   {
-    "code": "ky",
-    "title": "Kyrgyz",
-    "nativeTitle": "Кыргызча",
-    "dir": "ltr"
-  },
-  {
-    "code": "la",
-    "title": "Latin",
-    "nativeTitle": "Latina",
-    "dir": "ltr"
-  },
-  {
-    "code": "lt",
-    "title": "Lithuanian",
-    "nativeTitle": "Lietuvių",
-    "dir": "ltr"
-  },
-  {
-    "code": "lv",
-    "title": "Latvian",
-    "nativeTitle": "Latviešu",
-    "dir": "ltr"
-  },
-  {
-    "code": "ml",
-    "title": "Malayalam",
-    "nativeTitle": "മലയാളം",
-    "dir": "ltr"
-  },
-  {
-    "code": "ms",
-    "title": "Malay",
-    "nativeTitle": "Bahasa Melayu",
-    "dir": "ltr"
-  },
-  {
-    "code": "nan-TW",
-    "title": "Minnan (Taiwan)",
-    "nativeTitle": "臺語",
-    "dir": "ltr"
-  },
-  {
-    "code": "ne",
-    "title": "Nepali",
-    "nativeTitle": "नेपाली",
-    "dir": "ltr"
-  },
-  {
     "code": "nl",
     "title": "Dutch",
     "nativeTitle": "Nederlands",
-    "dir": "ltr"
-  },
-  {
-    "code": "nn",
-    "title": "Norwegian Nynorsk",
-    "nativeTitle": "Norsk nynorsk",
-    "dir": "ltr"
-  },
-  {
-    "code": "no",
-    "title": "Norwegian",
-    "nativeTitle": "Norsk",
-    "dir": "ltr"
-  },
-  {
-    "code": "oc",
-    "title": "Occitan",
-    "nativeTitle": "Occitan",
-    "dir": "ltr"
-  },
-  {
-    "code": "or",
-    "title": "Odia",
-    "nativeTitle": "ଓଡ଼ିଆ",
     "dir": "ltr"
   },
   {
@@ -300,75 +78,9 @@
     "dir": "ltr"
   },
   {
-    "code": "ro",
-    "title": "Romanian",
-    "nativeTitle": "Română",
-    "dir": "ltr"
-  },
-  {
     "code": "ru",
     "title": "Russian",
     "nativeTitle": "Русский",
-    "dir": "ltr"
-  },
-  {
-    "code": "sa",
-    "title": "Sanskrit",
-    "nativeTitle": "संस्कृतम्",
-    "dir": "ltr"
-  },
-  {
-    "code": "si",
-    "title": "Sinhala",
-    "nativeTitle": "සිංහල",
-    "dir": "ltr"
-  },
-  {
-    "code": "sk",
-    "title": "Slovak",
-    "nativeTitle": "Slovenčina",
-    "dir": "ltr"
-  },
-  {
-    "code": "sl",
-    "title": "Slovenian",
-    "nativeTitle": "Slovenščina",
-    "dir": "ltr"
-  },
-  {
-    "code": "sq",
-    "title": "Albanian",
-    "nativeTitle": "Shqip",
-    "dir": "ltr"
-  },
-  {
-    "code": "sr",
-    "title": "Serbian",
-    "nativeTitle": "Српски",
-    "dir": "ltr"
-  },
-  {
-    "code": "sv",
-    "title": "Swedish",
-    "nativeTitle": "Svenska",
-    "dir": "ltr"
-  },
-  {
-    "code": "sw",
-    "title": "Swahili",
-    "nativeTitle": "Kiswahili",
-    "dir": "ltr"
-  },
-  {
-    "code": "ta",
-    "title": "Tamil",
-    "nativeTitle": "தமிழ்",
-    "dir": "ltr"
-  },
-  {
-    "code": "te",
-    "title": "Telugu",
-    "nativeTitle": "తెలుగు",
     "dir": "ltr"
   },
   {
@@ -378,39 +90,15 @@
     "dir": "ltr"
   },
   {
-    "code": "tl",
-    "title": "Tagalog",
-    "nativeTitle": "Tagalog",
-    "dir": "ltr"
-  },
-  {
     "code": "tr",
     "title": "Turkish",
     "nativeTitle": "Türkçe",
     "dir": "ltr"
   },
   {
-    "code": "tt",
-    "title": "Tatar",
-    "nativeTitle": "Татарча",
-    "dir": "ltr"
-  },
-  {
     "code": "uk",
     "title": "Ukrainian",
     "nativeTitle": "Українська",
-    "dir": "ltr"
-  },
-  {
-    "code": "ur",
-    "title": "Urdu",
-    "nativeTitle": "اردو",
-    "dir": "rtl"
-  },
-  {
-    "code": "uz",
-    "title": "Uzbek",
-    "nativeTitle": "O'zbek",
     "dir": "ltr"
   },
   {
