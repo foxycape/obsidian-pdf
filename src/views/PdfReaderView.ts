@@ -8,7 +8,6 @@ import {
   type WorkspaceLeaf,
 } from 'obsidian'
 import { EventNames, formatFileSize, type IMarker, type Reader } from '@foxycape/core/kernal'
-import type { Mark } from '@foxycape/core/kernal/mark/Mark'
 import type { FoxycapePdfPlugin } from '@/plugin/FoxycapePdfPlugin'
 import { createPdfReader } from '@/reader/createPdfReader'
 import { resolvePdfAssetUrls } from '@/reader/pdfAssets'

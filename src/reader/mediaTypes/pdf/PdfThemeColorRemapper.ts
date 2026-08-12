@@ -125,8 +125,8 @@ export class PdfThemeColorRemapper implements IDisposable {
       this.wrapPaint(ctx, 'strokeRect', 'strokeStyle')
     }
     if (opts.handleDrawImage) {
-      storeBoundOriginal(ctx, 'originalDrawImage', canvasContext.drawImage.bind(canvasContext))
-      canvasContext.drawImage = ((...args: DrawImageArgs) => {
+      storeBoundOriginal(ctx, 'originalDrawImage', canvasContext.drawImage)
+      canvasContext.drawImage = (...args: DrawImageArgs) => {
         this.handleDrawImage(
           ctx,
           pageOriginWidth,
@@ -134,7 +134,7 @@ export class PdfThemeColorRemapper implements IDisposable {
           opts,
           args,
         )
-      }) as typeof canvasContext.drawImage
+      }
     }
   }
 

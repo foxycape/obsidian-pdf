@@ -169,24 +169,24 @@ export const handleOnlyImages = (
   const ctx = asAugmentedCanvasContext(canvasContext)
   const opts = Object.assign(new PdfRenderHandleOptions(), handleOptions)
   if (disableOtherInstructions) {
-    storeBoundOriginal(ctx, 'originalFillText', canvasContext.fillText.bind(canvasContext))
+    storeBoundOriginal(ctx, 'originalFillText', canvasContext.fillText)
     canvasContext.fillText = () => {}
-    storeBoundOriginal(ctx, 'originalStrokeText', canvasContext.strokeText.bind(canvasContext))
+    storeBoundOriginal(ctx, 'originalStrokeText', canvasContext.strokeText)
     canvasContext.strokeText = () => {}
-    storeBoundOriginal(ctx, 'originalFill', canvasContext.fill.bind(canvasContext))
+    storeBoundOriginal(ctx, 'originalFill', canvasContext.fill)
     canvasContext.fill = () => {}
-    storeBoundOriginal(ctx, 'originalFillRect', canvasContext.fillRect.bind(canvasContext))
+    storeBoundOriginal(ctx, 'originalFillRect', canvasContext.fillRect)
     canvasContext.fillRect = () => {}
-    storeBoundOriginal(ctx, 'originalStroke', canvasContext.stroke.bind(canvasContext))
+    storeBoundOriginal(ctx, 'originalStroke', canvasContext.stroke)
     canvasContext.stroke = () => {}
-    storeBoundOriginal(ctx, 'originalStrokeRect', canvasContext.strokeRect.bind(canvasContext))
+    storeBoundOriginal(ctx, 'originalStrokeRect', canvasContext.strokeRect)
     canvasContext.strokeRect = () => {}
   }
-  storeBoundOriginal(ctx, 'originalDrawImage', canvasContext.drawImage.bind(canvasContext))
-  canvasContext.drawImage = ((...args: DrawImageArgs) => {
+  storeBoundOriginal(ctx, 'originalDrawImage', canvasContext.drawImage)
+  canvasContext.drawImage = (...args: DrawImageArgs) => {
     buildImageDescriptors(canvasContext, pageOriginWidth, pageOriginHeight, opts, ...args)
     callOriginalDrawImage(ctx, args)
-  }) as typeof canvasContext.drawImage
+  }
 }
 
 export type { PdfAugmentedCanvasContext }

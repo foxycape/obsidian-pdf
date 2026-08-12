@@ -72,7 +72,7 @@ export class DexieStorage implements IStorage {
   }
 
   private emptyValue<T>(): T {
-    return null as unknown as T
+    return null
   }
 
   async filter<T>(

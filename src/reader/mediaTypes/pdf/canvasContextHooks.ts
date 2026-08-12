@@ -24,7 +24,7 @@ const HANDLED_KEY: keyof Pick<PdfAugmentedCanvasContext, 'handled'> = 'handled'
 
 export const asAugmentedCanvasContext = (
   ctx: CanvasRenderingContext2D,
-): PdfAugmentedCanvasContext => ctx as PdfAugmentedCanvasContext
+): PdfAugmentedCanvasContext => ctx
 
 export const markCanvasContextHandled = (
   canvasContext: CanvasRenderingContext2D,
@@ -58,5 +58,5 @@ export const callOriginalDrawImage = (
   if (!original) {
     return
   }
-  original.apply(ctx, args as Parameters<typeof original>)
+  original.apply(ctx, args)
 }

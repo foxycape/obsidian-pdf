@@ -183,7 +183,7 @@ export class PdfImageExtractor implements IDisposable {
       canvasContext: context,
       viewport,
       annotationMode: 0,
-    } as Parameters<typeof page.render>[0]).promise
+    }).promise
 
     return context
   }
@@ -228,9 +228,12 @@ export class PdfImageExtractor implements IDisposable {
     let fixedObjId: string | undefined
     for (let i = 0; i < operators.fnArray.length; i++) {
       if (operators.fnArray[i] === pdfjsLib.OPS.paintImageXObject) {
-        const currentImageArray = operators.argsArray[i]
-        const objName = Array.isArray(currentImageArray) ? currentImageArray[0] : undefined
-        if (typeof objName === 'string' && objName.endsWith(imageId)) {
+        const currentImageArray: unknown = operators.argsArray[i]
+        const objName =
+          Array.isArray(currentImageArray) && typeof currentImageArray[0] === 'string'
+            ? currentImageArray[0]
+            : undefined
+        if (objName !== undefined && objName.endsWith(imageId)) {
           fixedObjId = objName
           break
         }

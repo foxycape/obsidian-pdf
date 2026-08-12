@@ -87,8 +87,8 @@ export class PdfRenderHandler implements IDisposable {
     const ctx = asAugmentedCanvasContext(canvasContext)
 
     if (opts.handleFillText) {
-      storeBoundOriginal(ctx, 'originalFillText', canvasContext.fillText.bind(canvasContext))
-      canvasContext.fillText = ((...args: Parameters<CanvasRenderingContext2D['fillText']>) => {
+      storeBoundOriginal(ctx, 'originalFillText', canvasContext.fillText)
+      canvasContext.fillText = (...args: Parameters<CanvasRenderingContext2D['fillText']>) => {
         if (!this.isColorRemapEnabled()) {
           ctx.originalFillText?.(...args)
           return
@@ -100,12 +100,12 @@ export class PdfRenderHandler implements IDisposable {
         } finally {
           canvasContext.restore()
         }
-      }) as typeof canvasContext.fillText
+      }
     }
 
     if (opts.handleStrokeText) {
-      storeBoundOriginal(ctx, 'originalStrokeText', canvasContext.strokeText.bind(canvasContext))
-      canvasContext.strokeText = ((
+      storeBoundOriginal(ctx, 'originalStrokeText', canvasContext.strokeText)
+      canvasContext.strokeText = (
         ...args: Parameters<CanvasRenderingContext2D['strokeText']>
       ) => {
         if (!this.isColorRemapEnabled()) {
@@ -119,12 +119,13 @@ export class PdfRenderHandler implements IDisposable {
         } finally {
           canvasContext.restore()
         }
-      }) as typeof canvasContext.strokeText
+      }
     }
 
     if (opts.handleFill) {
-      storeBoundOriginal(ctx, 'originalFill', canvasContext.fill.bind(canvasContext))
-      canvasContext.fill = ((...args: Parameters<CanvasRenderingContext2D['fill']>) => {
+      storeBoundOriginal(ctx, 'originalFill', canvasContext.fill)
+      // Overloads collapse under Parameters<>; assert via unknown.
+      canvasContext.fill = ((...args: never[]) => {
         if (!this.isColorRemapEnabled()) {
           ctx.originalFill?.(...args)
           return
@@ -140,12 +141,12 @@ export class PdfRenderHandler implements IDisposable {
         } finally {
           canvasContext.restore()
         }
-      }) as typeof canvasContext.fill
+      }) as unknown as typeof canvasContext.fill
     }
 
     if (opts.handleFillRect) {
-      storeBoundOriginal(ctx, 'originalFillRect', canvasContext.fillRect.bind(canvasContext))
-      canvasContext.fillRect = ((
+      storeBoundOriginal(ctx, 'originalFillRect', canvasContext.fillRect)
+      canvasContext.fillRect = (
         ...args: Parameters<CanvasRenderingContext2D['fillRect']>
       ) => {
         if (!this.isColorRemapEnabled()) {
@@ -163,12 +164,13 @@ export class PdfRenderHandler implements IDisposable {
         } finally {
           canvasContext.restore()
         }
-      }) as typeof canvasContext.fillRect
+      }
     }
 
     if (opts.handleStroke) {
-      storeBoundOriginal(ctx, 'originalStroke', canvasContext.stroke.bind(canvasContext))
-      canvasContext.stroke = ((...args: Parameters<CanvasRenderingContext2D['stroke']>) => {
+      storeBoundOriginal(ctx, 'originalStroke', canvasContext.stroke)
+      // Overloads collapse under Parameters<>; assert via unknown.
+      canvasContext.stroke = ((...args: never[]) => {
         if (!this.isColorRemapEnabled()) {
           ctx.originalStroke?.(...args)
           return
@@ -182,12 +184,12 @@ export class PdfRenderHandler implements IDisposable {
         } finally {
           canvasContext.restore()
         }
-      }) as typeof canvasContext.stroke
+      }) as unknown as typeof canvasContext.stroke
     }
 
     if (opts.handleStrokeRect) {
-      storeBoundOriginal(ctx, 'originalStrokeRect', canvasContext.strokeRect.bind(canvasContext))
-      canvasContext.strokeRect = ((
+      storeBoundOriginal(ctx, 'originalStrokeRect', canvasContext.strokeRect)
+      canvasContext.strokeRect = (
         ...args: Parameters<CanvasRenderingContext2D['strokeRect']>
       ) => {
         if (!this.isColorRemapEnabled()) {
@@ -203,12 +205,12 @@ export class PdfRenderHandler implements IDisposable {
         } finally {
           canvasContext.restore()
         }
-      }) as typeof canvasContext.strokeRect
+      }
     }
 
     if (opts.handleDrawImage) {
-      storeBoundOriginal(ctx, 'originalDrawImage', canvasContext.drawImage.bind(canvasContext))
-      canvasContext.drawImage = ((...args: DrawImageArgs) => {
+      storeBoundOriginal(ctx, 'originalDrawImage', canvasContext.drawImage)
+      canvasContext.drawImage = (...args: DrawImageArgs) => {
         this.handleImages(
           ctx,
           pageOriginWidth,
@@ -217,7 +219,7 @@ export class PdfRenderHandler implements IDisposable {
           opts,
           args,
         )
-      }) as typeof canvasContext.drawImage
+      }
     }
   }
 

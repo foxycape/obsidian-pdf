@@ -162,8 +162,9 @@ type PdfLinkOpenPlugin = Plugin & {
  */
 export const installPdfLinkContextCapture = (plugin: PdfLinkOpenPlugin): void => {
   const { workspace } = plugin.app
-  const originalHandleLinkContextMenu: HandleLinkContextMenuFn =
-    workspace.handleLinkContextMenu.bind(workspace)
+  const originalHandleLinkContextMenu = workspace.handleLinkContextMenu.bind(
+    workspace,
+  ) as HandleLinkContextMenuFn
 
   workspace.handleLinkContextMenu = (
     menu: Menu,
@@ -199,7 +200,9 @@ export const consumePendingPdfLinkSubpath = (
  */
 export const installPdfLinkReuse = (plugin: Plugin): void => {
   const { workspace } = plugin.app
-  const originalOpenLinkText: OpenLinkTextFn = workspace.openLinkText.bind(workspace)
+  const originalOpenLinkText = workspace.openLinkText.bind(
+    workspace,
+  ) as OpenLinkTextFn
 
   workspace.openLinkText = async (
     linktext: string,

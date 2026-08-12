@@ -10,6 +10,7 @@ import {
     buildTextLayerMapping,
     readPageViewTextItems,
     resolveMatchRectsFromDom,
+    isPageTextMappingSource,
     type PdfSearchPageView,
 } from './matchGeometry'
 import {
@@ -444,10 +445,13 @@ export class PdfSearcher implements IPdfSearcher {
         if (!pageView) {
             return undefined;
         }
+        const textHighlighter: unknown = pageView._textHighlighter
         return {
             div: pageView.div,
             pdfPage: isPdfPageProxy(pageView.pdfPage) ? pageView.pdfPage : undefined,
-            _textHighlighter: pageView._textHighlighter,
+            _textHighlighter: isPageTextMappingSource(textHighlighter)
+                ? textHighlighter
+                : undefined,
             textLayer: pageView.textLayer ?? undefined,
         };
     }

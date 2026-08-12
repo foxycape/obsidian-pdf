@@ -33,7 +33,7 @@ export type PdfSearchPageView = {
     textLayer?: { highlighter?: PageTextMappingSource };
 };
 
-const isPageTextMappingSource = (value: unknown): value is PageTextMappingSource =>
+export const isPageTextMappingSource = (value: unknown): value is PageTextMappingSource =>
     typeof value === "object" &&
     value !== null &&
     ("textDivs" in value || "textContentItemsStr" in value);
@@ -268,7 +268,7 @@ export const collectPageTextElements = (
                 if (!n) {
                     return null
                 }
-                if (n instanceof Element) {
+                if (n.instanceOf(Element)) {
                     return n
                 }
                 return n.parentElement ?? null
@@ -278,7 +278,7 @@ export const collectPageTextElements = (
 
     const elements: Array<Element | null> = Array.from(
         { length: mapping.texts.length },
-        () => null,
+        (): Element | null => null,
     );
     const svgRoot = pageEl.querySelector("svg.custom-text-layer");
     if (svgRoot) {

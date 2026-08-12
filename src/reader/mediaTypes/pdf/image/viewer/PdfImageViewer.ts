@@ -348,7 +348,7 @@ export class PdfImageViewer {
   ) => {
     const buttons = container.querySelectorAll('button')
     buttons.forEach((button) => {
-      if (!(button instanceof HTMLButtonElement)) {
+      if (!button.instanceOf(HTMLButtonElement)) {
         return
       }
       const actionButton = button

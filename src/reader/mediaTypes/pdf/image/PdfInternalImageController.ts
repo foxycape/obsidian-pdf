@@ -94,7 +94,7 @@ export class PdfInternalImageController implements IDisposable {
       },
       getPage: async (pageNumber): Promise<pdfjsLib.PDFPageProxy | null> => {
         const pageView = renderer.getPageView(pageNumber)
-        const pdfPage = pageView?.pdfPage
+        const pdfPage: unknown = pageView?.pdfPage
         if (!pdfPage || typeof pdfPage !== 'object') {
           return null
         }
@@ -771,10 +771,15 @@ export class PdfInternalImageController implements IDisposable {
     pageNumber: number,
     descriptor: ImageDescriptor,
   ): string | undefined => {
-    const pageView = this.renderer.getPageView(pageNumber)
+    const pageView = this.renderer.getPageView(pageNumber) as PdfPageViewLike | undefined
     const canvas = pageView?.canvas
     const view = pageView?.pdfPage?.view
     if (!canvas || !view || view.length < 4) {
+      return undefined
+    }
+    const pageOriginWidth = view[2]
+    const pageOriginHeight = view[3]
+    if (typeof pageOriginWidth !== 'number' || typeof pageOriginHeight !== 'number') {
       return undefined
     }
     const x = descriptor.x
@@ -792,8 +797,8 @@ export class PdfInternalImageController implements IDisposable {
       height,
       canvasWidth: canvas.width,
       canvasHeight: canvas.height,
-      pageOriginWidth: view[2],
-      pageOriginHeight: view[3],
+      pageOriginWidth,
+      pageOriginHeight,
     })
   }
 

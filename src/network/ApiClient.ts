@@ -100,9 +100,10 @@ export class ApiClient implements IApiClient {
     const isApiHost = this.isSameHost(url, this.apiSettings.endPoint)
     let bodyData = this.normalizeRequestData(data, options)
 
+    const headers = copyRequestHeaders(options?.headers)
     const requestOptions: HttpClientOptions = {
       ...(options ?? {}),
-      headers: copyRequestHeaders(options?.headers),
+      headers,
       responseType: options?.responseType ?? 'json',
     }
     if (!bodyData || typeof bodyData !== 'object') {
@@ -122,8 +123,9 @@ export class ApiClient implements IApiClient {
       body = bodyData
       if (isApiHost) {
         for (const [key, value] of Object.entries(systemParameters)) {
-          requestOptions.headers![key] = String(value)
+          headers[key] = String(value)
         }
+        requestOptions.headers = headers
       }
     } else {
       let payload: Record<string, unknown>

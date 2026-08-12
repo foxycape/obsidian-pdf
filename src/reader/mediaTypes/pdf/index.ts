@@ -1,6 +1,4 @@
 import type { Reader } from '@foxycape/core/kernal'
-import type { IFileDecrypter } from '@foxycape/core/kernal/services/file/IFileDecrypter'
-import type { IFileProvider } from '@foxycape/core/kernal/services/file/IFileProvider'
 import { PdfFileParser } from '@foxycape/core/mediaTypes/pdf/fileParser/PdfFileParser'
 import { PdfOptions } from '@foxycape/core/mediaTypes/pdf/PdfOptions'
 import { CustomPdfOptions } from './CustomPdfOptions'
@@ -55,8 +53,8 @@ export const registerPdfMediaType = (
 
       return new PdfFileParser(
         crypto,
-        fileDecrypter as IFileDecrypter,
-        fileProvider as IFileProvider,
+        fileDecrypter,
+        fileProvider,
         fileUrlParser,
         httpClient,
         reader.events,
