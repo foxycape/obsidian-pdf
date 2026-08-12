@@ -1,7 +1,7 @@
 {
   "id": "foxycape-pdf",
   "name": "Foxycape PDF",
-  "version": "3.3.8",
+  "version": "3.3.9",
   "minAppVersion": "1.7.2",
   "description": "Embed Foxycape PDF reader with highlight and annotation sync to your notes.",
   "author": "Foxycape",
