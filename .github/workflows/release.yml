@@ -34,14 +34,16 @@ jobs:
           test -f dist/main.js
           test -f dist/manifest.json
           test -f dist/styles.css
-          # Obsidian community installs only these three files.
-          if [ -d dist/locales ] || [ -d dist/pdfjs ] || [ -d dist/static ]; then
-            echo "Unexpected sidecar asset directories in dist/" >&2
-            ls -la dist/
-            exit 1
-          fi
+          test -f dist/foxycape-pdf-assets.zip
+          test -f dist/pdfjs/pdf.worker.min.mjs
+          test -f dist/static/signer.js
+          test -d dist/pdfjs/cmaps
+          test -d dist/pdfjs/standard_fonts
           mkdir -p release-assets
+          # Community installer only consumes these three files.
           cp dist/main.js dist/manifest.json dist/styles.css release-assets/
+          # Sidecar zip is downloaded once at runtime (first PDF open).
+          cp dist/foxycape-pdf-assets.zip release-assets/
 
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
@@ -50,6 +52,7 @@ jobs:
             release-assets/main.js
             release-assets/manifest.json
             release-assets/styles.css
+            release-assets/foxycape-pdf-assets.zip
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -10,13 +10,3 @@ declare module '*.svg?raw' {
   const content: string
   export default content
 }
-
-declare module 'virtual:pdfjs-cmaps' {
-  const value: Record<string, string>
-  export default value
-}
-
-declare module 'virtual:pdfjs-standard-fonts' {
-  const value: Record<string, string>
-  export default value
-}

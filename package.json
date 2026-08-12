@@ -1,6 +1,6 @@
 {
   "name": "@foxycape/obsidian-pdf",
-  "version": "3.3.9",
+  "version": "3.4.0",
   "private": true,
   "description": "Embed Foxycape PDF reader with highlight and annotation sync to your notes.",
   "license": "SEE LICENSE IN LICENSE.md",
@@ -8,7 +8,7 @@
   "main": "dist/main.js",
   "scripts": {
     "dev": "vite build --watch",
-    "build": "vite build",
+    "build": "vite build && node scripts/package-runtime-assets.mjs",
     "test": "vitest run",
     "lint": "eslint .",
     "typecheck": "vue-tsc --noEmit -p tsconfig.json",
@@ -21,6 +21,7 @@
     "@foxycape/core": "^1.1.5",
     "dexie": "4.4.4",
     "events": "^3.3.0",
+    "fflate": "^0.8.3",
     "hotkeys-js": "^4.0.4",
     "js-base64": "^3.9.2",
     "js-logger": "^1.6.1",

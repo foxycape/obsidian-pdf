@@ -1,15 +1,17 @@
-import { rmSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createObsidianPluginConfig } from './scripts/vite/createObsidianPluginConfig'
 import { resolveFoxycapeCore } from './scripts/resolveFoxycapeCore'
 import type { Plugin } from 'vite'
-import { inlinePdfjsBinariesPlugin } from './vite.inline-pdfjs-binaries'
+import { copyPdfjsAssetsPlugin } from './vite.copy-pdfjs'
+import { copySignerAssetsPlugin } from './vite.copy-signer'
 import { patchPdfViewerImportPlugin } from './vite.patch-pdf-viewer'
 import {
   assertNoHostPdfjsGlobalsPlugin,
   renamePdfjsGlobalsPlugin,
 } from './vite.rename-pdfjs-globals'
+import { stubPdfWorkerRawPlugin } from './vite.stub-pdf-worker-raw'
 import {
   assertNoDynamicScriptElementsPlugin,
   stubVendorWebStoragePlugin,
@@ -19,6 +21,10 @@ const packageDir = fileURLToPath(new URL('.', import.meta.url))
 const { pdfjsDir: corePdfjsDir } = resolveFoxycapeCore(packageDir)
 const outDir = resolve(packageDir, 'dist')
 const mainJsPath = resolve(outDir, 'main.js')
+const signerSrcFile = resolve(packageDir, 'static/signer.js')
+const { version } = JSON.parse(readFileSync(resolve(packageDir, 'package.json'), 'utf8')) as {
+  version: string
+}
 const foxycapePdfViewer = resolve(packageDir, 'src/reader/foxycapePdfViewer.ts')
 const pdfViewerPath = resolve(corePdfjsDir, 'legacy/web/pdf_viewer.mjs').replace(
   /\\/g,
@@ -50,16 +56,6 @@ const isolatePdfViewerPlugin = (): Plugin => ({
   },
 })
 
-/** Remove legacy sidecar asset dirs so dist matches Obsidian's 3-file layout. */
-const cleanSidecarAssetDirsPlugin = (distDir: string): Plugin => ({
-  name: 'clean-sidecar-asset-dirs',
-  closeBundle() {
-    for (const name of ['locales', 'pdfjs', 'static']) {
-      rmSync(resolve(distDir, name), { recursive: true, force: true })
-    }
-  },
-})
-
 const base = createObsidianPluginConfig({
   packageDir,
   outDirName: 'dist',
@@ -69,12 +65,13 @@ export default {
   ...base,
   plugins: [
     stubVendorWebStoragePlugin(),
+    stubPdfWorkerRawPlugin(),
     isolatePdfViewerPlugin(),
     renamePdfjsGlobalsPlugin(),
     patchPdfViewerImportPlugin(corePdfjsDir),
-    inlinePdfjsBinariesPlugin(corePdfjsDir),
     ...(base.plugins ?? []),
-    cleanSidecarAssetDirsPlugin(outDir),
+    copyPdfjsAssetsPlugin({ outDir, corePdfjsDir, version }),
+    copySignerAssetsPlugin(outDir, signerSrcFile),
     assertNoHostPdfjsGlobalsPlugin(mainJsPath),
     assertNoDynamicScriptElementsPlugin(mainJsPath),
   ],

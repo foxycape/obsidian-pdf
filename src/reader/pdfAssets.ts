@@ -1,8 +1,9 @@
 import { ensurePdfWebWorker } from '@foxycape/core/mediaTypes/pdf/ensurePdfWebWorker'
+import { normalizePath, type Plugin } from 'obsidian'
 import {
-  EMBEDDED_CMAP_URL,
-  EMBEDDED_STANDARD_FONT_URL,
-} from './pdfEmbeddedAssetFactories'
+  DISK_PDF_CMAP_URL,
+  DISK_PDF_STANDARD_FONT_URL,
+} from './pdfDiskAssetFactories'
 
 export type PdfAssetUrls = {
   workerSrc: string
@@ -10,23 +11,45 @@ export type PdfAssetUrls = {
   standardFontDataUrl: string
 }
 
-/**
- * Install pdf.js worker from the inlined `?raw` source (Blob URL) and return
- * placeholder cmap/font URLs used with embedded factories.
- */
-export const resolvePdfAssetUrls = async (): Promise<PdfAssetUrls> => {
-  const workerSrc = ensurePdfWebWorker()
-  return {
-    workerSrc,
-    cMapUrl: EMBEDDED_CMAP_URL,
-    standardFontDataUrl: EMBEDDED_STANDARD_FONT_URL,
+let cachedWorkerBlobSrc: string | null = null
+
+const readPluginText = async (plugin: Plugin, relativePath: string): Promise<string> => {
+  const pluginDir = plugin.manifest.dir
+  if (!pluginDir) {
+    throw new Error('Plugin directory is unavailable (manifest.dir is empty).')
   }
+  const path = normalizePath(`${pluginDir}/${relativePath}`)
+  return plugin.app.vault.adapter.read(path)
 }
 
 /**
- * Worker Blob URL is owned by `@foxycape/core` ensurePdfWebWorker for the
- * plugin lifetime; nothing to revoke from the Obsidian host.
+ * Read external `pdfjs/pdf.worker.min.mjs` → Blob URL, then install via
+ * `ensurePdfWebWorker(preferred)`. Cmap/font URLs are placeholders; bytes come
+ * from disk factories after `ensureRuntimeAssets`.
  */
+export const resolvePdfAssetUrls = async (plugin: Plugin): Promise<PdfAssetUrls> => {
+  if (!cachedWorkerBlobSrc) {
+    const workerSource = await readPluginText(plugin, 'pdfjs/pdf.worker.min.mjs')
+    if (!workerSource) {
+      throw new Error('pdf.worker.min.mjs is empty or missing under the plugin directory.')
+    }
+    const blob = new Blob([workerSource], { type: 'text/javascript' })
+    cachedWorkerBlobSrc = URL.createObjectURL(blob)
+  }
+
+  const workerSrc = ensurePdfWebWorker(cachedWorkerBlobSrc)
+  return {
+    workerSrc,
+    cMapUrl: DISK_PDF_CMAP_URL,
+    standardFontDataUrl: DISK_PDF_STANDARD_FONT_URL,
+  }
+}
+
+/** Revoke the worker Blob URL created from the on-disk worker file. */
 export const disposePdfWorkerBlobSrc = () => {
-  // no-op: inlined worker Blob is reused until Obsidian unloads the plugin
+  if (!cachedWorkerBlobSrc) {
+    return
+  }
+  URL.revokeObjectURL(cachedWorkerBlobSrc)
+  cachedWorkerBlobSrc = null
 }

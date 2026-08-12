@@ -3,6 +3,7 @@ import type { IDevice } from '@foxycape/core/kernal'
 import type { IApiClient } from '@/network'
 import { createPluginApiClient } from '@/api/createPluginApiClient'
 import { DeviceService } from '@/api/DeviceService'
+import { ensureRuntimeAssets } from '@/assets/ensureRuntimeAssets'
 import { ObsidianLocale } from '@/i18n'
 import { LicenseService } from '@/license'
 import { installPdfImageRefContextMenu } from '@/obsidian/installPdfImageRefContextMenu'
@@ -23,6 +24,7 @@ import {
   toPersistedSettings,
   type FoxycapePdfSettings,
 } from '@/settings/types'
+import { disposeWasmSignerBlobUrl } from '@/api/resolveWasmSignerUrl'
 import { disposePdfWorkerBlobSrc } from '@/reader/pdfAssets'
 import { DexieStorage } from '@/storage'
 import { applyFoxycapeMenuIcon, registerFoxycapeIcon } from '@/ui/foxycapeIcon'
@@ -181,12 +183,19 @@ export class FoxycapePdfPlugin extends Plugin {
       console.warn('[Foxycape PDF] failed to restore pdf extension', error)
     }
     disposePdfWorkerBlobSrc()
+    disposeWasmSignerBlobUrl()
     void this.storage.dispose()
     void this.locale.dispose()
   }
 
   t = (key: string, defaultText: string, named?: object) =>
     this.locale.getText(key, defaultText, named)
+
+  /**
+   * Download/cache pdf.worker + cmaps + fonts + signer when missing
+   * (same GitHub Release zip). Usually triggered on first PDF open.
+   */
+  ensureRuntimeAssets = () => ensureRuntimeAssets(this, { t: this.t })
 
   syncLocaleIfNeeded = async () => {
     const before = this.locale.getCurrentLanguage()

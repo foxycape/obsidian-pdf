@@ -1,15 +1,23 @@
-import { cpSync, existsSync, mkdirSync, rmSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { Plugin } from 'vite'
 
 const WORKER_RELATIVE = 'legacy/build/pdf.worker.min.mjs'
 
+type CopyPdfjsAssetsOptions = {
+  outDir: string
+  corePdfjsDir: string
+  /** package.json version written to pdfjs/.foxycape-assets-version */
+  version: string
+}
+
 /**
  * Copy pdf.js runtime assets into dist/pdfjs:
- * - cmaps / standard_fonts (fetched by pdf.js)
+ * - cmaps / standard_fonts (served by disk factories)
  * - pdf.worker.min.mjs (read at runtime → Blob URL; not inlined into main.js)
  */
-export const copyPdfjsAssetsPlugin = (outDir: string, corePdfjsDir: string): Plugin => {
+export const copyPdfjsAssetsPlugin = (options: CopyPdfjsAssetsOptions): Plugin => {
+  const { outDir, corePdfjsDir, version } = options
   const pdfjsOutDir = join(outDir, 'pdfjs')
 
   const copy = () => {
@@ -30,6 +38,7 @@ export const copyPdfjsAssetsPlugin = (outDir: string, corePdfjsDir: string): Plu
       recursive: true,
     })
     cpSync(workerFrom, join(pdfjsOutDir, 'pdf.worker.min.mjs'))
+    writeFileSync(join(pdfjsOutDir, '.foxycape-assets-version'), `${version}\n`)
   }
 
   return {

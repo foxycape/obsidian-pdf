@@ -62,6 +62,12 @@ export class CustomPdfOptions extends PdfOptions {
    * Return false to block (caller may show a notice). Not persisted in settings.
    */
   ensureEntitled?: () => boolean
+
+  /**
+   * Runtime-only: install disk-backed CMap / standard-font factories on getDocument.
+   * Not persisted in settings.
+   */
+  documentInitParametersCallback?: (documentInitParameters: Record<string, unknown>) => void
 }
 
 /** Shared defaults for plugin persistence and reader construction. */

@@ -104,8 +104,8 @@ PDF 排版常把句子拦腰截断，复制后满是多余换行。照常选中�
 ```bash
 git submodule update --init --recursive   # 若 vendor/core 以 submodule 检出
 npm install
-npm run build      # → dist/main.js、styles.css、manifest.json（资源已内联）
-npm run dev        # 监听构建
+npm run build      # → dist/main.js、styles.css、manifest.json + foxycape-pdf-assets.zip
+npm run dev        # 监听构建（会把 pdfjs/static sidecar 拷到 dist/）
 npm test
 npm run typecheck
 npm run link       # 将 dist/ junction 到 vault 的 .obsidian/plugins/foxycape-pdf
@@ -113,11 +113,13 @@ npm run link       # 将 dist/ junction 到 vault 的 .obsidian/plugins/foxycape
 
 可用环境变量 `OBSIDIAN_PLUGIN_DIR` 覆盖 `npm run link` 的目标路径。
 
+社区安装只会拿到 Obsidian 标准三文件。**首次打开 PDF** 时，插件会一次性下载约 3MB 的 `foxycape-pdf-assets.zip`（含 pdf.worker、cmaps、标准字体、signer）到插件目录并缓存。本地 `npm run link` 已带 sidecar，无需下载。
+
 ## 发布（Obsidian 社区插件）
 
 1. 在 `package.json` 中提升 `version`（semver `x.y.z`）。构建会同步到 `manifest.json` / `versions.json`。
 2. 提交后创建 GitHub Release，**tag 必须与该 version 完全一致**（如 `3.3.6`，不要加 `v` 前缀）。
-3. 上传 `dist/main.js`、`dist/manifest.json`、`dist/styles.css`（Obsidian 社区插件标准三文件；locales / pdfjs / signer 已内联进 `main.js`）。
+3. 上传 `dist/main.js`、`dist/manifest.json`、`dist/styles.css`，以及 `dist/foxycape-pdf-assets.zip`。
 
 推送版本 tag 会触发 [`.github/workflows/release.yml`](.github/workflows/release.yml) 自动构建并上传上述资产。
 

@@ -322,16 +322,18 @@ export class PdfReaderView extends FileView {
     this.disposeMarkListPanel()
     this.disposeChrome()
     await this.disposeReader()
-    await this.plugin.syncLocaleIfNeeded()
 
     this.fileReadAbort = new AbortController()
     const signal = this.fileReadAbort.signal
 
     try {
-      const assets = await resolvePdfAssetUrls()
+      await this.plugin.ensureRuntimeAssets()
+      await this.plugin.syncLocaleIfNeeded()
+      const assets = await resolvePdfAssetUrls(this.plugin)
       const { settings } = this.plugin
       const session = await createPdfReader({
         app: this.app,
+        plugin: this.plugin,
         assets,
         locale: this.plugin.locale,
         storage: this.plugin.storage,

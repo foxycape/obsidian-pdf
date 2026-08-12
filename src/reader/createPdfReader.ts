@@ -8,7 +8,7 @@ import {
 } from '@foxycape/core/kernal'
 import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
 import { PdfMarker } from '@/marker/PdfMarker'
-import { Platform, type App } from 'obsidian'
+import { Platform, type App, type Plugin } from 'obsidian'
 import {
   CustomPdfOptions,
   DEFAULT_PDF_VIEW_PREFERENCES,
@@ -20,10 +20,12 @@ import {
   ObsidianThemeProvider,
 } from '@/reader/ObsidianThemeProvider'
 import type { PdfAssetUrls } from '@/reader/pdfAssets'
+import { createDiskPdfAssetInitializer } from '@/reader/pdfDiskAssetFactories'
 import type { PdfImageLinkSource } from '@/obsidian/pdfImageRef'
 
 export type CreatePdfReaderOptions = {
   app: App
+  plugin: Plugin
   assets: PdfAssetUrls
   locale: ILocale
   /** Shared plugin storage (Dexie). Must outlive individual reader sessions. */
@@ -48,7 +50,7 @@ export type PdfReaderSession = {
 export const createPdfReader = async (
   options: CreatePdfReaderOptions,
 ): Promise<PdfReaderSession> => {
-  // Worker Blob URL + embedded cmap/font factories are installed before open.
+  // Worker Blob URL + disk cmap/font factories are installed before open.
   const readerOptions = new Options()
   readerOptions.debug = false
   readerOptions.enableHeader = false
@@ -87,6 +89,9 @@ export const createPdfReader = async (
   Object.assign(pdfOptions, DEFAULT_PDF_VIEW_PREFERENCES, options.viewPreferences)
   pdfOptions.getLinkSource = options.getLinkSource
   pdfOptions.ensureEntitled = options.ensureEntitled
+  pdfOptions.documentInitParametersCallback = createDiskPdfAssetInitializer(
+    options.plugin,
+  )
   registerPdfMediaType(reader, pdfOptions)
 
   reader.onRenderered = async (renderer) => {
