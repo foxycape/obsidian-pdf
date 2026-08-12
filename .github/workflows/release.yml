@@ -31,13 +31,17 @@ jobs:
 
       - name: Package plugin assets
         run: |
+          test -f dist/main.js
+          test -f dist/manifest.json
+          test -f dist/styles.css
+          # Obsidian community installs only these three files.
+          if [ -d dist/locales ] || [ -d dist/pdfjs ] || [ -d dist/static ]; then
+            echo "Unexpected sidecar asset directories in dist/" >&2
+            ls -la dist/
+            exit 1
+          fi
           mkdir -p release-assets
           cp dist/main.js dist/manifest.json dist/styles.css release-assets/
-          if [ -d dist/locales ]; then cp -r dist/locales release-assets/; fi
-          if [ -d dist/pdfjs ]; then cp -r dist/pdfjs release-assets/; fi
-          if [ -d dist/static ]; then cp -r dist/static release-assets/; fi
-          cd release-assets
-          zip -r ../foxycape-pdf.zip .
 
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
@@ -46,7 +50,6 @@ jobs:
             release-assets/main.js
             release-assets/manifest.json
             release-assets/styles.css
-            foxycape-pdf.zip
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

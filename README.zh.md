@@ -104,7 +104,7 @@ PDF 排版常把句子拦腰截断，复制后满是多余换行。照常选中�
 ```bash
 git submodule update --init --recursive   # 若 vendor/core 以 submodule 检出
 npm install
-npm run build      # → dist/main.js、styles.css、manifest.json、locales/、pdfjs/、static/
+npm run build      # → dist/main.js、styles.css、manifest.json（资源已内联）
 npm run dev        # 监听构建
 npm test
 npm run typecheck
@@ -117,7 +117,7 @@ npm run link       # 将 dist/ junction 到 vault 的 .obsidian/plugins/foxycape
 
 1. 在 `package.json` 中提升 `version`（semver `x.y.z`）。构建会同步到 `manifest.json` / `versions.json`。
 2. 提交后创建 GitHub Release，**tag 必须与该 version 完全一致**（如 `3.3.6`，不要加 `v` 前缀）。
-3. 至少上传 `dist/main.js`、`dist/manifest.json`、`dist/styles.css`。完整安装还需 `dist/locales/`、`dist/pdfjs/`、`dist/static/`（或把整个 `dist/` 按插件目录结构打成 zip）。
+3. 上传 `dist/main.js`、`dist/manifest.json`、`dist/styles.css`（Obsidian 社区插件标准三文件；locales / pdfjs / signer 已内联进 `main.js`）。
 
 推送版本 tag 会触发 [`.github/workflows/release.yml`](.github/workflows/release.yml) 自动构建并上传上述资产。
 

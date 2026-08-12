@@ -48,7 +48,7 @@ export type PdfReaderSession = {
 export const createPdfReader = async (
   options: CreatePdfReaderOptions,
 ): Promise<PdfReaderSession> => {
-  // Worker Blob URL is installed in resolvePdfAssetUrls() before open.
+  // Worker Blob URL + embedded cmap/font factories are installed before open.
   const readerOptions = new Options()
   readerOptions.debug = false
   readerOptions.enableHeader = false

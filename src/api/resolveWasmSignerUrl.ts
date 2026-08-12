@@ -1,25 +1,23 @@
-import { normalizePath, type Plugin } from 'obsidian'
+import signerSource from '../../static/signer.js?raw'
 
-/** Relative to plugin dist root (copied by vite.copy-signer). */
+/** Kept for ApiSettings.wasmSignerFilePath compatibility (not used for disk IO). */
 export const WASM_SIGNER_RELATIVE = 'static/signer.js'
 
+let cachedSignerBlobUrl: string | null = null
+
 /**
- * Resolve a loadable URL for `injectExternalJS` / ApiClient WASM signing.
- * Uses vault adapter resource path (same pattern as pdf.js static assets).
+ * Inlined signer glue as a Blob URL for `injectExternalJS`.
  */
-export const resolveWasmSignerUrl = async (plugin: Plugin): Promise<string> => {
-  const pluginDir = plugin.manifest.dir
-  if (!pluginDir) {
-    throw new Error('Plugin directory is unavailable (manifest.dir is empty).')
+export const resolveWasmSignerUrl = async (): Promise<string> => {
+  if (cachedSignerBlobUrl) {
+    return cachedSignerBlobUrl
   }
-
-  const adapter = plugin.app.vault.adapter
-  const signerPath = normalizePath(`${pluginDir}/${WASM_SIGNER_RELATIVE}`)
-  if (!(await adapter.exists(signerPath))) {
-    throw new Error(
-      `WASM signer missing at ${signerPath}. Rebuild the plugin so dist/static/signer.js is copied.`,
-    )
+  if (!signerSource) {
+    throw new Error('WASM signer source is not bundled into main.js.')
   }
-
-  return adapter.getResourcePath(signerPath)
+  const blob = new Blob([signerSource], { type: 'text/javascript' })
+  cachedSignerBlobUrl = URL.createObjectURL(blob)
+  return cachedSignerBlobUrl
 }
+
+export const getWasmSignerSource = (): string => signerSource

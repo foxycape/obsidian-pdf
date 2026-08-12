@@ -104,7 +104,7 @@ For the smoothest experience—deep links, highlights, and theme-aware pages—t
 ```bash
 git submodule update --init --recursive   # if vendor/core is checked out as a submodule
 npm install
-npm run build      # → dist/main.js, styles.css, manifest.json, locales/, pdfjs/, static/
+npm run build      # → dist/main.js, styles.css, manifest.json (assets inlined)
 npm run dev        # watch build
 npm test
 npm run typecheck
@@ -117,7 +117,7 @@ Set `OBSIDIAN_PLUGIN_DIR` to override the vault plugin path used by `npm run lin
 
 1. Bump `version` in `package.json` (semver `x.y.z`). Build syncs it into `manifest.json` / `versions.json`.
 2. Commit, then create a GitHub release whose **tag equals that version** (e.g. `3.3.6`, no `v` prefix).
-3. Attach at least `dist/main.js`, `dist/manifest.json`, and `dist/styles.css`. For a full install also include `dist/locales/`, `dist/pdfjs/`, and `dist/static/` (or zip the whole `dist/` contents into the plugin folder layout).
+3. Attach `dist/main.js`, `dist/manifest.json`, and `dist/styles.css` (standard Obsidian community plugin layout; locales / pdfjs / signer are inlined into `main.js`).
 
 Pushing a version tag runs [`.github/workflows/release.yml`](.github/workflows/release.yml), which builds and uploads those assets.
 

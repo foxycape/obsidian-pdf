@@ -328,7 +328,7 @@ export class PdfReaderView extends FileView {
     const signal = this.fileReadAbort.signal
 
     try {
-      const assets = await resolvePdfAssetUrls(this.plugin)
+      const assets = await resolvePdfAssetUrls()
       const { settings } = this.plugin
       const session = await createPdfReader({
         app: this.app,

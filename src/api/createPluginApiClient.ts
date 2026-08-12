@@ -25,7 +25,7 @@ export type PluginApiContext = {
 
 /** Build the shared {@link IApiClient} + {@link IDevice} used by the Obsidian PDF plugin. */
 export const createPluginApiClient = (
-  plugin: Plugin,
+  _plugin: Plugin,
   config: PluginApiConfig = {},
 ): PluginApiContext => {
   const device: IDevice = new WebBrowser(new WebPlatform(), new WebEnvironment())
@@ -39,7 +39,7 @@ export const createPluginApiClient = (
     serverIsSupportCamelcase: true,
     enableWasm: true,
     wasmSignerFilePath: WASM_SIGNER_RELATIVE,
-    getWasmSignerUrl: async () => resolveWasmSignerUrl(plugin),
+    getWasmSignerUrl: async () => resolveWasmSignerUrl(),
   }
   return {
     apiClient: new ApiClient(

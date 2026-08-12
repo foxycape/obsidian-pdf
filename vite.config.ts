@@ -1,11 +1,10 @@
+import { rmSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createObsidianPluginConfig } from './scripts/vite/createObsidianPluginConfig'
 import { resolveFoxycapeCore } from './scripts/resolveFoxycapeCore'
 import type { Plugin } from 'vite'
-import { copyLocaleAssetsPlugin } from './vite.copy-locales'
-import { copyPdfjsAssetsPlugin } from './vite.copy-pdfjs'
-import { copySignerAssetsPlugin } from './vite.copy-signer'
+import { inlinePdfjsBinariesPlugin } from './vite.inline-pdfjs-binaries'
 import { patchPdfViewerImportPlugin } from './vite.patch-pdf-viewer'
 import {
   assertNoHostPdfjsGlobalsPlugin,
@@ -18,46 +17,13 @@ import {
 
 const packageDir = fileURLToPath(new URL('.', import.meta.url))
 const { pdfjsDir: corePdfjsDir } = resolveFoxycapeCore(packageDir)
-const localesSrcDir = resolve(packageDir, 'src/i18n/locales')
-const signerSrcFile = resolve(packageDir, 'static/signer.js')
 const outDir = resolve(packageDir, 'dist')
 const mainJsPath = resolve(outDir, 'main.js')
-const workerRawStub = resolve(packageDir, 'src/reader/pdfWorkerRawStub.ts')
 const foxycapePdfViewer = resolve(packageDir, 'src/reader/foxycapePdfViewer.ts')
 const pdfViewerPath = resolve(corePdfjsDir, 'legacy/web/pdf_viewer.mjs').replace(
   /\\/g,
   '/',
 )
-
-/**
- * Keep pdf.worker out of main.js:
- * - `?url` → empty (Obsidian app:// cannot load module workers)
- * - `?raw` → stub module (worker is copied to dist and read → Blob URL at runtime)
- *
- * Must run with `enforce: 'pre'` so Vite's asset/`?raw` pipeline never inlines the 1.3MB worker.
- */
-const stubPdfWorkerImportsPlugin = (): Plugin => ({
-  name: 'stub-pdf-worker-imports',
-  enforce: 'pre',
-  resolveId(id) {
-    if (!id.includes('pdf.worker')) {
-      return null
-    }
-    if (id.includes('?raw')) {
-      return workerRawStub
-    }
-    if (id.includes('?url')) {
-      return '\0pdf-worker-url-stub'
-    }
-    return null
-  },
-  load(id) {
-    if (id === '\0pdf-worker-url-stub') {
-      return 'export default ""'
-    }
-    return null
-  },
-})
 
 /**
  * Redirect imports of core's pdf_viewer.mjs to foxycapePdfViewer, except when
@@ -84,6 +50,16 @@ const isolatePdfViewerPlugin = (): Plugin => ({
   },
 })
 
+/** Remove legacy sidecar asset dirs so dist matches Obsidian's 3-file layout. */
+const cleanSidecarAssetDirsPlugin = (distDir: string): Plugin => ({
+  name: 'clean-sidecar-asset-dirs',
+  closeBundle() {
+    for (const name of ['locales', 'pdfjs', 'static']) {
+      rmSync(resolve(distDir, name), { recursive: true, force: true })
+    }
+  },
+})
+
 const base = createObsidianPluginConfig({
   packageDir,
   outDirName: 'dist',
@@ -93,14 +69,12 @@ export default {
   ...base,
   plugins: [
     stubVendorWebStoragePlugin(),
-    stubPdfWorkerImportsPlugin(),
     isolatePdfViewerPlugin(),
     renamePdfjsGlobalsPlugin(),
     patchPdfViewerImportPlugin(corePdfjsDir),
+    inlinePdfjsBinariesPlugin(corePdfjsDir),
     ...(base.plugins ?? []),
-    copyPdfjsAssetsPlugin(outDir, corePdfjsDir),
-    copyLocaleAssetsPlugin(outDir, localesSrcDir),
-    copySignerAssetsPlugin(outDir, signerSrcFile),
+    cleanSidecarAssetDirsPlugin(outDir),
     assertNoHostPdfjsGlobalsPlugin(mainJsPath),
     assertNoDynamicScriptElementsPlugin(mainJsPath),
   ],

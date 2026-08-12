@@ -26,3 +26,11 @@ declare module '*.js?url'
 declare module '*.mjs?url'
 declare module '*/?url'
 declare module '*.css?raw'
+declare module 'virtual:pdfjs-cmaps' {
+  const value: Record<string, string>
+  export default value
+}
+declare module 'virtual:pdfjs-standard-fonts' {
+  const value: Record<string, string>
+  export default value
+}

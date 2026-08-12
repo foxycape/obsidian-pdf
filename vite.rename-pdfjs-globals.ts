@@ -17,7 +17,7 @@ export const renamePdfjsGlobalsInCode = (code: string): string => {
 }
 
 const isBundledPdfjsSource = (id: string) => {
-  const normalized = id.replace(/\\/g, '/')
+  const normalized = id.split('?')[0].replace(/\\/g, '/')
   if (normalized.includes('\0')) {
     return false
   }
@@ -25,6 +25,8 @@ const isBundledPdfjsSource = (id: string) => {
     normalized.includes('/pdfjs/') &&
     (normalized.endsWith('/legacy/build/pdf.mjs') ||
       normalized.endsWith('/legacy/build/pdf.min.mjs') ||
+      normalized.endsWith('/legacy/build/pdf.worker.min.mjs') ||
+      normalized.endsWith('/legacy/build/pdf.worker.min.js') ||
       normalized.endsWith('/legacy/web/pdf_viewer.mjs'))
   )
 }
