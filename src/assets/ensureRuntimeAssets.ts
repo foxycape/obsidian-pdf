@@ -178,7 +178,7 @@ export const ensureRuntimeAssets = async (
     return
   }
 
-  if (!ensurePromise) {
+  if (ensurePromise === null) {
     ensurePromise = showRuntimeAssetsModal({
       app: plugin.app,
       t,

@@ -139,9 +139,7 @@ export class RuntimeAssetsModal extends Modal {
   private setDownloading = () => {
     this.progressEl?.addClass('is-indeterminate')
     this.progressEl?.removeClass('is-determinate')
-    if (this.progressFillEl) {
-      this.progressFillEl.style.width = ''
-    }
+    this.progressFillEl?.setCssStyles({ width: '' })
     if (this.statusEl) {
       this.statusEl.setText(
         this.t('plugin_assets_modal_status_downloading', 'Downloading…'),
@@ -153,9 +151,9 @@ export class RuntimeAssetsModal extends Modal {
     this.progressEl?.removeClass('is-indeterminate')
     this.progressEl?.addClass('is-determinate')
     const ratio = total > 0 ? Math.min(1, current / total) : 0
-    if (this.progressFillEl) {
-      this.progressFillEl.style.width = `${Math.round(ratio * 100)}%`
-    }
+    this.progressFillEl?.setCssStyles({
+      width: `${Math.round(ratio * 100)}%`,
+    })
     if (this.statusEl) {
       this.statusEl.setText(
         this.t(
@@ -170,9 +168,7 @@ export class RuntimeAssetsModal extends Modal {
   private setDone = () => {
     this.progressEl?.removeClass('is-indeterminate')
     this.progressEl?.addClass('is-determinate')
-    if (this.progressFillEl) {
-      this.progressFillEl.style.width = '100%'
-    }
+    this.progressFillEl?.setCssStyles({ width: '100%' })
     if (this.statusEl) {
       this.statusEl.setText(
         this.t('plugin_assets_modal_status_done', 'Assets installed'),
