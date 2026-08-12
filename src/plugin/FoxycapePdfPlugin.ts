@@ -3,7 +3,10 @@ import type { IDevice } from '@foxycape/core/kernal'
 import type { IApiClient } from '@/network'
 import { createPluginApiClient } from '@/api/createPluginApiClient'
 import { DeviceService } from '@/api/DeviceService'
-import { ensureRuntimeAssets } from '@/assets/ensureRuntimeAssets'
+import {
+  ensureRuntimeAssets,
+  hasInstalledRuntimeAssets,
+} from '@/assets/ensureRuntimeAssets'
 import { ObsidianLocale } from '@/i18n'
 import { LicenseService } from '@/license'
 import { installPdfImageRefContextMenu } from '@/obsidian/installPdfImageRefContextMenu'
@@ -77,8 +80,10 @@ export class FoxycapePdfPlugin extends Plugin {
     registerFoxycapeIcon()
 
     await this.licenseService.ensureTrialStarted()
-    void this.deviceService.registerDevice()
-    void this.licenseService.validateOnStartupIfNeeded()
+    // Device/license API needs signer.js from the asset pack — defer until
+    // assets exist (local dist/ or after first PDF-open download). Avoids a
+    // download modal on every Obsidian launch.
+    void this.runNetworkWhenAssetsReady()
     this.licenseService.startPeriodicValidation()
 
     this.registerView(
@@ -193,9 +198,21 @@ export class FoxycapePdfPlugin extends Plugin {
 
   /**
    * Download/cache pdf.worker + cmaps + fonts + signer when missing
-   * (same GitHub Release zip). Usually triggered on first PDF open.
+   * (same GitHub Release zip). Triggered on first PDF open (not on plugin load).
    */
-  ensureRuntimeAssets = () => ensureRuntimeAssets(this, { t: this.t })
+  ensureRuntimeAssets = async () => {
+    await ensureRuntimeAssets(this, { t: this.t })
+    void this.runNetworkWhenAssetsReady()
+  }
+
+  /** Register device / validate license only when runtime assets are on disk. */
+  runNetworkWhenAssetsReady = async () => {
+    if (!(await hasInstalledRuntimeAssets(this))) {
+      return
+    }
+    void this.deviceService.registerDevice()
+    void this.licenseService.validateOnStartupIfNeeded()
+  }
 
   syncLocaleIfNeeded = async () => {
     const before = this.locale.getCurrentLanguage()

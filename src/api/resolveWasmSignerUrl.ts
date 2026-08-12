@@ -1,5 +1,5 @@
 import { normalizePath, type Plugin } from 'obsidian'
-import { ensureRuntimeAssets } from '@/assets/ensureRuntimeAssets'
+import { hasInstalledRuntimeAssets } from '@/assets/ensureRuntimeAssets'
 
 /** Kept for ApiSettings.wasmSignerFilePath compatibility (not used for disk IO). */
 export const WASM_SIGNER_RELATIVE = 'static/signer.js'
@@ -8,14 +8,20 @@ let cachedSignerBlobUrl: string | null = null
 
 /**
  * Load `static/signer.js` from the plugin directory as a Blob URL for
- * `injectExternalJS`. Downloads the runtime asset pack on first use if needed.
+ * `injectExternalJS`. Does **not** download assets — callers that need the
+ * pack (first PDF open / explicit license actions) must `ensureRuntimeAssets`
+ * first so Obsidian startup stays quiet.
  */
 export const resolveWasmSignerUrl = async (plugin: Plugin): Promise<string> => {
   if (cachedSignerBlobUrl) {
     return cachedSignerBlobUrl
   }
 
-  await ensureRuntimeAssets(plugin)
+  if (!(await hasInstalledRuntimeAssets(plugin))) {
+    throw new Error(
+      'Runtime assets are not installed yet (open a PDF once to download them).',
+    )
+  }
 
   const pluginDir = plugin.manifest.dir
   if (!pluginDir) {
@@ -23,9 +29,13 @@ export const resolveWasmSignerUrl = async (plugin: Plugin): Promise<string> => {
   }
 
   const path = normalizePath(`${pluginDir}/${WASM_SIGNER_RELATIVE}`)
+  if (!(await plugin.app.vault.adapter.exists(path))) {
+    throw new Error(`WASM signer missing at ${path}.`)
+  }
+
   const signerSource = await plugin.app.vault.adapter.read(path)
   if (!signerSource) {
-    throw new Error('WASM signer source is missing under the plugin directory.')
+    throw new Error('WASM signer source is empty.')
   }
 
   const blob = new Blob([signerSource], { type: 'text/javascript' })

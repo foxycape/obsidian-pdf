@@ -8,7 +8,7 @@ export const RUNTIME_ASSETS_ZIP_NAME = 'foxycape-pdf-assets.zip'
 export const RUNTIME_ASSETS_VERSION_MARKER = 'pdfjs/.foxycape-assets-version'
 
 /**
- * Approximate download size shown in the first-open Notice.
+ * Approximate download size shown in the first-open assets modal.
  * Keep in sync with the packaged zip (worker + cmaps + fonts + signer).
  */
 export const RUNTIME_ASSETS_SIZE_HINT = '~3 MB'

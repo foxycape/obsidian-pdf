@@ -1,5 +1,5 @@
 import { unzipSync } from 'fflate'
-import { Notice, normalizePath, requestUrl, type Plugin } from 'obsidian'
+import { normalizePath, requestUrl, type Plugin } from 'obsidian'
 import {
   RUNTIME_ASSETS_MARKERS,
   RUNTIME_ASSETS_SIZE_HINT,
@@ -7,6 +7,10 @@ import {
   RUNTIME_ASSETS_ZIP_NAME,
   buildRuntimeAssetsDownloadUrl,
 } from './constants'
+import {
+  showRuntimeAssetsModal,
+  type RuntimeAssetsProgressUi,
+} from '@/ui/RuntimeAssetsModal'
 
 type Translate = (key: string, defaultText: string, named?: object) => string
 
@@ -83,7 +87,11 @@ const isSafeZipEntryName = (name: string): boolean => {
   )
 }
 
-const extractZipToPluginDir = async (plugin: Plugin, zipBytes: Uint8Array) => {
+const extractZipToPluginDir = async (
+  plugin: Plugin,
+  zipBytes: Uint8Array,
+  onProgress?: (current: number, total: number) => void,
+) => {
   const pluginDir = plugin.manifest.dir
   if (!pluginDir) {
     throw new Error('Plugin directory is unavailable (manifest.dir is empty).')
@@ -91,13 +99,14 @@ const extractZipToPluginDir = async (plugin: Plugin, zipBytes: Uint8Array) => {
 
   const adapter = plugin.app.vault.adapter
   const entries = unzipSync(zipBytes)
+  const files = Object.entries(entries).filter(([rawName]) =>
+    isSafeZipEntryName(rawName.replace(/\\/g, '/')),
+  )
+  const total = files.length
   let written = 0
 
-  for (const [rawName, data] of Object.entries(entries)) {
+  for (const [rawName, data] of files) {
     const name = rawName.replace(/\\/g, '/')
-    if (!isSafeZipEntryName(name)) {
-      continue
-    }
     const target = joinPluginPath(pluginDir, name)
     await ensureParentDir(adapter, target)
     await adapter.writeBinary(
@@ -105,6 +114,7 @@ const extractZipToPluginDir = async (plugin: Plugin, zipBytes: Uint8Array) => {
       data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength),
     )
     written += 1
+    onProgress?.(written, total)
   }
 
   if (written === 0) {
@@ -116,47 +126,33 @@ const extractZipToPluginDir = async (plugin: Plugin, zipBytes: Uint8Array) => {
   await adapter.write(markerPath, `${plugin.manifest.version}\n`)
 }
 
-const downloadAndInstall = async (plugin: Plugin, t: Translate) => {
+const downloadAndInstall = async (
+  plugin: Plugin,
+  t: Translate,
+  ui: RuntimeAssetsProgressUi,
+) => {
   const version = plugin.manifest.version
   const url = buildRuntimeAssetsDownloadUrl(version)
 
-  const progressNotice = new Notice(
-    t(
-      'plugin_notice_assets_downloading',
-      'Foxycape PDF: first-time setup — downloading reader assets ({size}). Includes PDF worker, fonts, character maps, and license signer. One-time only; cached in the plugin folder.',
-      { size: RUNTIME_ASSETS_SIZE_HINT },
-    ),
-    0,
-  )
-
-  try {
-    const response = await requestUrl({ url, throw: false })
-    if (response.status !== 200) {
-      throw new Error(
-        t(
-          'plugin_notice_assets_download_failed',
-          'Failed to download runtime assets (HTTP {status}).',
-          { status: String(response.status) },
-        ) + ` URL: ${url}`,
-      )
-    }
-
-    const bytes = new Uint8Array(response.arrayBuffer)
-    if (bytes.byteLength < 64) {
-      throw new Error(`Downloaded ${RUNTIME_ASSETS_ZIP_NAME} is empty or invalid.`)
-    }
-
-    await extractZipToPluginDir(plugin, bytes)
-  } finally {
-    progressNotice.hide()
+  ui.setDownloading()
+  const response = await requestUrl({ url, throw: false })
+  if (response.status !== 200) {
+    throw new Error(
+      t(
+        'plugin_notice_assets_download_failed',
+        'Failed to download runtime assets (HTTP {status}).',
+        { status: String(response.status) },
+      ),
+    )
   }
 
-  new Notice(
-    t(
-      'plugin_notice_assets_installed',
-      'Foxycape PDF: reader assets installed. Opening PDF…',
-    ),
-  )
+  const bytes = new Uint8Array(response.arrayBuffer)
+  if (bytes.byteLength < 64) {
+    throw new Error(`Downloaded ${RUNTIME_ASSETS_ZIP_NAME} is empty or invalid.`)
+  }
+
+  ui.setInstalling(0, 1)
+  await extractZipToPluginDir(plugin, bytes, ui.setInstalling)
 }
 
 /**
@@ -183,19 +179,26 @@ export const ensureRuntimeAssets = async (
   }
 
   if (!ensurePromise) {
-    ensurePromise = downloadAndInstall(plugin, t).finally(() => {
-      ensurePromise = null
+    ensurePromise = showRuntimeAssetsModal({
+      app: plugin.app,
+      t,
+      sizeHint: RUNTIME_ASSETS_SIZE_HINT,
+      run: (ui) => downloadAndInstall(plugin, t, ui),
     })
+      .then(async () => {
+        if (!(await hasInstalledRuntimeAssets(plugin, version))) {
+          throw new Error(
+            t(
+              'plugin_notice_assets_still_missing',
+              'Runtime assets are still missing after download.',
+            ),
+          )
+        }
+      })
+      .finally(() => {
+        ensurePromise = null
+      })
   }
 
   await ensurePromise
-
-  if (!(await hasInstalledRuntimeAssets(plugin, version))) {
-    throw new Error(
-      t(
-        'plugin_notice_assets_still_missing',
-        'Runtime assets are still missing after download.',
-      ),
-    )
-  }
 }

@@ -167,6 +167,18 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
     this.isLicenseChecking = true
     this.lastUnbindError = null
     this.refreshLicenseStatus()
+    try {
+      // License API needs signer from the asset pack; prompt download if missing.
+      await this.plugin.ensureRuntimeAssets()
+    } catch (error) {
+      this.isLicenseChecking = false
+      this.lastOutcome = {
+        kind: 'network_error',
+        message: error instanceof Error ? error.message : String(error),
+      }
+      this.refreshLicenseStatus()
+      return
+    }
     const outcome = await this.plugin.licenseService.setLicense(value)
     this.isLicenseChecking = false
     this.lastOutcome = outcome
@@ -207,6 +219,15 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
     this.isLicenseUnbinding = true
     this.lastUnbindError = null
     this.refreshLicenseStatus()
+    try {
+      await this.plugin.ensureRuntimeAssets()
+    } catch (error) {
+      this.isLicenseUnbinding = false
+      this.lastUnbindError =
+        error instanceof Error ? error.message : String(error)
+      this.refreshLicenseStatus()
+      return
+    }
     const outcome = await this.plugin.licenseService.unbindLicense()
     this.isLicenseUnbinding = false
 
