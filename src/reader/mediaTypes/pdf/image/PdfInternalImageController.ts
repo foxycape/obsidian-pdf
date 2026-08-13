@@ -78,6 +78,7 @@ export class PdfInternalImageController implements IDisposable {
   private currentDoc: IPdfDocument | null = null
   private currentDescriptor: ImageDescriptor | null = null
   private busyAction: ImageExportAction | null = null
+  private paused = false
   private readonly supportsHoverLens =
     typeof window !== 'undefined' &&
     window.matchMedia('(hover: hover) and (pointer: fine)').matches
@@ -281,6 +282,16 @@ export class PdfInternalImageController implements IDisposable {
     this.moreWrap.classList.remove('is-open')
   }
 
+  setPaused = (paused: boolean) => {
+    this.paused = paused
+    if (paused) {
+      this.hideLensNow()
+      this.mobileLensHost.hide()
+      return
+    }
+    this.mobileLensHost.show()
+  }
+
   private bindEvents() {
     const events = this.reader.events
     events.on(EventNames.PdfPageRender, this.onPdfPageRender)
@@ -355,7 +366,7 @@ export class PdfInternalImageController implements IDisposable {
     pageView: { canvas?: HTMLCanvasElement; id: number; width: number; height: number }
     pageNumber: number
   }) => {
-    if (!this.options.enableViewPdfImages || this.supportsHoverLens) {
+    if (this.paused || !this.options.enableViewPdfImages || this.supportsHoverLens) {
       return
     }
     const canvas = pageView.canvas
@@ -533,7 +544,7 @@ export class PdfInternalImageController implements IDisposable {
   }
 
   private checkContainsImageAsync = async (e: PointerEvent, doc?: IPdfDocument) => {
-    if (!this.options.enableViewPdfImages || !this.supportsHoverLens) {
+    if (this.paused || !this.options.enableViewPdfImages || !this.supportsHoverLens) {
       return
     }
     // Keep toolbar visible while interacting with it (incl. popup menu).

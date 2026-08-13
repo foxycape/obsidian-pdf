@@ -145,6 +145,21 @@ export class FoxycapePdfPlugin extends Plugin {
       },
     })
 
+    this.addCommand({
+      id: 'pdf-screenshot',
+      name: this.t('plugin_command_pdf_screenshot', 'Screenshot region in PDF'),
+      checkCallback: (checking) => {
+        const view = this.getActiveFoxycapePdfView()
+        if (!view) {
+          return false
+        }
+        if (!checking) {
+          view.requestToggleScreenshot()
+        }
+        return true
+      },
+    })
+
     this.registerEvent(
       this.app.workspace.on('file-menu', (menu, file) => {
         if (!(file instanceof TFile) || file.extension.toLowerCase() !== 'pdf') {

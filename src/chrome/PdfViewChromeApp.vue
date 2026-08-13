@@ -16,12 +16,15 @@ const props = defineProps<{
   t: (key: string, fallback: string, vars?: Record<string, string | number>) => string
   sidebarOpen: boolean
   settingsOpenNonce: number
+  screenshotActive: boolean
   onToggleSidebar: () => void
   onOpenMoreMenu?: (event: MouseEvent) => void
+  onToggleScreenshot?: () => void
   getViewPreferences: () => PdfViewPreferences
   onUpdateViewPreferences: (patch: PdfViewPreferencePatch) => Promise<void>
   navTarget: HTMLElement
   pageTarget: HTMLElement
+  screenshotTarget: HTMLElement
   zoomTarget: HTMLElement
   settingsTarget: HTMLElement
   moreTarget?: HTMLElement | null
@@ -32,6 +35,10 @@ useApplyIcon(navIconEl, () => 'lucide-panel-left')
 
 const onMoreClick = (event: MouseEvent) => {
   props.onOpenMoreMenu?.(event)
+}
+
+const onScreenshotClick = () => {
+  props.onToggleScreenshot?.()
 }
 </script>
 
@@ -52,6 +59,15 @@ const onMoreClick = (event: MouseEvent) => {
   </Teleport>
   <Teleport :to="pageTarget">
     <PdfPagePicker :reader="reader" :t="t" />
+  </Teleport>
+  <Teleport :to="screenshotTarget">
+    <ClickableIconButton
+      icon="lucide-crop"
+      :class-name="['view-action', 'foxycape-pdf-screenshot-btn', { 'is-active': screenshotActive }]"
+      :label="t('pdf_chrome_screenshot', 'Screenshot')"
+      :aria-pressed="screenshotActive"
+      @click="onScreenshotClick"
+    />
   </Teleport>
   <Teleport :to="zoomTarget">
     <PdfZoomControls :reader="reader" :t="t" />

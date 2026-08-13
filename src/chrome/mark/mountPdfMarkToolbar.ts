@@ -6,6 +6,7 @@ import type { PdfMarkToolbarLinkSource } from './usePdfMarkToolbar'
 
 export type PdfMarkToolbarMount = {
   updateSession: (reader: Reader, getMarker: () => IMarker | undefined) => void
+  setPaused: (paused: boolean) => void
   dispose: () => void
 }
 
@@ -43,6 +44,9 @@ export const mountPdfMarkToolbar = (options: {
     updateSession: (reader: Reader, getMarker: () => IMarker | undefined) => {
       currentReader = markRaw(reader)
       currentGetMarker = getMarker
+    },
+    setPaused: (paused: boolean) => {
+      root.toggleClass('is-paused', paused)
     },
     dispose: () => {
       app.unmount()

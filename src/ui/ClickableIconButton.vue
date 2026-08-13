@@ -30,8 +30,7 @@ defineExpose({ el })
     type="button"
     class="clickable-icon"
     :class="[className, attrs.class]"
-    :aria-label="label ?? (attrs['aria-label'] as string | undefined)"
-    :title="title ?? label ?? (attrs.title as string | undefined)"
     v-bind="forwardedAttrs"
+    :aria-label="label ?? (attrs['aria-label'] as string | undefined)"
   />
 </template>

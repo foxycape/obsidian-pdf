@@ -27,6 +27,10 @@ import {
   type PdfSearchBarMount,
 } from '@/chrome/search/mountPdfSearchBar'
 import {
+  mountPdfScreenshot,
+  type PdfScreenshotMount,
+} from '@/chrome/screenshot/mountPdfScreenshot'
+import {
   mountPdfMarkListPanel,
   type PdfMarkListPanelMount,
 } from '@/sidebar/mountPdfMarkListPanel'
@@ -52,6 +56,7 @@ export class PdfReaderView extends FileView {
   private chromeMount: PdfChromeMount | null = null
   private markToolbarMount: PdfMarkToolbarMount | null = null
   private searchBarMount: PdfSearchBarMount | null = null
+  private screenshotMount: PdfScreenshotMount | null = null
   private markListMount: PdfMarkListPanelMount | null = null
   private sidebarOpen = false
   private markPanelOpen = false
@@ -95,6 +100,10 @@ export class PdfReaderView extends FileView {
       return
     }
     this.searchBarMount?.toggle()
+  }
+
+  requestToggleScreenshot() {
+    this.screenshotMount?.toggle()
   }
 
   // Must be prototype methods: ItemView calls getViewType() inside super().
@@ -261,6 +270,7 @@ export class PdfReaderView extends FileView {
     this.unbindChromePlacementObserver()
     this.unbindWorkspaceEvents()
     this.disposeSearchBar()
+    this.disposeScreenshot()
     this.disposeMarkToolbar()
     this.disposeMarkListPanel()
     this.disposeChrome()
@@ -284,6 +294,7 @@ export class PdfReaderView extends FileView {
 
   async onUnloadFile(_file: TFile) {
     this.disposeSearchBar()
+    this.disposeScreenshot()
     this.disposeMarkToolbar()
     this.disposeMarkListPanel()
     this.disposeChrome()
@@ -318,6 +329,7 @@ export class PdfReaderView extends FileView {
     }
 
     this.disposeSearchBar()
+    this.disposeScreenshot()
     this.disposeMarkToolbar()
     this.disposeMarkListPanel()
     this.disposeChrome()
@@ -382,6 +394,7 @@ export class PdfReaderView extends FileView {
       this.mountChrome(session.reader)
       this.mountMarkToolbar(session.reader, session.getMarker)
       this.mountSearchBar(session.reader)
+      this.mountScreenshot(session.reader)
       this.mountMarkListPanel(session.reader, session.getMarker)
 
       if (this.pendingSubpath) {
@@ -396,6 +409,7 @@ export class PdfReaderView extends FileView {
       console.error('[Foxycape PDF] failed to open file', error)
       const message = error instanceof Error ? error.message : String(error)
       this.disposeSearchBar()
+      this.disposeScreenshot()
       this.disposeMarkToolbar()
       this.disposeMarkListPanel()
       this.disposeChrome()
@@ -538,6 +552,10 @@ export class PdfReaderView extends FileView {
       onOpenMoreMenu: (event) => {
         this.showPaneMenu(event)
       },
+      screenshotActive: this.screenshotMount?.isActive() ?? false,
+      onToggleScreenshot: () => {
+        this.screenshotMount?.toggle()
+      },
     })
     this.containerEl.toggleClass('foxycape-pdf-sidebar-open', this.sidebarOpen)
     this.syncMobilePanelOutsideClose()
@@ -553,6 +571,7 @@ export class PdfReaderView extends FileView {
       return
     }
     this.mountChrome(this.reader)
+    this.chromeMount?.setScreenshotActive(this.screenshotMount?.isActive() ?? false)
   }
 
   private mountMarkToolbar(reader: Reader, getMarker: () => IMarker | undefined) {
@@ -593,6 +612,42 @@ export class PdfReaderView extends FileView {
     }
   }
 
+  private mountScreenshot(reader: Reader) {
+    if (!this.mountEl) {
+      return
+    }
+    this.disposeScreenshot()
+    try {
+      this.screenshotMount = mountPdfScreenshot({
+        viewEl: this.containerEl,
+        hostEl: this.mountEl,
+        reader,
+        t: this.plugin.t,
+        getLinkSource: () => {
+          const pdfFile = this.file
+          if (!pdfFile) {
+            return null
+          }
+          return { app: this.app, pdfFile }
+        },
+        ensureEntitled: () => this.plugin.ensureLicenseEntitlement(),
+        onActiveChange: (active) => {
+          this.syncScreenshotMode(active)
+        },
+      })
+    } catch (error) {
+      console.warn('[Foxycape PDF] failed to mount screenshot overlay', error)
+      this.screenshotMount = null
+    }
+  }
+
+  private syncScreenshotMode(active: boolean) {
+    this.containerEl.toggleClass('foxycape-pdf--screenshot-mode', active)
+    this.markToolbarMount?.setPaused(active)
+    getPdfRenderer(this.reader)?.setImageToolsPaused(active)
+    this.chromeMount?.setScreenshotActive(active)
+  }
+
   private mountMarkListPanel(
     reader: Reader,
     getMarker: () => IMarker | undefined,
@@ -631,6 +686,12 @@ export class PdfReaderView extends FileView {
   private disposeSearchBar() {
     this.searchBarMount?.dispose()
     this.searchBarMount = null
+  }
+
+  private disposeScreenshot() {
+    this.screenshotMount?.dispose()
+    this.screenshotMount = null
+    this.syncScreenshotMode(false)
   }
 
   private disposeMarkListPanel() {

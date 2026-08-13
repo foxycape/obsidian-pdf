@@ -47,6 +47,7 @@
   height: 100%;
 }
 
+.workspace-leaf-content[data-type="foxycape-pdf"] .foxycape-pdf-header-screenshot,
 .workspace-leaf-content[data-type="foxycape-pdf"] .foxycape-pdf-header-zoom,
 .workspace-leaf-content[data-type="foxycape-pdf"] .foxycape-pdf-header-settings,
 .workspace-leaf-content[data-type="foxycape-pdf"] .foxycape-pdf-header-more {
@@ -275,6 +276,10 @@ body.foxycape-pdf-resizing .workspace-leaf-content[data-type="foxycape-pdf"] .te
   pointer-events: none;
   z-index: 1000;
   overflow: visible;
+}
+
+.foxycape-pdf-mark-toolbar-root.is-paused {
+  display: none;
 }
 
 @keyframes foxycape-pdf-toolbar-pop {
@@ -1032,4 +1037,88 @@ body.is-mobile .modal.foxycape-pdf-assets-modal-dialog {
   border: none;
   padding-left: 0;
   padding-right: 0;
+}
+
+.workspace-leaf-content.foxycape-pdf--screenshot-mode .pdfViewer,
+.workspace-leaf-content.foxycape-pdf--screenshot-mode .textLayer {
+  cursor: crosshair;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+}
+
+.foxycape-pdf-screenshot-root {
+  pointer-events: none;
+}
+
+.foxycape-pdf-crop-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  overflow: visible;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.foxycape-pdf-crop-mask {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.foxycape-pdf-crop-hole {
+  position: absolute;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.foxycape-pdf-crop-rect {
+  position: absolute;
+  box-sizing: border-box;
+  pointer-events: auto;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  outline: 1px solid rgba(0, 0, 0, 0.35);
+}
+
+.foxycape-pdf-crop-handle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--background-primary);
+  background: var(--interactive-accent);
+  border-radius: 1px;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
+.foxycape-pdf-crop-handle::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+}
+
+.foxycape-pdf-screenshot-menu {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  border-radius: var(--radius-m, 8px);
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  box-shadow: var(--shadow-s);
+  pointer-events: auto;
+}
+
+.foxycape-pdf-screenshot-menu .clickable-icon {
+  --icon-size: 18px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
 }

@@ -18,7 +18,7 @@
     "i18n:generate": "node ./scripts/generate-locales.mjs"
   },
   "dependencies": {
-    "@foxycape/core": "^1.1.5",
+    "@foxycape/core": "^1.1.6",
     "dexie": "4.4.4",
     "events": "^3.3.0",
     "fflate": "^0.8.3",

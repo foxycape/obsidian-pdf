@@ -70,6 +70,10 @@ export class CustomPdfRenderer extends PdfRenderer implements IPdfImageSource {
 
   getCustomOptions = () => this.customOptions
 
+  setImageToolsPaused = (paused: boolean) => {
+    this.imageController?.setPaused(paused)
+  }
+
   /**
    * Apply view preferences at runtime (settings panel).
    * Lazily creates remapper / image controller when first enabled.
