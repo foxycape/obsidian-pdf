@@ -55,6 +55,20 @@ Bright PDF pages can fight a dark vault. Optionally remap grayscale vector color
 ![](docs/gifs/theme-adapt-dark.gif)
 <!-- GIF: docs/gifs/theme-adapt.gif — PDF page follows Obsidian theme -->
 
+### Region screenshot
+
+Skip the OS snipping tool, and skip stitching pages by hand. Click **Screenshot** in the toolbar and drag a region on the PDF. Copy the image, or copy an image citation so you can jump back from the note later.
+
+Crop a region on a single page:
+
+![](docs/gifs/screenshot-single.gif)
+<!-- GIF: docs/gifs/screenshot-single.gif — single-page region screenshot -->
+
+Span the page gap and Foxycape stitches it into one continuous image:
+
+![](docs/gifs/screenshot-multi.gif)
+<!-- GIF: docs/gifs/screenshot-multi.gif — multi-page continuous screenshot -->
+
 ### Compatible with Obsidian’s built-in PDF links
 
 Switching readers shouldn’t break the links you already have. Foxycape understands Obsidian-style `#page=` and `#selection=`, can become the default PDF viewer, reuses an open tab when possible, and adds `#markId=` for precise highlight jumps.

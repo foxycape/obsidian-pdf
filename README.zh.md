@@ -55,6 +55,20 @@ Foxycape PDF 在 Obsidian 内补上这些缺口。
 ![](docs/gifs/theme-adapt-dark.gif)
 <!-- GIF: docs/gifs/theme-adapt.gif — PDF 页面随主题变化 -->
 
+### 框选截图
+
+不必再切到系统截图、跨页还得自己拼。点工具栏「截图」，在 PDF 上拖出选区即可。可复制图片，或复制图片引用——粘贴到笔记后，右键即可跳回原文位置。
+
+单页框选，裁出当前页上的一块：
+
+![](docs/gifs/screenshot-single.gif)
+<!-- GIF: docs/gifs/screenshot-single.gif — 单页框选截图 -->
+
+选区跨过页缝时，自动拼接成一张连续图：
+
+![](docs/gifs/screenshot-multi.gif)
+<!-- GIF: docs/gifs/screenshot-multi.gif — 多页连续截图并拼接 -->
+
 ### 兼容内置阅读器的位置与链接
 
 换阅读器不该弄坏已有链接。兼容 Obsidian 的 `#page=`、`#selection=`，可设为默认 PDF 阅读器，已打开时复用标签，并支持 `#markId=` 精确定位划线。
