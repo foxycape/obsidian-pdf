@@ -212,8 +212,10 @@ export class FoxycapePdfPlugin extends Plugin {
     this.locale.getText(key, defaultText, named)
 
   /**
-   * Download/cache pdf.worker + cmaps + fonts + signer when missing
-   * (same GitHub Release zip). Triggered on first PDF open (not on plugin load).
+   * Download/cache pdf.worker + cmaps + fonts + signer when the on-disk
+   * assets id (pdf.js + signer) does not match this build. Zip comes from
+   * the current plugin GitHub Release. Triggered on first PDF open, not
+   * on every plugin upgrade.
    */
   ensureRuntimeAssets = async () => {
     await ensureRuntimeAssets(this, { t: this.t })

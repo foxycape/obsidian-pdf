@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createObsidianPluginConfig } from './scripts/vite/createObsidianPluginConfig'
@@ -12,6 +11,7 @@ import {
   renamePdfjsGlobalsPlugin,
 } from './vite.rename-pdfjs-globals'
 import { stubPdfWorkerRawPlugin } from './vite.stub-pdf-worker-raw'
+import { buildRuntimeAssetsId } from './scripts/runtimeAssetsId.mjs'
 import {
   assertNoDynamicScriptElementsPlugin,
   stubVendorWebStoragePlugin,
@@ -22,9 +22,7 @@ const { pdfjsDir: corePdfjsDir } = resolveFoxycapeCore(packageDir)
 const outDir = resolve(packageDir, 'dist')
 const mainJsPath = resolve(outDir, 'main.js')
 const signerSrcFile = resolve(packageDir, 'static/signer.js')
-const { version } = JSON.parse(readFileSync(resolve(packageDir, 'package.json'), 'utf8')) as {
-  version: string
-}
+const runtimeAssetsId = buildRuntimeAssetsId(corePdfjsDir, signerSrcFile)
 const foxycapePdfViewer = resolve(packageDir, 'src/reader/foxycapePdfViewer.ts')
 const pdfViewerPath = resolve(corePdfjsDir, 'legacy/web/pdf_viewer.mjs').replace(
   /\\/g,
@@ -63,6 +61,10 @@ const base = createObsidianPluginConfig({
 
 export default {
   ...base,
+  define: {
+    ...base.define,
+    __FOXYCAPE_RUNTIME_ASSETS_ID__: JSON.stringify(runtimeAssetsId),
+  },
   plugins: [
     stubVendorWebStoragePlugin(),
     stubPdfWorkerRawPlugin(),
@@ -70,7 +72,7 @@ export default {
     renamePdfjsGlobalsPlugin(),
     patchPdfViewerImportPlugin(corePdfjsDir),
     ...(base.plugins ?? []),
-    copyPdfjsAssetsPlugin({ outDir, corePdfjsDir, version }),
+    copyPdfjsAssetsPlugin({ outDir, corePdfjsDir, assetsId: runtimeAssetsId }),
     copySignerAssetsPlugin(outDir, signerSrcFile),
     assertNoHostPdfjsGlobalsPlugin(mainJsPath),
     assertNoDynamicScriptElementsPlugin(mainJsPath),

@@ -12,7 +12,6 @@ import { zipSync } from 'fflate'
 const packageDir = fileURLToPath(new URL('..', import.meta.url))
 const distDir = resolve(packageDir, 'dist')
 const zipPath = resolve(distDir, 'foxycape-pdf-assets.zip')
-const { version } = JSON.parse(readFileSync(resolve(packageDir, 'package.json'), 'utf8'))
 
 /** Folders / files included in the runtime asset pack (not inlined into main.js). */
 const INCLUDE_ROOTS = [
@@ -69,12 +68,22 @@ const main = () => {
     entries[toZipKey(abs)] = new Uint8Array(readFileSync(abs))
   }
 
-  // Marker is written at extract time from manifest.version; also ship a build-time
-  // copy so `npm run link` / full dist installs skip the download.
+  // Marker is written by copy-pdfjs from pdf.js + signer id (not plugin semver)
+  // so `npm run link` / full dist installs skip the download. Zip it as-is.
   const markerKey = 'pdfjs/.foxycape-assets-version'
   const markerPath = join(distDir, 'pdfjs', '.foxycape-assets-version')
-  writeFileSync(markerPath, `${version}\n`)
-  entries[markerKey] = new Uint8Array(Buffer.from(`${version}\n`, 'utf8'))
+  if (!existsSync(markerPath)) {
+    throw new Error(
+      `Missing ${markerKey} under dist/. Run vite build (copy plugins) before packaging assets.`,
+    )
+  }
+  const assetsId = readFileSync(markerPath, 'utf8').trim()
+  if (!assetsId.startsWith('pdfjs-')) {
+    throw new Error(
+      `Unexpected assets id in ${markerPath}: ${assetsId}. Expected pdfjs-{version}+signer-{hash}.`,
+    )
+  }
+  entries[markerKey] = new Uint8Array(Buffer.from(`${assetsId}\n`, 'utf8'))
 
   const zipped = zipSync(entries, { level: 6 })
   writeFileSync(zipPath, zipped)

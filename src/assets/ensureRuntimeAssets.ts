@@ -1,6 +1,7 @@
 import { unzipSync } from 'fflate'
 import { normalizePath, requestUrl, type Plugin } from 'obsidian'
 import {
+  RUNTIME_ASSETS_ID,
   RUNTIME_ASSETS_MARKERS,
   RUNTIME_ASSETS_SIZE_HINT,
   RUNTIME_ASSETS_VERSION_MARKER,
@@ -43,7 +44,7 @@ const ensureParentDir = async (
 
 export const hasInstalledRuntimeAssets = async (
   plugin: Plugin,
-  version = plugin.manifest.version,
+  assetsId = RUNTIME_ASSETS_ID,
 ): Promise<boolean> => {
   const pluginDir = plugin.manifest.dir
   if (!pluginDir) {
@@ -56,7 +57,7 @@ export const hasInstalledRuntimeAssets = async (
   }
   try {
     const installed = (await adapter.read(markerPath)).trim()
-    if (installed !== version) {
+    if (installed !== assetsId) {
       return false
     }
   } catch {
@@ -123,7 +124,7 @@ const extractZipToPluginDir = async (
 
   const markerPath = joinPluginPath(pluginDir, RUNTIME_ASSETS_VERSION_MARKER)
   await ensureParentDir(adapter, markerPath)
-  await adapter.write(markerPath, `${plugin.manifest.version}\n`)
+  await adapter.write(markerPath, `${RUNTIME_ASSETS_ID}\n`)
 }
 
 const downloadAndInstall = async (
@@ -131,8 +132,7 @@ const downloadAndInstall = async (
   t: Translate,
   ui: RuntimeAssetsProgressUi,
 ) => {
-  const version = plugin.manifest.version
-  const url = buildRuntimeAssetsDownloadUrl(version)
+  const url = buildRuntimeAssetsDownloadUrl(plugin.manifest.version)
 
   ui.setDownloading()
   const response = await requestUrl({ url, throw: false })
@@ -158,7 +158,9 @@ const downloadAndInstall = async (
 /**
  * Ensure pdf.worker / cmaps / standard_fonts / signer exist under the plugin dir.
  * Community installs only ship main.js / styles.css / manifest.json; the zip is
- * downloaded once from the same GitHub Release tag (typically on first PDF open).
+ * fetched from the current plugin GitHub Release when the on-disk assets id
+ * (pdf.js + signer) does not match this build — typically first PDF open, not
+ * every plugin upgrade.
  */
 export const ensureRuntimeAssets = async (
   plugin: Plugin,
@@ -173,8 +175,7 @@ export const ensureRuntimeAssets = async (
       return defaultText
     })
 
-  const version = plugin.manifest.version
-  if (await hasInstalledRuntimeAssets(plugin, version)) {
+  if (await hasInstalledRuntimeAssets(plugin)) {
     return
   }
 
@@ -186,7 +187,7 @@ export const ensureRuntimeAssets = async (
       run: (ui) => downloadAndInstall(plugin, t, ui),
     })
       .then(async () => {
-        if (!(await hasInstalledRuntimeAssets(plugin, version))) {
+        if (!(await hasInstalledRuntimeAssets(plugin))) {
           throw new Error(
             t(
               'plugin_notice_assets_still_missing',

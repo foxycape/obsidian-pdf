@@ -42,7 +42,7 @@ jobs:
           mkdir -p release-assets
           # Community installer only consumes these three files.
           cp dist/main.js dist/manifest.json dist/styles.css release-assets/
-          # Sidecar zip is downloaded once at runtime (first PDF open).
+          # Sidecar zip is fetched when the on-disk pdf.js/signer id mismatches.
           cp dist/foxycape-pdf-assets.zip release-assets/
 
       - name: Upload release assets

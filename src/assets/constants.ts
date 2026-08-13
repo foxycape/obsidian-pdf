@@ -4,7 +4,13 @@ export const RUNTIME_ASSETS_REPO = 'foxycape/obsidian-pdf'
 /** Release attachment name produced by `npm run build`. */
 export const RUNTIME_ASSETS_ZIP_NAME = 'foxycape-pdf-assets.zip'
 
-/** Written after a successful extract; compared to `manifest.version`. */
+/**
+ * Compatibility id baked into main.js. Compared to the on-disk marker so
+ * plugin-only upgrades skip re-download; pdf.js / signer changes still fetch.
+ */
+export const RUNTIME_ASSETS_ID = __FOXYCAPE_RUNTIME_ASSETS_ID__
+
+/** Written after a successful extract; compared to `RUNTIME_ASSETS_ID`. */
 export const RUNTIME_ASSETS_VERSION_MARKER = 'pdfjs/.foxycape-assets-version'
 
 /**
@@ -21,5 +27,6 @@ export const RUNTIME_ASSETS_MARKERS = [
   'static/signer.js',
 ] as const
 
-export const buildRuntimeAssetsDownloadUrl = (version: string): string =>
-  `https://github.com/${RUNTIME_ASSETS_REPO}/releases/download/${version}/${RUNTIME_ASSETS_ZIP_NAME}`
+/** Zip lives on the current plugin GitHub Release; only fetched when the id mismatches. */
+export const buildRuntimeAssetsDownloadUrl = (pluginVersion: string): string =>
+  `https://github.com/${RUNTIME_ASSETS_REPO}/releases/download/${pluginVersion}/${RUNTIME_ASSETS_ZIP_NAME}`
