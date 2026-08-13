@@ -113,7 +113,7 @@ npm run link       # junction dist/ into your vault's .obsidian/plugins/foxycape
 
 Set `OBSIDIAN_PLUGIN_DIR` to override the vault plugin path used by `npm run link`.
 
-Community installs only receive the three Obsidian files. On **first PDF open**, the plugin downloads `foxycape-pdf-assets.zip` (~3 MB: pdf.worker, cmaps, standard fonts) into the plugin folder. The cache is keyed by **PDF.js + signer identity**, not the plugin version, so routine plugin upgrades do not prompt again. Local `npm run link` already has those sidecars under `dist/`, so no download is needed.
+Community installs only receive the three Obsidian files. Worker and signer are unpacked from `main.js` on first load (no download). Cmaps and standard fonts (~1.5 MB) download silently from `foxycape-pdf-assets.zip` when missing — keyed by **PDF.js version**, so routine plugin upgrades skip the fetch. Local `npm run link` already has those sidecars under `dist/`, so no download is needed.
 
 ## Release (Obsidian Community)
 

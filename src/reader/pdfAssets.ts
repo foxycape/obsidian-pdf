@@ -25,7 +25,7 @@ const readPluginText = async (plugin: Plugin, relativePath: string): Promise<str
 /**
  * Read external `pdfjs/pdf.worker.min.mjs` → Blob URL, then install via
  * `ensurePdfWebWorker(preferred)`. Cmap/font URLs are placeholders; bytes come
- * from disk factories after `ensureRuntimeAssets`.
+ * from disk factories if the remote pack is already on disk.
  */
 export const resolvePdfAssetUrls = async (plugin: Plugin): Promise<PdfAssetUrls> => {
   if (!cachedWorkerBlobSrc) {

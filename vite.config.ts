@@ -11,7 +11,8 @@ import {
   renamePdfjsGlobalsPlugin,
 } from './vite.rename-pdfjs-globals'
 import { stubPdfWorkerRawPlugin } from './vite.stub-pdf-worker-raw'
-import { buildRuntimeAssetsId } from './scripts/runtimeAssetsId.mjs'
+import { embedRuntimeAssetsPlugin } from './vite.embed-runtime-assets'
+import { buildPdfjsCmapsId } from './scripts/runtimeAssetsId.mjs'
 import {
   assertNoDynamicScriptElementsPlugin,
   stubVendorWebStoragePlugin,
@@ -22,7 +23,7 @@ const { pdfjsDir: corePdfjsDir } = resolveFoxycapeCore(packageDir)
 const outDir = resolve(packageDir, 'dist')
 const mainJsPath = resolve(outDir, 'main.js')
 const signerSrcFile = resolve(packageDir, 'static/signer.js')
-const runtimeAssetsId = buildRuntimeAssetsId(corePdfjsDir, signerSrcFile)
+const pdfjsCmapsId = buildPdfjsCmapsId(corePdfjsDir)
 const foxycapePdfViewer = resolve(packageDir, 'src/reader/foxycapePdfViewer.ts')
 const pdfViewerPath = resolve(corePdfjsDir, 'legacy/web/pdf_viewer.mjs').replace(
   /\\/g,
@@ -63,16 +64,21 @@ export default {
   ...base,
   define: {
     ...base.define,
-    __FOXYCAPE_RUNTIME_ASSETS_ID__: JSON.stringify(runtimeAssetsId),
+    __FOXYCAPE_PDFJS_CMAPS_ID__: JSON.stringify(pdfjsCmapsId),
   },
   plugins: [
+    embedRuntimeAssetsPlugin({ corePdfjsDir, signerPath: signerSrcFile }),
     stubVendorWebStoragePlugin(),
     stubPdfWorkerRawPlugin(),
     isolatePdfViewerPlugin(),
     renamePdfjsGlobalsPlugin(),
     patchPdfViewerImportPlugin(corePdfjsDir),
     ...(base.plugins ?? []),
-    copyPdfjsAssetsPlugin({ outDir, corePdfjsDir, assetsId: runtimeAssetsId }),
+    copyPdfjsAssetsPlugin({
+      outDir,
+      corePdfjsDir,
+      cmapsId: pdfjsCmapsId,
+    }),
     copySignerAssetsPlugin(outDir, signerSrcFile),
     assertNoHostPdfjsGlobalsPlugin(mainJsPath),
     assertNoDynamicScriptElementsPlugin(mainJsPath),

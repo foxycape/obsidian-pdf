@@ -2,19 +2,17 @@ import { resolve } from 'node:path'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vitest/config'
 import { createFoxycapeCoreAliases, resolveFoxycapeCore } from './scripts/resolveFoxycapeCore'
-import { buildRuntimeAssetsId } from './scripts/runtimeAssetsId.mjs'
+import { buildPdfjsCmapsId } from './scripts/runtimeAssetsId.mjs'
+import { stubEmbeddedRuntimeAssetsPlugin } from './vite.embed-runtime-assets'
 
 const packageDir = resolve(__dirname)
 const { pdfjsDir } = resolveFoxycapeCore(packageDir)
-const runtimeAssetsId = buildRuntimeAssetsId(
-  pdfjsDir,
-  resolve(packageDir, 'static/signer.js'),
-)
+const pdfjsCmapsId = buildPdfjsCmapsId(pdfjsDir)
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [vue(), stubEmbeddedRuntimeAssetsPlugin()],
   define: {
-    __FOXYCAPE_RUNTIME_ASSETS_ID__: JSON.stringify(runtimeAssetsId),
+    __FOXYCAPE_PDFJS_CMAPS_ID__: JSON.stringify(pdfjsCmapsId),
   },
   resolve: {
     alias: [

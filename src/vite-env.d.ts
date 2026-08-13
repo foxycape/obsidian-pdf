@@ -1,7 +1,11 @@
 /// <reference types="vite/client" />
 
-/** Baked at build time from pdf.js version + signer hash (not plugin semver). */
-declare const __FOXYCAPE_RUNTIME_ASSETS_ID__: string
+/** Baked at build time from pdf.js version only (remote cmaps / fonts pack). */
+declare const __FOXYCAPE_PDFJS_CMAPS_ID__: string
+
+declare module 'virtual:foxycape-embedded-assets' {
+  export const EMBEDDED_RUNTIME_ASSETS_BASE64: string
+}
 
 declare module '*.vue' {
   import type { DefineComponent } from 'vue'

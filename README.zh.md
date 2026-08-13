@@ -113,7 +113,7 @@ npm run link       # 将 dist/ junction 到 vault 的 .obsidian/plugins/foxycape
 
 可用环境变量 `OBSIDIAN_PLUGIN_DIR` 覆盖 `npm run link` 的目标路径。
 
-社区安装只会拿到 Obsidian 标准三文件。**首次打开 PDF** 时，插件会下载约 3MB 的 `foxycape-pdf-assets.zip`（含 pdf.worker、cmaps、标准字体）到插件目录。缓存按 **PDF.js + signer 身份** 识别，与插件版本无关，因此日常插件升级不会再次弹出下载。本地 `npm run link` 已带 sidecar，无需下载。
+社区安装只会拿到 Obsidian 标准三文件。Worker 与 signer 在首次加载时从 `main.js` 解压（无需下载）。字符映射与标准字体（约 1.5 MB）在缺失时从 `foxycape-pdf-assets.zip` 静默下载，按 **PDF.js 版本** 识别，因此日常插件升级不会再次拉取。本地 `npm run link` 已带 sidecar，无需下载。
 
 ## 发布（Obsidian 社区插件）
 

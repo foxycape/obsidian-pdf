@@ -2,13 +2,13 @@ import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { buildRuntimeAssetsDownloadUrl, RUNTIME_ASSETS_ID } from '@/assets/constants'
-import { buildRuntimeAssetsId } from '../scripts/runtimeAssetsId.mjs'
+import { buildRuntimeAssetsDownloadUrl, RUNTIME_CMAPS_ID } from '@/assets/constants'
+import { buildPdfjsCmapsId, buildRuntimeAssetsId } from '../scripts/runtimeAssetsId.mjs'
 
 const packageDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
 describe('runtime assets identity', () => {
-  it('is derived from pdf.js version and signer contents, not plugin semver', () => {
+  it('keys the remote pack by pdf.js version, not plugin semver', () => {
     const { version: pluginVersion } = JSON.parse(
       readFileSync(resolve(packageDir, 'package.json'), 'utf8'),
     ) as { version: string }
@@ -22,9 +22,12 @@ describe('runtime assets identity', () => {
     )
     const escapedPdfjs = pdfjsVersion.replace(/\./g, '\\.')
 
-    expect(assetsId).toBe(RUNTIME_ASSETS_ID)
     expect(assetsId).toMatch(new RegExp(`^pdfjs-${escapedPdfjs}\\+signer-[0-9a-f]{8}$`))
     expect(assetsId).not.toBe(pluginVersion)
+    expect(buildPdfjsCmapsId(resolve(packageDir, 'vendor/core/pdfjs'))).toBe(
+      `pdfjs-${pdfjsVersion}`,
+    )
+    expect(RUNTIME_CMAPS_ID).toBe(`pdfjs-${pdfjsVersion}`)
   })
 
   it('still downloads the zip from the current plugin GitHub Release tag', () => {

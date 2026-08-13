@@ -168,8 +168,8 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
     this.lastUnbindError = null
     this.refreshLicenseStatus()
     try {
-      // License API needs signer from the asset pack; prompt download if missing.
-      await this.plugin.ensureRuntimeAssets()
+      // License API needs signer from the embedded pack, not remote cmaps/fonts.
+      await this.plugin.ensureEmbeddedRuntimeAssets()
     } catch (error) {
       this.isLicenseChecking = false
       this.lastOutcome = {
@@ -220,7 +220,7 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
     this.lastUnbindError = null
     this.refreshLicenseStatus()
     try {
-      await this.plugin.ensureRuntimeAssets()
+      await this.plugin.ensureEmbeddedRuntimeAssets()
     } catch (error) {
       this.isLicenseUnbinding = false
       this.lastUnbindError =

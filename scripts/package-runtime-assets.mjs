@@ -13,14 +13,10 @@ const packageDir = fileURLToPath(new URL('..', import.meta.url))
 const distDir = resolve(packageDir, 'dist')
 const zipPath = resolve(distDir, 'foxycape-pdf-assets.zip')
 
-/** Folders / files included in the runtime asset pack (not inlined into main.js). */
+/** Remote pack: cmaps + standard_fonts. Worker/signer are zipped into main.js. */
 const INCLUDE_ROOTS = [
   join('pdfjs', 'cmaps'),
   join('pdfjs', 'standard_fonts'),
-]
-const INCLUDE_FILES = [
-  join('pdfjs', 'pdf.worker.min.mjs'),
-  join('static', 'signer.js'),
 ]
 
 const walkFiles = (dir, files = []) => {
@@ -46,13 +42,18 @@ const main = () => {
       )
     }
   }
-  for (const file of INCLUDE_FILES) {
-    const abs = join(distDir, file)
-    if (!existsSync(abs)) {
-      throw new Error(
-        `Missing ${file} under dist/. Run vite build (copy plugins) before packaging assets.`,
-      )
-    }
+
+  const cmapsMarkerPath = join(distDir, 'pdfjs', '.foxycape-cmaps-version')
+  if (!existsSync(cmapsMarkerPath)) {
+    throw new Error(
+      `Missing pdfjs/.foxycape-cmaps-version under dist/. Run vite build before packaging assets.`,
+    )
+  }
+  const cmapsId = readFileSync(cmapsMarkerPath, 'utf8').trim()
+  if (!cmapsId.startsWith('pdfjs-') || cmapsId.includes('+')) {
+    throw new Error(
+      `Unexpected cmaps id in ${cmapsMarkerPath}: ${cmapsId}. Expected pdfjs-{version}.`,
+    )
   }
 
   /** @type {Record<string, Uint8Array>} */
@@ -63,32 +64,11 @@ const main = () => {
       entries[toZipKey(file)] = new Uint8Array(readFileSync(file))
     }
   }
-  for (const file of INCLUDE_FILES) {
-    const abs = join(distDir, file)
-    entries[toZipKey(abs)] = new Uint8Array(readFileSync(abs))
-  }
-
-  // Marker is written by copy-pdfjs from pdf.js + signer id (not plugin semver)
-  // so `npm run link` / full dist installs skip the download. Zip it as-is.
-  const markerKey = 'pdfjs/.foxycape-assets-version'
-  const markerPath = join(distDir, 'pdfjs', '.foxycape-assets-version')
-  if (!existsSync(markerPath)) {
-    throw new Error(
-      `Missing ${markerKey} under dist/. Run vite build (copy plugins) before packaging assets.`,
-    )
-  }
-  const assetsId = readFileSync(markerPath, 'utf8').trim()
-  if (!assetsId.startsWith('pdfjs-')) {
-    throw new Error(
-      `Unexpected assets id in ${markerPath}: ${assetsId}. Expected pdfjs-{version}+signer-{hash}.`,
-    )
-  }
-  entries[markerKey] = new Uint8Array(Buffer.from(`${assetsId}\n`, 'utf8'))
 
   const zipped = zipSync(entries, { level: 6 })
   writeFileSync(zipPath, zipped)
   const mb = (zipped.byteLength / (1024 * 1024)).toFixed(2)
-  console.log(`Wrote ${zipPath} (${Object.keys(entries).length} files, ${mb} MB)`)
+  console.log(`Wrote ${zipPath} (${Object.keys(entries).length} files, ${mb} MB, ${cmapsId})`)
 }
 
 main()

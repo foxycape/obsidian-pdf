@@ -1,32 +1,33 @@
 /** GitHub repo that hosts release attachments (same tag as manifest.version). */
 export const RUNTIME_ASSETS_REPO = 'foxycape/obsidian-pdf'
 
-/** Release attachment name produced by `npm run build`. */
+/** Release attachment name produced by `npm run build` (cmaps + standard_fonts). */
 export const RUNTIME_ASSETS_ZIP_NAME = 'foxycape-pdf-assets.zip'
 
 /**
- * Compatibility id baked into main.js. Compared to the on-disk marker so
- * plugin-only upgrades skip re-download; pdf.js / signer changes still fetch.
+ * Remote cmaps / standard_fonts id (pdf.js version only). Signer-only changes
+ * do not re-download this pack. Worker + signer are unpacked from main.js.
  */
-export const RUNTIME_ASSETS_ID = __FOXYCAPE_RUNTIME_ASSETS_ID__
+export const RUNTIME_CMAPS_ID = __FOXYCAPE_PDFJS_CMAPS_ID__
 
-/** Written after a successful extract; compared to `RUNTIME_ASSETS_ID`. */
-export const RUNTIME_ASSETS_VERSION_MARKER = 'pdfjs/.foxycape-assets-version'
+/** Written after installing the remote cmaps / fonts zip. */
+export const RUNTIME_CMAPS_VERSION_MARKER = 'pdfjs/.foxycape-cmaps-version'
 
-/**
- * Approximate download size shown in the first-open assets modal.
- * Keep in sync with the packaged zip (worker + cmaps + fonts + signer).
- */
-export const RUNTIME_ASSETS_SIZE_HINT = '~2 MB'
+/** Approximate size of the remote cmaps + fonts zip (worker/signer are in main.js). */
+export const RUNTIME_ASSETS_SIZE_HINT = '~1.5 MB'
 
-/** Paths that must exist after extract (dev `dist/` copy or downloaded zip). */
-export const RUNTIME_ASSETS_MARKERS = [
+/** Paths that must exist after unpacking worker + signer from main.js. */
+export const EMBEDDED_RUNTIME_MARKERS = [
   'pdfjs/pdf.worker.min.mjs',
-  'pdfjs/cmaps',
-  'pdfjs/standard_fonts',
   'static/signer.js',
 ] as const
 
-/** Zip lives on the current plugin GitHub Release; only fetched when the id mismatches. */
+/** Paths that must exist after the remote cmaps/fonts install. */
+export const REMOTE_RUNTIME_MARKERS = [
+  'pdfjs/cmaps',
+  'pdfjs/standard_fonts',
+] as const
+
+/** Zip lives on the current plugin GitHub Release; only fetched when the cmaps id mismatches. */
 export const buildRuntimeAssetsDownloadUrl = (pluginVersion: string): string =>
   `https://github.com/${RUNTIME_ASSETS_REPO}/releases/download/${pluginVersion}/${RUNTIME_ASSETS_ZIP_NAME}`

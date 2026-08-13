@@ -1,5 +1,5 @@
 import { normalizePath, type Plugin } from 'obsidian'
-import { hasInstalledRuntimeAssets } from '@/assets/ensureRuntimeAssets'
+import { hasEmbeddedRuntimeAssets } from '@/assets/ensureRuntimeAssets'
 
 /** Kept for ApiSettings.wasmSignerFilePath compatibility (not used for disk IO). */
 export const WASM_SIGNER_RELATIVE = 'static/signer.js'
@@ -8,18 +8,17 @@ let cachedSignerBlobUrl: string | null = null
 
 /**
  * Load `static/signer.js` from the plugin directory as a Blob URL for
- * `injectExternalJS`. Does **not** download assets — callers that need the
- * pack (first PDF open / explicit license actions) must `ensureRuntimeAssets`
- * first so Obsidian startup stays quiet.
+ * `injectExternalJS`. Does **not** download remote fonts — callers that need
+ * signer (license / API) must `ensureEmbeddedRuntimeAssets` first.
  */
 export const resolveWasmSignerUrl = async (plugin: Plugin): Promise<string> => {
   if (cachedSignerBlobUrl) {
     return cachedSignerBlobUrl
   }
 
-  if (!(await hasInstalledRuntimeAssets(plugin))) {
+  if (!(await hasEmbeddedRuntimeAssets(plugin))) {
     throw new Error(
-      'Runtime assets are not installed yet (open a PDF once to download them).',
+      'Embedded runtime assets are not installed yet (worker/signer missing).',
     )
   }
 

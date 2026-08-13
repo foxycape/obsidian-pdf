@@ -7,8 +7,8 @@ const WORKER_RELATIVE = 'legacy/build/pdf.worker.min.mjs'
 type CopyPdfjsAssetsOptions = {
   outDir: string
   corePdfjsDir: string
-  /** pdf.js + signer id written to pdfjs/.foxycape-assets-version */
-  assetsId: string
+  /** pdf.js-only id written to pdfjs/.foxycape-cmaps-version */
+  cmapsId: string
 }
 
 /**
@@ -17,7 +17,7 @@ type CopyPdfjsAssetsOptions = {
  * - pdf.worker.min.mjs (read at runtime → Blob URL; not inlined into main.js)
  */
 export const copyPdfjsAssetsPlugin = (options: CopyPdfjsAssetsOptions): Plugin => {
-  const { outDir, corePdfjsDir, assetsId } = options
+  const { outDir, corePdfjsDir, cmapsId } = options
   const pdfjsOutDir = join(outDir, 'pdfjs')
 
   const copy = () => {
@@ -38,7 +38,7 @@ export const copyPdfjsAssetsPlugin = (options: CopyPdfjsAssetsOptions): Plugin =
       recursive: true,
     })
     cpSync(workerFrom, join(pdfjsOutDir, 'pdf.worker.min.mjs'))
-    writeFileSync(join(pdfjsOutDir, '.foxycape-assets-version'), `${assetsId}\n`)
+    writeFileSync(join(pdfjsOutDir, '.foxycape-cmaps-version'), `${cmapsId}\n`)
   }
 
   return {

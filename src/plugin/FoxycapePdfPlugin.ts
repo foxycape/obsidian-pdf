@@ -4,8 +4,10 @@ import type { IApiClient } from '@/network'
 import { createPluginApiClient } from '@/api/createPluginApiClient'
 import { DeviceService } from '@/api/DeviceService'
 import {
-  ensureRuntimeAssets,
-  hasInstalledRuntimeAssets,
+  ensureEmbeddedRuntimeAssets as unpackEmbeddedRuntimeAssets,
+  ensureRemoteRuntimeAssets,
+  ensureRuntimeAssets as unpackRuntimeAssets,
+  hasEmbeddedRuntimeAssets,
 } from '@/assets/ensureRuntimeAssets'
 import { ObsidianLocale } from '@/i18n'
 import { LicenseService } from '@/license'
@@ -80,10 +82,9 @@ export class FoxycapePdfPlugin extends Plugin {
     registerFoxycapeIcon()
 
     await this.licenseService.ensureTrialStarted()
-    // Device/license API needs signer.js from the asset pack — defer until
-    // assets exist (local dist/ or after first PDF-open download). Avoids a
-    // download modal on every Obsidian launch.
-    void this.runNetworkWhenAssetsReady()
+    // Unpack worker+signer from main.js, then register device / validate license.
+    // Cmaps/fonts download silently in the background.
+    void this.bootstrapRuntimeAssets()
     this.licenseService.startPeriodicValidation()
 
     this.registerView(
@@ -212,19 +213,35 @@ export class FoxycapePdfPlugin extends Plugin {
     this.locale.getText(key, defaultText, named)
 
   /**
-   * Download/cache pdf.worker + cmaps + fonts + signer when the on-disk
-   * assets id (pdf.js + signer) does not match this build. Zip comes from
-   * the current plugin GitHub Release. Triggered on first PDF open, not
-   * on every plugin upgrade.
+   * Unpack worker+signer from main.js (no download). Cmaps/fonts keep
+   * downloading in the background and do not block opening a PDF.
    */
   ensureRuntimeAssets = async () => {
-    await ensureRuntimeAssets(this, { t: this.t })
+    await unpackRuntimeAssets(this, { t: this.t })
     void this.runNetworkWhenAssetsReady()
   }
 
-  /** Register device / validate license only when runtime assets are on disk. */
+  /** Unpack worker+signer from main.js (no network). License/API only needs this. */
+  ensureEmbeddedRuntimeAssets = async () => {
+    await unpackEmbeddedRuntimeAssets(this, { t: this.t })
+    void this.runNetworkWhenAssetsReady()
+  }
+
+  bootstrapRuntimeAssets = async () => {
+    try {
+      await this.ensureEmbeddedRuntimeAssets()
+    } catch (error) {
+      console.error('[Foxycape PDF] failed to extract embedded runtime assets', error)
+      new Notice(error instanceof Error ? error.message : String(error), 8000)
+    }
+    void ensureRemoteRuntimeAssets(this, { t: this.t }).catch((error) => {
+      console.warn('[Foxycape PDF] background font download failed', error)
+    })
+  }
+
+  /** Register device / validate license once signer.js is on disk. */
   runNetworkWhenAssetsReady = async () => {
-    if (!(await hasInstalledRuntimeAssets(this))) {
+    if (!(await hasEmbeddedRuntimeAssets(this))) {
       return
     }
     void this.deviceService.registerDevice()

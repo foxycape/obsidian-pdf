@@ -245,7 +245,7 @@ const downloadByRangeOrFull = async (
  */
 export const downloadBinaryWithProgress = async (
   url: string,
-  onProgress: DownloadProgressHandler,
+  onProgress: DownloadProgressHandler = () => undefined,
   request: BinaryRequestFn = requestWithObsidian,
 ): Promise<BinaryDownloadResult> => {
   const modules = getNodeHttpModules()

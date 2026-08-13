@@ -148,6 +148,9 @@ export const Platform = {
   isMobile: false,
 }
 
+export const normalizePath = (path: string): string =>
+  path.replace(/\\/g, '/').replace(/\/{2,}/g, '/')
+
 export const requestUrl = async (_request?: unknown) => ({
   status: 0,
   headers: {} as Record<string, string>,
@@ -155,6 +158,21 @@ export const requestUrl = async (_request?: unknown) => ({
   json: {},
   text: '',
 })
+
+export class Notice {
+  message: string
+
+  constructor(message: string, _timeout?: number) {
+    this.message = message
+  }
+
+  setMessage = (message: string) => {
+    this.message = message
+    return this
+  }
+
+  hide = () => undefined
+}
 
 export const parseLinktext = (linktext: string): { path: string; subpath: string } => {
   const hashIndex = linktext.indexOf('#')
