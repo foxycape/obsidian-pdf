@@ -1,7 +1,7 @@
 import type { MarkStyle, MarkStyleName } from '@foxycape/core/kernal/mark/types'
 import { DEFAULT_MARK_COLORS } from './PdfMarkConstants'
 
-export type MarkWritingMode = 'horizontal-tb' | 'vertical-lr' | 'vertical-rl'
+export type MarkWritingMode = 'horizontal-tb' | 'horizontal-bt' | 'vertical-lr' | 'vertical-rl'
 
 const encodeSvg = (svg: string): string => {
   if (typeof btoa === 'function') {
@@ -79,13 +79,15 @@ export const buildMarkStylesCss = (): string => {
     `${m}.mark_pen:first-of-type{border-start-start-radius:3px !important;border-end-start-radius:3px !important;}`,
     `${m}.mark_pen:last-of-type{border-start-end-radius:3px !important;border-end-end-radius:3px !important;}`,
 
-    // wavy_line — vertical-* keep physical padding (underline side follows writing-mode, not doc RTL)
+    // wavy_line — physical padding follows rotated ink edge (not doc RTL)
     `${m}.wavy_line{background-image:${wavyBackground(wavy)};background-size:9px 4px !important;background-position:0 100% !important;background-repeat:repeat-x !important;padding:0 !important;padding-block-end:4px !important;}`,
+    `${m}.wavy_line-horizontal-bt{background-image:${wavyBackground(wavy, 'horizontal-bt')};background-size:9px 4px !important;background-position:0 0 !important;background-repeat:repeat-x !important;padding:0 !important;padding-block-start:4px !important;}`,
     `${m}.wavy_line-vertical-lr{background-image:${wavyBackground(wavy, 'vertical-lr')};background-size:4px 9px !important;background-position:100% 0 !important;background-repeat:repeat-y !important;padding:0 !important;padding-right:4px !important;}`,
     `${m}.wavy_line-vertical-rl{background-image:${wavyBackground(wavy, 'vertical-rl')};background-size:4px 9px !important;background-position:0 100% !important;background-repeat:repeat-y !important;padding:0 !important;padding-left:4px !important;}`,
 
     // underline_straight — SVG tile (~1.5px), no CSS border
     `${m}.underline_straight{background-image:${straightBackground(underline)};background-size:9px 3px !important;background-position:0 100% !important;background-repeat:repeat-x !important;padding:0 !important;padding-block-end:3px !important;}`,
+    `${m}.underline_straight-horizontal-bt{background-image:${straightBackground(underline, 'horizontal-bt')};background-size:9px 3px !important;background-position:0 0 !important;background-repeat:repeat-x !important;padding:0 !important;padding-block-start:3px !important;}`,
     `${m}.underline_straight-vertical-lr{background-image:${straightBackground(underline, 'vertical-lr')};background-size:3px 9px !important;background-position:100% 0 !important;background-repeat:repeat-y !important;padding:0 !important;padding-right:3px !important;}`,
     `${m}.underline_straight-vertical-rl{background-image:${straightBackground(underline, 'vertical-rl')};background-size:3px 9px !important;background-position:0 100% !important;background-repeat:repeat-y !important;padding:0 !important;padding-left:3px !important;}`,
   ].join('')
@@ -126,6 +128,8 @@ export const getCustomColorStyleText = (
       mode = 'vertical-lr'
     } else if (styleType.endsWith('vertical-rl')) {
       mode = 'vertical-rl'
+    } else if (styleType.endsWith('horizontal-bt')) {
+      mode = 'horizontal-bt'
     }
     return `background-image:${wavyBackground(color, mode)};`
   }
@@ -136,6 +140,8 @@ export const getCustomColorStyleText = (
       mode = 'vertical-lr'
     } else if (styleType.endsWith('vertical-rl')) {
       mode = 'vertical-rl'
+    } else if (styleType.endsWith('horizontal-bt')) {
+      mode = 'horizontal-bt'
     }
     return `background-image:${straightBackground(color, mode)};`
   }

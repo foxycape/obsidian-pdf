@@ -14,9 +14,39 @@ import {
   type MarkWritingMode,
 } from './PdfMarkStyles'
 
-/** Match original PdfSvgHighlighter: taller-than-wide rect → vertical-lr */
-const resolveWritingMode = (width: number, height: number): MarkWritingMode =>
-  width > height ? 'horizontal-tb' : 'vertical-lr'
+type InkEdge = 'bottom' | 'left' | 'top' | 'right'
+
+const INK_EDGES_CW: InkEdge[] = ['bottom', 'left', 'top', 'right']
+
+/** Stored rect aspect: wide → underline bottom; tall → underline right (vertical-lr). */
+const resolveInkEdge = (width: number, height: number): InkEdge =>
+  width > height ? 'bottom' : 'right'
+
+const rotateInkEdge = (edge: InkEdge, rotationDelta: number): InkEdge => {
+  const steps = ((Math.round(rotationDelta / 90) % 4) + 4) % 4
+  const index = INK_EDGES_CW.indexOf(edge)
+  return INK_EDGES_CW[(index + steps) % 4] ?? edge
+}
+
+const inkEdgeToWritingMode = (edge: InkEdge): MarkWritingMode => {
+  if (edge === 'left') {
+    return 'vertical-rl'
+  }
+  if (edge === 'right') {
+    return 'vertical-lr'
+  }
+  if (edge === 'top') {
+    return 'horizontal-bt'
+  }
+  return 'horizontal-tb'
+}
+
+/** Writing mode follows stored glyph side, then rotates with the page. */
+const resolveWritingMode = (
+  storedWidth: number,
+  storedHeight: number,
+  rotationDelta: number,
+): MarkWritingMode => inkEdgeToWritingMode(rotateInkEdge(resolveInkEdge(storedWidth, storedHeight), rotationDelta))
 
 const ensureMarkLayer = (pageEl: HTMLElement): HTMLElement => {
   let layer = pageEl.querySelector<HTMLElement>(`:scope > .${PDF_MARK_LAYER_CLASS}`)
@@ -66,12 +96,14 @@ const paintGeometry = (
   geometry: ContentGeometry,
   displayWidth: number,
   displayHeight: number,
+  currentRotation: number,
 ) => {
-  const scaled = scaleGeometryCoords(geometry, displayWidth, displayHeight)
+  const scaled = scaleGeometryCoords(geometry, displayWidth, displayHeight, currentRotation)
   if (scaled.width <= 0 || scaled.height <= 0) {
     return
   }
-  const writingMode = resolveWritingMode(scaled.width, scaled.height)
+  const [, , storedW = 0, storedH = 0] = geometry.coords
+  const writingMode = resolveWritingMode(storedW, storedH, scaled.rotationDelta)
   const styleType = resolveMarkStyleType(mark.styleName, writingMode)
   const mask = layer.createDiv({ cls: `${mark.styleName} ${PDF_MARK_MASK_CLASS}` })
   if (writingMode !== 'horizontal-tb') {
@@ -115,8 +147,9 @@ export const paintMarkOnPage = (doc: IPdfDocument, mark: Mark) => {
   const displayWidth = pageEl.clientWidth || pageGeometry.displayWidth || pageGeometry.pageRect.width
   const displayHeight =
     pageEl.clientHeight || pageGeometry.displayHeight || pageGeometry.pageRect.height
+  const currentRotation = pageGeometry.rotation ?? 0
   for (const geometry of geometries) {
-    paintGeometry(layer, mark, geometry, displayWidth, displayHeight)
+    paintGeometry(layer, mark, geometry, displayWidth, displayHeight, currentRotation)
   }
 }
 

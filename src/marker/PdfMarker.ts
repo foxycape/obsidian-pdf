@@ -102,13 +102,17 @@ export class PdfMarker implements IMarker {
     await this.ensureReady()
     const text = options.text || getSelectionText(options.target)
     const contentRange = selectionToFixedContentRange(options.target, (pageNumber) => {
-      const pageEl =
-        this.getDocByPageNumber(pageNumber)?.getContentContainer() ??
-        this.renderer.getPageView(pageNumber)?.div
+      const doc = this.getDocByPageNumber(pageNumber)
+      const pageEl = doc?.getContentContainer() ?? this.renderer.getPageView(pageNumber)?.div
       if (!pageEl) {
         return undefined
       }
-      return getPageLayoutRef(pageEl)
+      const layout = getPageLayoutRef(pageEl)
+      if (!layout) {
+        return undefined
+      }
+      const rotation = doc?.getPageGeometry()?.rotation ?? 0
+      return { ...layout, rotation }
     })
     if (!contentRange) {
       this.logger.warn('createMark failed: empty contentRange')
