@@ -2,8 +2,21 @@ import { Modal, Setting, type App } from 'obsidian'
 
 type Translate = (key: string, defaultText: string, named?: object) => string
 
+const formatBytes = (bytes: number): string => {
+  if (!Number.isFinite(bytes) || bytes <= 0) {
+    return '0 B'
+  }
+  if (bytes < 1024) {
+    return `${Math.round(bytes)} B`
+  }
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`
+  }
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
 export type RuntimeAssetsProgressUi = {
-  setDownloading: () => void
+  setDownloading: (loaded?: number, total?: number) => void
   setInstalling: (current: number, total: number) => void
 }
 
@@ -137,15 +150,35 @@ export class RuntimeAssetsModal extends Modal {
     }
   }
 
-  private setDownloading = () => {
-    this.progressEl?.addClass('is-indeterminate')
-    this.progressEl?.removeClass('is-determinate')
-    this.progressFillEl?.setCssStyles({ width: '' })
-    if (this.statusEl) {
-      this.statusEl.setText(
-        this.t('plugin_assets_modal_status_downloading', 'Downloading…'),
-      )
+  private setDownloading = (loaded = 0, total = 0) => {
+    if (total > 0) {
+      this.progressEl?.removeClass('is-indeterminate')
+      this.progressEl?.addClass('is-determinate')
+      const ratio = Math.min(1, loaded / total)
+      this.progressFillEl?.setCssStyles({
+        width: `${Math.round(ratio * 100)}%`,
+      })
+    } else {
+      this.progressEl?.addClass('is-indeterminate')
+      this.progressEl?.removeClass('is-determinate')
+      this.progressFillEl?.setCssStyles({ width: '' })
     }
+    if (!this.statusEl) {
+      return
+    }
+    if (total > 0) {
+      this.statusEl.setText(
+        this.t(
+          'plugin_assets_modal_status_downloading_progress',
+          'Downloading… {loaded} / {total}',
+          { loaded: formatBytes(loaded), total: formatBytes(total) },
+        ),
+      )
+      return
+    }
+    this.statusEl.setText(
+      this.t('plugin_assets_modal_status_downloading', 'Downloading…'),
+    )
   }
 
   private setInstalling = (current: number, total: number) => {

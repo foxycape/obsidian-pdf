@@ -23,6 +23,7 @@
   "plugin_assets_modal_title": "下载阅读器资源",
   "plugin_assets_modal_description": "首次打开需从 GitHub 一次性下载阅读器资源（{size}）：PDF Worker、字体与字符映射。文件会缓存到插件目录。",
   "plugin_assets_modal_status_downloading": "正在下载…",
+  "plugin_assets_modal_status_downloading_progress": "正在下载… {loaded} / {total}",
   "plugin_assets_modal_status_installing": "正在安装… {current}/{total}",
   "plugin_assets_modal_status_done": "资源已安装",
   "plugin_assets_modal_status_failed": "下载失败",

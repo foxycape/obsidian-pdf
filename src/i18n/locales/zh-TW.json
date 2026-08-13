@@ -23,6 +23,7 @@
   "plugin_assets_modal_title": "下載閱讀器資源",
   "plugin_assets_modal_description": "首次開啟需從 GitHub 一次性下載閱讀器資源（{size}）：PDF Worker、字型與字元對應。檔案會快取到外掛目錄。",
   "plugin_assets_modal_status_downloading": "正在下載…",
+  "plugin_assets_modal_status_downloading_progress": "正在下載… {loaded} / {total}",
   "plugin_assets_modal_status_installing": "正在安裝… {current}/{total}",
   "plugin_assets_modal_status_done": "資源已安裝",
   "plugin_assets_modal_status_failed": "下載失敗",

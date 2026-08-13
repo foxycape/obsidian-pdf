@@ -1,5 +1,5 @@
 import { unzipSync } from 'fflate'
-import { normalizePath, requestUrl, type Plugin } from 'obsidian'
+import { normalizePath, type Plugin } from 'obsidian'
 import {
   RUNTIME_ASSETS_ID,
   RUNTIME_ASSETS_MARKERS,
@@ -8,6 +8,7 @@ import {
   RUNTIME_ASSETS_ZIP_NAME,
   buildRuntimeAssetsDownloadUrl,
 } from './constants'
+import { downloadBinaryWithProgress } from './downloadBinaryWithProgress'
 import {
   showRuntimeAssetsModal,
   type RuntimeAssetsProgressUi,
@@ -134,19 +135,18 @@ const downloadAndInstall = async (
 ) => {
   const url = buildRuntimeAssetsDownloadUrl(plugin.manifest.version)
 
-  ui.setDownloading()
-  const response = await requestUrl({ url, throw: false })
-  if (response.status !== 200) {
+  ui.setDownloading(0, 0)
+  const { status, bytes } = await downloadBinaryWithProgress(url, ui.setDownloading)
+  if (status !== 200) {
     throw new Error(
       t(
         'plugin_notice_assets_download_failed',
         'Failed to download runtime assets (HTTP {status}).',
-        { status: String(response.status) },
+        { status: String(status) },
       ),
     )
   }
 
-  const bytes = new Uint8Array(response.arrayBuffer)
   if (bytes.byteLength < 64) {
     throw new Error(`Downloaded ${RUNTIME_ASSETS_ZIP_NAME} is empty or invalid.`)
   }

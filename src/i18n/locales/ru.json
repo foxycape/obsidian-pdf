@@ -23,6 +23,7 @@
   "plugin_assets_modal_title": "Download reader assets",
   "plugin_assets_modal_description": "First open needs a one-time download ({size}) from GitHub: PDF worker, fonts, and character maps. Files are cached in the plugin folder.",
   "plugin_assets_modal_status_downloading": "Downloading…",
+  "plugin_assets_modal_status_downloading_progress": "Downloading… {loaded} / {total}",
   "plugin_assets_modal_status_installing": "Installing… {current}/{total}",
   "plugin_assets_modal_status_done": "Assets installed",
   "plugin_assets_modal_status_failed": "Download failed",

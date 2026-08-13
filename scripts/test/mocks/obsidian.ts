@@ -143,6 +143,19 @@ export type OpenViewState = {
 
 export type PaneType = 'tab' | 'split' | 'window'
 
+export const Platform = {
+  isDesktopApp: false,
+  isMobile: false,
+}
+
+export const requestUrl = async (_request?: unknown) => ({
+  status: 0,
+  headers: {} as Record<string, string>,
+  arrayBuffer: new ArrayBuffer(0),
+  json: {},
+  text: '',
+})
+
 export const parseLinktext = (linktext: string): { path: string; subpath: string } => {
   const hashIndex = linktext.indexOf('#')
   if (hashIndex < 0) {

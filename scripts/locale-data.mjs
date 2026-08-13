@@ -163,6 +163,7 @@ export const KEY_ORDER = [
   "plugin_assets_modal_title",
   "plugin_assets_modal_description",
   "plugin_assets_modal_status_downloading",
+  "plugin_assets_modal_status_downloading_progress",
   "plugin_assets_modal_status_installing",
   "plugin_assets_modal_status_done",
   "plugin_assets_modal_status_failed",
