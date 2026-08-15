@@ -191,4 +191,21 @@ describe('formatMarkQuoteLine', () => {
       '> hello world [[Book.pdf#page=1&markId=x|↗]]',
     )
   })
+
+  it('escapes markdown syntax in the quote text', () => {
+    expect(
+      formatMarkQuoteLine('See **bold**, _em_, #tag and [[Note]]', '[[Book.pdf#page=1]]'),
+    ).toBe('> See \\*\\*bold\\*\\*, \\_em\\_, \\#tag and \\[\\[Note\\]\\] [[Book.pdf#page=1]]')
+  })
+
+  it('escapes backticks, highlight, math, and html', () => {
+    expect(formatMarkQuoteLine('use `x` ==hi== $a$ <b>', '[[Book.pdf]]')).toBe(
+      '> use \\`x\\` \\=\\=hi\\=\\= \\$a\\$ \\<b> [[Book.pdf]]',
+    )
+  })
+
+  it('escapes a leading list marker so the quote stays a paragraph', () => {
+    expect(formatMarkQuoteLine('- item', '[[Book.pdf]]')).toBe('> \\- item [[Book.pdf]]')
+    expect(formatMarkQuoteLine('1. item', '[[Book.pdf]]')).toBe('> 1\\. item [[Book.pdf]]')
+  })
 })

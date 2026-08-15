@@ -353,7 +353,19 @@ export const parseRectTuple = (
   return [x1, y1, x2, y2]
 }
 
+/**
+ * Escape PDF quote text so Obsidian markdown keeps the original characters
+ * (`**`, `#tag`, `[[wiki]]`, `$math$`, …) instead of rendering them as syntax.
+ */
+const escapeMarkdownQuoteText = (text: string): string => {
+  const escaped = text.replace(/([\\`*_[\]#~=$<%])/g, '\\$1')
+  // After `> `, a leading list/quote marker would start a nested block.
+  return escaped
+    .replace(/^([-+>])(?=\s|$)/, '\\$1')
+    .replace(/^(\d+)\.(?=\s|$)/, '$1\\.')
+}
+
 export const formatMarkQuoteLine = (text: string, markdownLink: string): string => {
-  const quote = text.replace(/\s+/g, ' ').trim()
+  const quote = escapeMarkdownQuoteText(text.replace(/\s+/g, ' ').trim())
   return `> ${quote} ${markdownLink}`
 }
