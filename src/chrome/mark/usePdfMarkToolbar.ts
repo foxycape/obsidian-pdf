@@ -12,6 +12,7 @@ import { MARK_HIGHLIGHT_ID_ATTR } from '@foxycape/core/kernal/mark/MarkConstants
 import { DEFAULT_MARK_COLORS } from '@/marker/PdfMarkConstants'
 import {
   buildPdfDeepLinkFragment,
+  escapeMarkdownText,
   formatMarkQuoteLine,
   getRangePageNumber,
   rangeToObsidianSelection,
@@ -623,7 +624,7 @@ export const usePdfMarkToolbar = (options: {
       if (!text) {
         return
       }
-      const ok = await writeClipboard(text)
+      const ok = await writeClipboard(escapeMarkdownText(text))
       if (ok) {
         options.reader.notifier?.info(
           options.t('share_copy_success_tip', 'Copied to clipboard'),

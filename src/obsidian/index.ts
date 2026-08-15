@@ -56,6 +56,7 @@ export {
   LEGACY_RECT_PARAM,
   buildPdfDeepLinkFragment,
   buildPdfUserSpaceRectParam,
+  escapeMarkdownText,
   formatMarkQuoteLine,
   formatRectTuple,
   getRangePageNumber,

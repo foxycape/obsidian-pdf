@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildPdfDeepLinkFragment,
   buildPdfUserSpaceRectParam,
+  escapeMarkdownText,
   formatMarkQuoteLine,
   formatRectTuple,
   parsePdfDeepLink,
@@ -207,5 +208,15 @@ describe('formatMarkQuoteLine', () => {
   it('escapes a leading list marker so the quote stays a paragraph', () => {
     expect(formatMarkQuoteLine('- item', '[[Book.pdf]]')).toBe('> \\- item [[Book.pdf]]')
     expect(formatMarkQuoteLine('1. item', '[[Book.pdf]]')).toBe('> 1\\. item [[Book.pdf]]')
+  })
+})
+
+describe('escapeMarkdownText', () => {
+  it('escapes inline syntax without collapsing whitespace', () => {
+    expect(escapeMarkdownText('See **bold** and #tag')).toBe('See \\*\\*bold\\*\\* and \\#tag')
+  })
+
+  it('escapes a list marker on every line', () => {
+    expect(escapeMarkdownText('- one\n1. two\nplain')).toBe('\\- one\n1\\. two\nplain')
   })
 })
