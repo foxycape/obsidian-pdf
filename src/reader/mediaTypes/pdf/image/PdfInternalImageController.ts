@@ -732,7 +732,7 @@ export class PdfInternalImageController implements IDisposable {
         new Notice(this.reader.locale.getText('pdf_image_downloaded', 'Image downloaded'))
       } else if (action === 'copyReference') {
         const linkSource = this.options.getLinkSource?.() ?? null
-        if (!linkSource) {
+        if (!linkSource?.pdfFile) {
           new Notice(
             this.reader.locale.getText(
               'pdf_image_ref_unavailable',

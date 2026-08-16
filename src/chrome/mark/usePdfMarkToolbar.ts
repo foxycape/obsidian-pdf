@@ -17,6 +17,7 @@ import {
   getRangePageNumber,
   rangeToObsidianSelection,
 } from '@/obsidian/selectionLink'
+import { buildPdfMarkdownLink } from '@/obsidian/remotePdfLink'
 import { PdfSelection } from '@foxycape/core/mediaTypes/pdf/shared/selection/PdfSelection'
 import type { IPdfSelection } from '@foxycape/core/mediaTypes/pdf/shared/selection/IPdfSelection'
 import type { App, TFile } from 'obsidian'
@@ -34,7 +35,8 @@ import {
 
 export type PdfMarkToolbarLinkSource = {
   app: App
-  pdfFile: TFile
+  pdfFile?: TFile
+  sourceUrl?: string
 }
 
 export type PdfMarkToolbarState = {
@@ -691,12 +693,13 @@ export const usePdfMarkToolbar = (options: {
         selection,
         markId,
       })
-      const markdownLink = linkSource.app.fileManager.generateMarkdownLink(
-        linkSource.pdfFile,
-        '',
-        subpath,
-        '↗',
-      )
+      const markdownLink = buildPdfMarkdownLink(linkSource, subpath, '↗')
+      if (!markdownLink) {
+        options.reader.notifier?.info(
+          options.t('share_copy_reference_unavailable', 'Unable to create text reference'),
+        )
+        return
+      }
       const payload = formatMarkQuoteLine(quoteText, markdownLink)
       const ok = await writeClipboard(payload)
       if (ok) {

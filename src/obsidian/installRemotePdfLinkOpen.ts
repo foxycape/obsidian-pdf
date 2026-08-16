@@ -1,0 +1,72 @@
+import type { EventRef, Menu, Plugin } from 'obsidian'
+import { applyFoxycapeMenuIcon } from '@/ui/foxycapeIcon'
+import { parseRemotePdfHref } from './remotePdfLink'
+
+type RemotePdfOpenPlugin = Plugin & {
+  settings: { useAsDefaultPdfViewer: boolean }
+  t: (key: string, fallback: string) => string
+  openUrlWithFoxycape: (url: string, subpath?: string) => Promise<void>
+}
+
+type WorkspaceWithUrlMenu = {
+  on: (name: 'url-menu', callback: (menu: Menu, url: string) => unknown) => EventRef
+}
+
+const resolveClickedHref = (event: MouseEvent): string | null => {
+  const target = event.target
+  if (!(target instanceof Element)) {
+    return null
+  }
+  const anchor = target.closest('a')
+  if (!anchor) {
+    return null
+  }
+  return anchor.getAttribute('href') ?? anchor.getAttribute('data-href')
+}
+
+/**
+ * Right-click any remote `.pdf` URL to open in Foxycape.
+ * When Foxycape is the default PDF viewer, a plain click also opens it.
+ */
+export const installRemotePdfLinkOpen = (plugin: RemotePdfOpenPlugin): void => {
+  const workspace = plugin.app.workspace as unknown as WorkspaceWithUrlMenu
+  plugin.registerEvent(
+    workspace.on('url-menu', (menu, url) => {
+      const parsed = parseRemotePdfHref(url)
+      if (!parsed) {
+        return
+      }
+      menu.addItem((item) => {
+        item.setTitle(plugin.t('plugin_menu_open_with', 'Open with Foxycape PDF'))
+        applyFoxycapeMenuIcon(item)
+        item.onClick(() => {
+          void plugin.openUrlWithFoxycape(parsed.url, parsed.subpath)
+        })
+      })
+    }),
+  )
+
+  plugin.registerDomEvent(
+    document,
+    'click',
+    (event: MouseEvent) => {
+      if (!plugin.settings.useAsDefaultPdfViewer) {
+        return
+      }
+      if (event.defaultPrevented || event.button !== 0) {
+        return
+      }
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return
+      }
+      const parsed = parseRemotePdfHref(resolveClickedHref(event))
+      if (!parsed) {
+        return
+      }
+      event.preventDefault()
+      event.stopPropagation()
+      void plugin.openUrlWithFoxycape(parsed.url, parsed.subpath)
+    },
+    { capture: true },
+  )
+}

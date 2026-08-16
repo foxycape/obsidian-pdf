@@ -442,7 +442,7 @@ export const usePdfScreenshot = (options: {
       return
     }
     const linkSource = options.getLinkSource?.() ?? null
-    if (!linkSource) {
+    if (!linkSource?.pdfFile) {
       new Notice(options.t('pdf_image_ref_unavailable', 'Unable to create image reference'))
       return
     }

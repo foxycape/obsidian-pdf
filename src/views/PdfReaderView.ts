@@ -1,10 +1,11 @@
 import {
-  FileView,
+  ItemView,
   Menu,
   Notice,
   Scope,
+  TFile,
   type EventRef,
-  type TFile,
+  type ViewStateResult,
   type WorkspaceLeaf,
 } from 'obsidian'
 import { EventNames, formatFileSize, type IMarker, type Reader } from '@foxycape/core/kernal'
@@ -38,15 +39,30 @@ import { getPdfRenderer } from '@/chrome/usePdfRenderer'
 import type { MarkDataChangePayload } from '@/marker/PdfMarker'
 import { MarkNoteCompanion, syncMarkToSidecarNote } from '@/obsidian/markNoteSync'
 import { applyPdfDeepLink } from '@/obsidian/pdfDeepLink'
+import {
+  displayNameFromRemotePdfUrl,
+  fileNameFromRemotePdfUrl,
+  normalizeRemoteDocumentUrl,
+} from '@/obsidian/remotePdfLink'
+import type { PdfImageLinkSource } from '@/obsidian/pdfImageRef'
 import { PDF_READER_VIEW_TYPE } from '@/settings/types'
 import { isObsidianMobile } from '@/ui/isObsidianMobile'
 import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
 
 export { PDF_READER_VIEW_TYPE }
 
+export type PdfReaderViewState = {
+  file?: string
+  url?: string
+}
+
 const FILE_LOADING_DELAY_MS = 2000
 
-export class PdfReaderView extends FileView {
+export class PdfReaderView extends ItemView {
+  file: TFile | null = null
+  sourceUrl: string | null = null
+  navigation = true
+
   private reader: Reader | null = null
   private getMarker: (() => IMarker | undefined) | null = null
   private bodyEl: HTMLElement | null = null
@@ -112,14 +128,21 @@ export class PdfReaderView extends FileView {
   }
 
   getDisplayText() {
-    return (
-      this.file?.basename ??
-      this.plugin.t('plugin_view_display_name', 'Foxycape PDF')
-    )
+    if (this.file?.basename) {
+      return this.file.basename
+    }
+    if (this.sourceUrl) {
+      return displayNameFromRemotePdfUrl(this.sourceUrl)
+    }
+    return this.plugin.t('plugin_view_display_name', 'Foxycape PDF')
   }
 
   getIcon() {
     return 'file-pdf'
+  }
+
+  canAcceptExtension(extension: string) {
+    return extension.toLowerCase() === 'pdf'
   }
 
   onPaneMenu(menu: Menu, source: string): void {
@@ -277,6 +300,8 @@ export class PdfReaderView extends FileView {
     await this.disposeReader()
     this.markNoteCompanion.reset()
     this.pendingSubpath = null
+    this.file = null
+    this.sourceUrl = null
     this.contentEl.empty()
     this.bodyEl = null
     this.mountEl = null
@@ -284,15 +309,65 @@ export class PdfReaderView extends FileView {
     this.markPanelHost = null
   }
 
-  async onLoadFile(file: TFile) {
+  getState(): PdfReaderViewState {
+    const state: PdfReaderViewState = {}
+    if (this.file?.path) {
+      state.file = this.file.path
+    }
+    if (this.sourceUrl) {
+      state.url = this.sourceUrl
+    }
+    return state
+  }
+
+  async setState(state: unknown, result: ViewStateResult): Promise<void> {
+    await super.setState(state, result)
+    const record = state && typeof state === 'object' ? (state as PdfReaderViewState) : {}
+    const filePath = typeof record.file === 'string' && record.file ? record.file : undefined
+    const url = typeof record.url === 'string' ? normalizeRemoteDocumentUrl(record.url) : undefined
+
+    const sameFile = !!filePath && this.file?.path === filePath && !url
+    const sameUrl = !!url && this.sourceUrl === url && !filePath
+    if (sameFile || sameUrl) {
+      return
+    }
+
     if (!this.mountEl || !this.sidebarHost || !this.markPanelHost) {
       await this.onOpen()
     }
     this.markNoteCompanion.reset()
-    await this.openPdfFile(file)
+
+    if (filePath) {
+      const file = this.app.vault.getAbstractFileByPath(filePath)
+      if (!(file instanceof TFile) || file.extension.toLowerCase() !== 'pdf') {
+        this.file = null
+        this.sourceUrl = null
+        this.showError(
+          this.plugin.t('plugin_error_open_failed', 'Failed to open PDF: {message}', {
+            message: filePath,
+          }),
+        )
+        return
+      }
+      this.file = file
+      this.sourceUrl = null
+      await this.openPdfSource({ file })
+      return
+    }
+
+    if (url) {
+      this.file = null
+      this.sourceUrl = url
+      await this.openPdfSource({ url })
+      return
+    }
+
+    this.file = null
+    this.sourceUrl = null
+    await this.unloadCurrentPdf()
   }
 
-  async onUnloadFile(_file: TFile) {
+  private async unloadCurrentPdf() {
     this.disposeSearchBar()
     this.disposeScreenshot()
     this.disposeMarkToolbar()
@@ -323,7 +398,17 @@ export class PdfReaderView extends FileView {
     void this.applySubpath(subpath)
   }
 
-  private async openPdfFile(file: TFile) {
+  private resolveLinkSource = (): PdfImageLinkSource | null => {
+    if (this.file) {
+      return { app: this.app, pdfFile: this.file }
+    }
+    if (this.sourceUrl) {
+      return { app: this.app, sourceUrl: this.sourceUrl }
+    }
+    return null
+  }
+
+  private async openPdfSource(source: { file: TFile } | { url: string }) {
     if (!this.mountEl) {
       throw new Error('PDF mount element is not ready.')
     }
@@ -355,13 +440,7 @@ export class PdfReaderView extends FileView {
           pdfThemeColorRemapMode: settings.pdfThemeColorRemapMode,
           enableAutoCreateHighlightNotes: settings.enableAutoCreateHighlightNotes,
         },
-        getLinkSource: () => {
-          const pdfFile = this.file
-          if (!pdfFile) {
-            return null
-          }
-          return { app: this.app, pdfFile }
-        },
+        getLinkSource: this.resolveLinkSource,
         ensureEntitled: () => this.plugin.ensureLicenseEntitlement(),
         onRequirePassword: async (callback, reason) => {
           const password = await promptPdfPassword(
@@ -381,16 +460,27 @@ export class PdfReaderView extends FileView {
       this.getMarker = session.getMarker
       this.bindMarkNoteSync(session.reader)
 
-      const data = await this.readFileWithLoadingProgress(file, session.reader, signal)
+      if ('file' in source) {
+        const data = await this.readFileWithLoadingProgress(source.file, session.reader, signal)
+        if (signal.aborted) {
+          return
+        }
+        await session.reader.open(data, this.mountEl, this.contentEl, {
+          extension: '.pdf',
+          fileName: source.file.name,
+          fileSize: source.file.stat.size,
+          abortController: this.fileReadAbort,
+        })
+      } else {
+        await session.reader.open(source.url, this.mountEl, this.contentEl, {
+          extension: '.pdf',
+          fileName: fileNameFromRemotePdfUrl(source.url),
+          abortController: this.fileReadAbort,
+        })
+      }
       if (signal.aborted) {
         return
       }
-
-      await session.reader.open(data, this.mountEl, this.contentEl, {
-        extension: '.pdf',
-        fileName: file.name,
-        fileSize: file.stat.size,
-      })
       this.mountChrome(session.reader)
       this.mountMarkToolbar(session.reader, session.getMarker)
       this.mountSearchBar(session.reader)
@@ -584,13 +674,7 @@ export class PdfReaderView extends FileView {
       reader,
       getMarker,
       t: this.plugin.t,
-      getLinkSource: () => {
-        const pdfFile = this.file
-        if (!pdfFile) {
-          return null
-        }
-        return { app: this.app, pdfFile }
-      },
+      getLinkSource: this.resolveLinkSource,
       ensureEntitled: () => this.plugin.ensureLicenseEntitlement(),
     })
   }
@@ -623,13 +707,7 @@ export class PdfReaderView extends FileView {
         hostEl: this.mountEl,
         reader,
         t: this.plugin.t,
-        getLinkSource: () => {
-          const pdfFile = this.file
-          if (!pdfFile) {
-            return null
-          }
-          return { app: this.app, pdfFile }
-        },
+        getLinkSource: this.resolveLinkSource,
         ensureEntitled: () => this.plugin.ensureLicenseEntitlement(),
         onActiveChange: (active) => {
           this.syncScreenshotMode(active)
@@ -788,14 +866,14 @@ export class PdfReaderView extends FileView {
       return
     }
     const mark = payload.items[0]
-    const pdfFile = this.file
-    if (!mark || !pdfFile) {
+    if (!mark || (!this.file && !this.sourceUrl)) {
       return
     }
     void syncMarkToSidecarNote(
       {
         app: this.app,
-        pdfFile,
+        pdfFile: this.file ?? undefined,
+        sourceUrl: this.sourceUrl ?? undefined,
         mark,
         selection: payload.selection,
         t: this.plugin.t,

@@ -57,6 +57,29 @@ describe('findExistingPdfLeaf', () => {
     expect(findExistingPdfLeaf(app, file, [PDF_READER_VIEW_TYPE])).toBe(newer)
   })
 
+  it('finds a remote URL tab from view state', () => {
+    const url = 'https://cdn.example.com/paper.pdf'
+    const remote = {
+      view: {},
+      activeTime: 20,
+      setEphemeralState: vi.fn(),
+      getViewState: () => ({
+        type: PDF_READER_VIEW_TYPE,
+        state: { url },
+      }),
+    } as unknown as WorkspaceLeaf
+    const app = {
+      workspace: {
+        getLeavesOfType: () => [remote],
+        iterateAllLeaves: (cb: (leaf: WorkspaceLeaf) => void) => {
+          cb(remote)
+        },
+      },
+    } as unknown as App
+
+    expect(findExistingPdfLeaf(app, { url }, [PDF_READER_VIEW_TYPE])).toBe(remote)
+  })
+
   it('finds deferred tabs that only expose the file path on view state', () => {
     const deferred = createLeaf('Books/a.pdf', 50, { fileOnView: false })
     const app = {

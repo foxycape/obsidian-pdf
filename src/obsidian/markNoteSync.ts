@@ -4,10 +4,12 @@ import {
   buildPdfDeepLinkFragment,
   formatMarkQuoteLine,
 } from './selectionLink'
+import { buildPdfMarkdownLink, resolveRemoteSidecarNotePath } from './remotePdfLink'
 
 export type MarkNoteSyncOptions = {
   app: App
-  pdfFile: TFile
+  pdfFile?: TFile
+  sourceUrl?: string
   mark: Mark
   selection?: string
   t: (key: string, fallback: string, vars?: Record<string, string | number>) => string
@@ -85,8 +87,18 @@ export const resolveSidecarNotePath = (pdfFile: TFile): string => {
   return `${parent.path}/${pdfFile.basename}.md`
 }
 
-export const ensureSidecarNote = async (app: App, pdfFile: TFile): Promise<TFile> => {
-  const notePath = resolveSidecarNotePath(pdfFile)
+export const ensureSidecarNote = async (
+  app: App,
+  target: { pdfFile?: TFile; sourceUrl?: string },
+): Promise<TFile> => {
+  const notePath = target.pdfFile
+    ? resolveSidecarNotePath(target.pdfFile)
+    : target.sourceUrl
+      ? resolveRemoteSidecarNotePath(target.sourceUrl)
+      : ''
+  if (!notePath) {
+    throw new Error('Sidecar note path is missing')
+  }
   const existing = app.vault.getAbstractFileByPath(notePath)
   if (existing instanceof TFile) {
     return existing
@@ -99,7 +111,7 @@ export const ensureSidecarNote = async (app: App, pdfFile: TFile): Promise<TFile
 
 export const buildMarkNoteAppendBlock = (
   app: App,
-  pdfFile: TFile,
+  source: { pdfFile?: TFile; sourceUrl?: string },
   noteFile: TFile,
   mark: Mark,
   selection?: string,
@@ -110,7 +122,12 @@ export const buildMarkNoteAppendBlock = (
     selection,
     markId: mark.markId,
   })
-  const link = app.fileManager.generateMarkdownLink(pdfFile, noteFile.path, subpath, '↗')
+  const link = buildPdfMarkdownLink(
+    { app, pdfFile: source.pdfFile, sourceUrl: source.sourceUrl },
+    subpath,
+    '↗',
+    noteFile.path,
+  )
   return `\n${formatMarkQuoteLine(mark.text || '', link)}\n`
 }
 
@@ -121,10 +138,16 @@ export const syncMarkToSidecarNote = async (
   options: MarkNoteSyncOptions,
   companion: MarkNoteCompanion,
 ): Promise<TFile | null> => {
-  const { app, pdfFile, mark, selection, t } = options
+  const { app, pdfFile, sourceUrl, mark, selection, t } = options
   try {
-    const noteFile = await ensureSidecarNote(app, pdfFile)
-    const block = buildMarkNoteAppendBlock(app, pdfFile, noteFile, mark, selection)
+    const noteFile = await ensureSidecarNote(app, { pdfFile, sourceUrl })
+    const block = buildMarkNoteAppendBlock(
+      app,
+      { pdfFile, sourceUrl },
+      noteFile,
+      mark,
+      selection,
+    )
     await app.vault.append(noteFile, block)
     await companion.revealOrOpen(app, noteFile)
     return noteFile

@@ -8,7 +8,9 @@ export type PdfImageRefKind = 'embed' | 'screenshot'
 
 export type PdfImageLinkSource = {
   app: App
-  pdfFile: TFile
+  pdfFile?: TFile
+  /** Remote document URL without hash. */
+  sourceUrl?: string
 }
 
 export type StagePdfImageRefCopyOptions = {

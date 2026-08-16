@@ -13,6 +13,8 @@ import { ObsidianLocale } from '@/i18n'
 import { LicenseService } from '@/license'
 import { installPdfImageRefContextMenu } from '@/obsidian/installPdfImageRefContextMenu'
 import { installPdfImageRefPaste } from '@/obsidian/installPdfImageRefPaste'
+import { installRemotePdfLinkOpen } from '@/obsidian/installRemotePdfLinkOpen'
+import { normalizeRemoteDocumentUrl } from '@/obsidian/remotePdfLink'
 import {
   consumePendingPdfLinkSubpath,
   findExistingPdfLeaf,
@@ -97,6 +99,7 @@ export class FoxycapePdfPlugin extends Plugin {
     installPdfLinkReuse(this)
     installPdfImageRefPaste(this)
     installPdfImageRefContextMenu(this)
+    installRemotePdfLinkOpen(this)
 
     this.addCommand({
       id: 'open-with-reader',
@@ -305,8 +308,28 @@ export class FoxycapePdfPlugin extends Plugin {
   }
 
   openFileWithFoxycape = async (file: TFile, subpath?: string) => {
-    const normalizedSubpath = normalizePdfSubpath(subpath)
-    const existing = findExistingPdfLeaf(this.app, file, [PDF_READER_VIEW_TYPE])
+    await this.openPdfInFoxycape({ file, subpath })
+  }
+
+  openUrlWithFoxycape = async (url: string, subpath?: string) => {
+    const documentUrl = normalizeRemoteDocumentUrl(url)
+    if (!documentUrl) {
+      return
+    }
+    await this.openPdfInFoxycape({ url: documentUrl, subpath })
+  }
+
+  private openPdfInFoxycape = async (target: {
+    file?: TFile
+    url?: string
+    subpath?: string
+  }) => {
+    const normalizedSubpath = normalizePdfSubpath(target.subpath)
+    const existing = findExistingPdfLeaf(
+      this.app,
+      { file: target.file, url: target.url },
+      [PDF_READER_VIEW_TYPE],
+    )
     if (existing) {
       await revealExistingPdfLeaf(this.app, existing, undefined, normalizedSubpath)
       return
@@ -316,7 +339,9 @@ export class FoxycapePdfPlugin extends Plugin {
     await leaf.setViewState(
       {
         type: PDF_READER_VIEW_TYPE,
-        state: { file: file.path },
+        state: target.file
+          ? { file: target.file.path }
+          : { url: target.url },
         active: true,
       },
       normalizedSubpath ? { subpath: normalizedSubpath } : undefined,
@@ -346,7 +371,7 @@ export class FoxycapePdfPlugin extends Plugin {
     if (file && file.extension.toLowerCase() === 'pdf') {
       return file
     }
-    return null
+    return this.getActiveFoxycapePdfView()?.file ?? null
   }
 
   private getActiveFoxycapePdfView = (): PdfReaderView | null => {

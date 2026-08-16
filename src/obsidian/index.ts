@@ -41,6 +41,19 @@ export {
   type PendingPdfImageRef,
   type StagePdfImageRefCopyOptions,
 } from './pdfImageRef'
+export { installRemotePdfLinkOpen } from './installRemotePdfLinkOpen'
+export {
+  buildPdfMarkdownLink,
+  displayNameFromRemotePdfUrl,
+  fileNameFromRemotePdfUrl,
+  formatRemotePdfMarkdownLink,
+  isRemotePdfUrl,
+  normalizeRemoteDocumentUrl,
+  parseRemotePdfHref,
+  resolveRemoteSidecarNotePath,
+  type PdfMarkdownLinkSource,
+  type RemotePdfHref,
+} from './remotePdfLink'
 export {
   consumePendingPdfLinkSubpath,
   findExistingPdfLeaf,
@@ -49,6 +62,7 @@ export {
   normalizePdfSubpath,
   resolvePdfLinkSubpath,
   revealExistingPdfLeaf,
+  type PdfLeafTarget,
 } from './reusePdfLeaf'
 export {
   FOXYCAPE_IMAGE_NAME_PARAM,

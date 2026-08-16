@@ -599,7 +599,7 @@ export class PdfImageViewer {
   ) => {
     try {
       const linkSource = this.callbacks.getLinkSource?.() ?? null
-      if (!linkSource) {
+      if (!linkSource?.pdfFile) {
         this.notifyError('copyReference')
         return
       }

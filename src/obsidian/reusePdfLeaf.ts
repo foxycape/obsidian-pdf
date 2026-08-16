@@ -16,6 +16,12 @@ type LeafWithActiveTime = WorkspaceLeaf & {
 
 type FileBearingView = {
   file?: TFile | null
+  sourceUrl?: string | null
+}
+
+export type PdfLeafTarget = {
+  file?: TFile | null
+  url?: string | null
 }
 
 type PendingPdfLink = {
@@ -88,12 +94,51 @@ export const resolvePdfLinkSubpath = (
   return normalizePdfSubpath(subpath)
 }
 
-/** Find an already-open PDF tab for `file`, preferring the most recently active one. */
+const getLeafSourceUrl = (leaf: WorkspaceLeaf): string | null => {
+  const view = leaf.view as FileBearingView | null
+  if (view?.sourceUrl) {
+    return view.sourceUrl
+  }
+  try {
+    const stateUrl = leaf.getViewState()?.state?.url
+    if (typeof stateUrl === 'string' && stateUrl) {
+      return stateUrl
+    }
+  } catch {
+    // ignore unavailable view state
+  }
+  return null
+}
+
+const toPdfLeafTarget = (target: TFile | PdfLeafTarget): PdfLeafTarget => {
+  if (target && typeof target === 'object' && 'path' in target && !('url' in target) && !('file' in target)) {
+    return { file: target as TFile }
+  }
+  return target as PdfLeafTarget
+}
+
+const leafMatchesTarget = (leaf: WorkspaceLeaf, target: PdfLeafTarget): boolean => {
+  const filePath = target.file?.path
+  if (filePath && getLeafFilePath(leaf) === filePath) {
+    return true
+  }
+  const url = target.url
+  if (url && getLeafSourceUrl(leaf) === url) {
+    return true
+  }
+  return false
+}
+
+/** Find an already-open PDF tab for a vault file or remote URL. */
 export const findExistingPdfLeaf = (
   app: App,
-  file: TFile,
+  target: TFile | PdfLeafTarget,
   viewTypes: readonly string[] = PDF_VIEW_TYPES,
 ): WorkspaceLeaf | null => {
+  const resolved = toPdfLeafTarget(target)
+  if (!resolved.file && !resolved.url) {
+    return null
+  }
   const allowed = new Set(viewTypes)
   const candidates: WorkspaceLeaf[] = []
   const seen = new Set<WorkspaceLeaf>()
@@ -106,7 +151,7 @@ export const findExistingPdfLeaf = (
     if (typeof type !== 'string' || !allowed.has(type)) {
       return
     }
-    if (getLeafFilePath(leaf) !== file.path) {
+    if (!leafMatchesTarget(leaf, resolved)) {
       return
     }
     seen.add(leaf)
