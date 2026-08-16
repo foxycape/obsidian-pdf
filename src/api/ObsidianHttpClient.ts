@@ -21,7 +21,13 @@ export class ObsidianHttpClient implements IHttpClient {
       throw: false,
     })
     this.throwIfFailed(response)
-    return this.parseResponse(response, responseType)
+    const result = this.parseResponse(response, responseType)
+    const received =
+      responseType === 'arraybuffer' || responseType === 'blob' || responseType === 'stream'
+        ? response.arrayBuffer.byteLength
+        : 0
+    options?.downloadProgressCallback?.(received, received, true)
+    return result
   }
 
   async post(url: string, data: unknown, options?: HttpClientOptions): Promise<unknown> {

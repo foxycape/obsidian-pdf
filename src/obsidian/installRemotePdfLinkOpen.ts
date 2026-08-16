@@ -1,8 +1,8 @@
 import type { EventRef, Menu, Plugin } from 'obsidian'
 import { applyFoxycapeMenuIcon } from '@/ui/foxycapeIcon'
-import { parseRemotePdfHref } from './remotePdfLink'
+import { parseRemoteContextMenuHref, parseRemotePdfHref } from './remotePdfLink'
 
-type RemotePdfOpenPlugin = Plugin & {
+type RemotePdfOpenPlugin = Omit<Plugin, 'settings'> & {
   settings: { useAsDefaultPdfViewer: boolean }
   t: (key: string, fallback: string) => string
   openUrlWithFoxycape: (url: string, subpath?: string) => Promise<void>
@@ -25,14 +25,15 @@ const resolveClickedHref = (event: MouseEvent): string | null => {
 }
 
 /**
- * Right-click any remote `.pdf` URL to open in Foxycape.
- * When Foxycape is the default PDF viewer, a plain click also opens it.
+ * Right-click a remote `.pdf` URL or Google Drive share link (`usp=sharing`)
+ * to open in Foxycape. When Foxycape is the default PDF viewer, a plain click
+ * on a `.pdf` URL also opens it (Drive share links stay menu-only).
  */
 export const installRemotePdfLinkOpen = (plugin: RemotePdfOpenPlugin): void => {
   const workspace = plugin.app.workspace as unknown as WorkspaceWithUrlMenu
   plugin.registerEvent(
     workspace.on('url-menu', (menu, url) => {
-      const parsed = parseRemotePdfHref(url)
+      const parsed = parseRemoteContextMenuHref(url)
       if (!parsed) {
         return
       }

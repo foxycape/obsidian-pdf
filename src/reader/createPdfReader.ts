@@ -8,6 +8,7 @@ import {
 } from '@foxycape/core/kernal'
 import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
 import { PdfMarker } from '@/marker/PdfMarker'
+import { ObsidianHttpClient } from '@/api/ObsidianHttpClient'
 import { Platform, type App, type Plugin } from 'obsidian'
 import {
   CustomPdfOptions,
@@ -60,6 +61,8 @@ export const createPdfReader = async (
   const reader = new Reader(readerOptions, {
     locale: options.locale,
     storage: options.storage,
+    // requestUrl is not subject to browser CORS (Drive / other hosts block fetch).
+    httpClient: new ObsidianHttpClient(),
   })
   let marker: PdfMarker | undefined
 

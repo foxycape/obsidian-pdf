@@ -49,8 +49,11 @@ export {
   formatRemotePdfMarkdownLink,
   isRemotePdfUrl,
   normalizeRemoteDocumentUrl,
+  parseGoogleDriveShareHref,
+  parseRemoteContextMenuHref,
   parseRemotePdfHref,
   resolveRemoteSidecarNotePath,
+  toGoogleDriveDownloadUrl,
   type PdfMarkdownLinkSource,
   type RemotePdfHref,
 } from './remotePdfLink'

@@ -110,13 +110,6 @@ const getLeafSourceUrl = (leaf: WorkspaceLeaf): string | null => {
   return null
 }
 
-const toPdfLeafTarget = (target: TFile | PdfLeafTarget): PdfLeafTarget => {
-  if (target && typeof target === 'object' && 'path' in target && !('url' in target) && !('file' in target)) {
-    return { file: target as TFile }
-  }
-  return target as PdfLeafTarget
-}
-
 const leafMatchesTarget = (leaf: WorkspaceLeaf, target: PdfLeafTarget): boolean => {
   const filePath = target.file?.path
   if (filePath && getLeafFilePath(leaf) === filePath) {
@@ -132,11 +125,10 @@ const leafMatchesTarget = (leaf: WorkspaceLeaf, target: PdfLeafTarget): boolean 
 /** Find an already-open PDF tab for a vault file or remote URL. */
 export const findExistingPdfLeaf = (
   app: App,
-  target: TFile | PdfLeafTarget,
+  target: PdfLeafTarget,
   viewTypes: readonly string[] = PDF_VIEW_TYPES,
 ): WorkspaceLeaf | null => {
-  const resolved = toPdfLeafTarget(target)
-  if (!resolved.file && !resolved.url) {
+  if (!target.file && !target.url) {
     return null
   }
   const allowed = new Set(viewTypes)
@@ -151,7 +143,7 @@ export const findExistingPdfLeaf = (
     if (typeof type !== 'string' || !allowed.has(type)) {
       return
     }
-    if (!leafMatchesTarget(leaf, resolved)) {
+    if (!leafMatchesTarget(leaf, target)) {
       return
     }
     seen.add(leaf)
@@ -268,7 +260,7 @@ export const installPdfLinkReuse = (plugin: Plugin): void => {
       return
     }
 
-    const existing = findExistingPdfLeaf(plugin.app, file)
+    const existing = findExistingPdfLeaf(plugin.app, { file })
     if (!existing) {
       await originalOpenLinkText(linktext, sourcePath, newLeaf, openViewState)
       return

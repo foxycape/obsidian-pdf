@@ -36,7 +36,7 @@ describe('findExistingPdfLeaf', () => {
     } as unknown as App
     const file = { path: 'Books/a.pdf', extension: 'pdf' } as TFile
 
-    expect(findExistingPdfLeaf(app, file)).toBeNull()
+    expect(findExistingPdfLeaf(app, { file })).toBeNull()
   })
 
   it('prefers the most recently active matching leaf', () => {
@@ -54,7 +54,7 @@ describe('findExistingPdfLeaf', () => {
     } as unknown as App
     const file = { path: 'Books/a.pdf', extension: 'pdf' } as TFile
 
-    expect(findExistingPdfLeaf(app, file, [PDF_READER_VIEW_TYPE])).toBe(newer)
+    expect(findExistingPdfLeaf(app, { file }, [PDF_READER_VIEW_TYPE])).toBe(newer)
   })
 
   it('finds a remote URL tab from view state', () => {
@@ -92,7 +92,7 @@ describe('findExistingPdfLeaf', () => {
     } as unknown as App
     const file = { path: 'Books/a.pdf', extension: 'pdf' } as TFile
 
-    expect(findExistingPdfLeaf(app, file, [PDF_READER_VIEW_TYPE])).toBe(deferred)
+    expect(findExistingPdfLeaf(app, { file }, [PDF_READER_VIEW_TYPE])).toBe(deferred)
   })
 })
 
