@@ -42,7 +42,7 @@ describe('parseGoogleDriveShareHref', () => {
   const shareHref =
     'https://drive.google.com/file/d/19ZEB_jP80PT0pnRgS1c_qJSgNp9fS2Bt/view?usp=sharing'
   const downloadHref =
-    'https://drive.google.com/uc?export=download&id=19ZEB_jP80PT0pnRgS1c_qJSgNp9fS2Bt'
+    'https://drive.google.com/uc?export=download&id=19ZEB_jP80PT0pnRgS1c_qJSgNp9fS2Bt&extension=.pdf'
 
   it('converts a sharing view link to the download URL', () => {
     expect(parseGoogleDriveShareHref(shareHref)).toEqual({
@@ -75,17 +75,30 @@ describe('parseRemoteContextMenuHref', () => {
       parseRemoteContextMenuHref(
         'https://drive.google.com/file/d/19ZEB_jP80PT0pnRgS1c_qJSgNp9fS2Bt/view?usp=sharing',
       )?.url,
-    ).toBe('https://drive.google.com/uc?export=download&id=19ZEB_jP80PT0pnRgS1c_qJSgNp9fS2Bt')
+    ).toBe(
+      'https://drive.google.com/uc?export=download&id=19ZEB_jP80PT0pnRgS1c_qJSgNp9fS2Bt&extension=.pdf',
+    )
+  })
+
+  it('accepts Drive download links that declare extension=.pdf', () => {
+    const href =
+      'https://drive.google.com/uc?export=download&id=19ZEB_jP80PT0pnRgS1c_qJSgNp9fS2Bt&extension=.pdf#page=1&selection=45,0,47,34&markId=fbb0c09f7105ab8d'
+    expect(parseRemoteContextMenuHref(href)).toEqual({
+      url: 'https://drive.google.com/uc?export=download&id=19ZEB_jP80PT0pnRgS1c_qJSgNp9fS2Bt&extension=.pdf',
+      subpath: '#page=1&selection=45,0,47,34&markId=fbb0c09f7105ab8d',
+    })
   })
 })
 
 describe('normalizeRemoteDocumentUrl', () => {
-  it('accepts already-converted Google Drive download URLs', () => {
+  it('adds extension=.pdf to converted Google Drive download URLs', () => {
     expect(
       normalizeRemoteDocumentUrl(
         'https://drive.google.com/uc?export=download&id=19ZEB_jP80PT0pnRgS1c_qJSgNp9fS2Bt',
       ),
-    ).toBe('https://drive.google.com/uc?export=download&id=19ZEB_jP80PT0pnRgS1c_qJSgNp9fS2Bt')
+    ).toBe(
+      'https://drive.google.com/uc?export=download&id=19ZEB_jP80PT0pnRgS1c_qJSgNp9fS2Bt&extension=.pdf',
+    )
   })
 })
 
@@ -126,6 +139,17 @@ describe('formatRemotePdfMarkdownLink', () => {
     expect(
       formatRemotePdfMarkdownLink('https://cdn.example.com/book.pdf', '#page=2'),
     ).toBe('[↗](https://cdn.example.com/book.pdf#page=2)')
+  })
+
+  it('adds extension=.pdf to Drive download highlight links', () => {
+    expect(
+      formatRemotePdfMarkdownLink(
+        'https://drive.google.com/uc?export=download&id=19ZEB_jP80PT0pnRgS1c_qJSgNp9fS2Bt',
+        '#page=1&selection=45,0,47,34&markId=fbb0c09f7105ab8d',
+      ),
+    ).toBe(
+      '[↗](https://drive.google.com/uc?export=download&id=19ZEB_jP80PT0pnRgS1c_qJSgNp9fS2Bt&extension=.pdf#page=1&selection=45,0,47,34&markId=fbb0c09f7105ab8d)',
+    )
   })
 })
 

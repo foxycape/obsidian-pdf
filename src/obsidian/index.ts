@@ -45,6 +45,7 @@ export { installRemotePdfLinkOpen } from './installRemotePdfLinkOpen'
 export {
   buildPdfMarkdownLink,
   displayNameFromRemotePdfUrl,
+  ensurePdfExtensionQuery,
   fileNameFromRemotePdfUrl,
   formatRemotePdfMarkdownLink,
   isRemotePdfUrl,

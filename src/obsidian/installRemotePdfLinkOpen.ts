@@ -25,9 +25,10 @@ const resolveClickedHref = (event: MouseEvent): string | null => {
 }
 
 /**
- * Right-click a remote `.pdf` URL or Google Drive share link (`usp=sharing`)
- * to open in Foxycape. When Foxycape is the default PDF viewer, a plain click
- * on a `.pdf` URL also opens it (Drive share links stay menu-only).
+ * Right-click a remote `.pdf` URL, `extension=.pdf` query, or Google Drive
+ * share link (`usp=sharing`) to open in Foxycape. When Foxycape is the default
+ * PDF viewer, a plain click on a `.pdf` path also opens it (Drive / extension
+ * hints stay menu-only).
  */
 export const installRemotePdfLinkOpen = (plugin: RemotePdfOpenPlugin): void => {
   const workspace = plugin.app.workspace as unknown as WorkspaceWithUrlMenu

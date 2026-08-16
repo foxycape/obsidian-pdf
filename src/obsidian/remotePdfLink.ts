@@ -9,6 +9,7 @@ export type RemotePdfHref = {
 
 const GOOGLE_DRIVE_HOST = 'drive.google.com'
 const GOOGLE_DRIVE_FILE_ID_RE = /\/file\/d\/([^/]+)/i
+const PDF_EXTENSION_HINT = '.pdf'
 
 const isHttpUrl = (value: string): boolean => /^https?:\/\//i.test(value)
 
@@ -35,6 +36,34 @@ const toDocumentHref = (parsed: URL): RemotePdfHref => ({
 const isGoogleDriveHost = (hostname: string): boolean =>
   hostname.toLowerCase() === GOOGLE_DRIVE_HOST
 
+const hasPdfPathSuffix = (parsed: URL): boolean => {
+  let path: string
+  try {
+    path = decodeURIComponent(parsed.pathname)
+  } catch {
+    path = parsed.pathname
+  }
+  return path.toLowerCase().endsWith('.pdf')
+}
+
+const hasPdfExtensionHint = (parsed: URL): boolean => {
+  const raw = parsed.searchParams.get('extension')?.trim().toLowerCase()
+  return raw === 'pdf' || raw === '.pdf'
+}
+
+/** Keep `extension=.pdf` on URLs whose path has no `.pdf` suffix (e.g. Drive). */
+export const ensurePdfExtensionQuery = (url: string): string => {
+  const parsed = tryParseHttpUrl(url)
+  if (!parsed) {
+    return url
+  }
+  if (hasPdfPathSuffix(parsed) || hasPdfExtensionHint(parsed)) {
+    return `${parsed.origin}${parsed.pathname}${parsed.search}`
+  }
+  parsed.searchParams.set('extension', PDF_EXTENSION_HINT)
+  return `${parsed.origin}${parsed.pathname}${parsed.search}`
+}
+
 const extractGoogleDriveFileId = (parsed: URL): string | null => {
   const fromPath = parsed.pathname.match(GOOGLE_DRIVE_FILE_ID_RE)?.[1]
   if (fromPath) {
@@ -45,7 +74,7 @@ const extractGoogleDriveFileId = (parsed: URL): string | null => {
 }
 
 export const toGoogleDriveDownloadUrl = (fileId: string): string =>
-  `https://${GOOGLE_DRIVE_HOST}/uc?export=download&id=${encodeURIComponent(fileId)}`
+  `https://${GOOGLE_DRIVE_HOST}/uc?export=download&id=${encodeURIComponent(fileId)}&extension=${PDF_EXTENSION_HINT}`
 
 /** `https://drive.google.com/file/d/{id}/view?usp=sharing` → direct download URL. */
 export const parseGoogleDriveShareHref = (
@@ -81,6 +110,20 @@ const parseGoogleDriveDownloadHref = (
   if (!parsed.searchParams.get('id')?.trim()) {
     return null
   }
+  const documentHref = toDocumentHref(parsed)
+  return {
+    url: ensurePdfExtensionQuery(documentHref.url),
+    subpath: documentHref.subpath,
+  }
+}
+
+const parseRemoteExtensionHintHref = (
+  href: string | null | undefined,
+): RemotePdfHref | null => {
+  const parsed = tryParseHttpUrl(href)
+  if (!parsed || !hasPdfExtensionHint(parsed)) {
+    return null
+  }
   return toDocumentHref(parsed)
 }
 
@@ -89,7 +132,8 @@ export const normalizeRemoteDocumentUrl = (href: string): string | undefined => 
   const parsed =
     parseRemotePdfHref(href) ??
     parseGoogleDriveShareHref(href) ??
-    parseGoogleDriveDownloadHref(href)
+    parseGoogleDriveDownloadHref(href) ??
+    parseRemoteExtensionHintHref(href)
   return parsed?.url
 }
 
@@ -97,25 +141,22 @@ export const parseRemotePdfHref = (
   href: string | null | undefined,
 ): RemotePdfHref | null => {
   const parsed = tryParseHttpUrl(href)
-  if (!parsed) {
-    return null
-  }
-  let path: string
-  try {
-    path = decodeURIComponent(parsed.pathname)
-  } catch {
-    path = parsed.pathname
-  }
-  if (!path.toLowerCase().endsWith('.pdf')) {
+  if (!parsed || !hasPdfPathSuffix(parsed)) {
     return null
   }
   return toDocumentHref(parsed)
 }
 
-/** Right-click targets: remote `.pdf` URLs and Google Drive share links. */
+/**
+ * Right-click targets: path ends with `.pdf`, Google Drive `usp=sharing`,
+ * or an explicit `extension=.pdf` query.
+ */
 export const parseRemoteContextMenuHref = (
   href: string | null | undefined,
-): RemotePdfHref | null => parseRemotePdfHref(href) ?? parseGoogleDriveShareHref(href)
+): RemotePdfHref | null =>
+  parseRemotePdfHref(href) ??
+  parseGoogleDriveShareHref(href) ??
+  parseRemoteExtensionHintHref(href)
 
 export const isRemotePdfUrl = (href: string | null | undefined): boolean =>
   parseRemotePdfHref(href) != null
@@ -161,12 +202,13 @@ export const formatRemotePdfMarkdownLink = (
   subpath: string,
   alias = '↗',
 ): string => {
+  const normalizedUrl = ensurePdfExtensionQuery(documentUrl)
   const hash = !subpath
     ? ''
     : subpath.startsWith('#')
       ? subpath
       : `#${subpath}`
-  const href = `${documentUrl}${hash}`
+  const href = `${normalizedUrl}${hash}`
   const needsBrackets = /[\s()<>]/.test(href)
   return needsBrackets ? `[${alias}](<${href}>)` : `[${alias}](${href})`
 }
