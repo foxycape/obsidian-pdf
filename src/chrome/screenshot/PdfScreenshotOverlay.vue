@@ -11,7 +11,6 @@ const props = defineProps<{
   hostEl: HTMLElement
   t: (key: string, fallback: string) => string
   getLinkSource?: () => PdfImageLinkSource | null
-  ensureEntitled?: () => boolean
   onActiveChange?: (active: boolean) => void
 }>()
 
@@ -31,7 +30,6 @@ const {
   hostEl: props.hostEl,
   t: props.t,
   getLinkSource: props.getLinkSource,
-  ensureEntitled: props.ensureEntitled,
   onActiveChange: props.onActiveChange,
 })
 

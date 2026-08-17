@@ -53,18 +53,19 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
         this.bindDefaultViewerToggle(setting)
       },
     },
-    {
-      type: 'group',
-      heading: this.plugin.t('plugin_settings_license_heading', 'License'),
-      items: [
-        {
-          name: this.plugin.t('plugin_settings_license_name', 'License key'),
-          render: (setting) => {
-            this.bindLicenseSetting(setting)
-          },
-        },
-      ],
-    },
+
+    // {
+    //   type: 'group',
+    //   heading: this.plugin.t('plugin_settings_license_heading', 'License'),
+    //   items: [
+    //     {
+    //       name: this.plugin.t('plugin_settings_license_name', 'License key'),
+    //       render: (setting) => {
+    //         this.bindLicenseSetting(setting)
+    //       },
+    //     },
+    //   ],
+    // },
   ]
 
   /** Pre-1.13 fallback; skipped when getSettingDefinitions() returns a non-empty array. */
@@ -93,16 +94,16 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
         )
       this.bindDefaultViewerToggle(defaultViewerSetting)
 
-      new Setting(containerEl)
-        .setName(this.plugin.t('plugin_settings_license_heading', 'License'))
-        .setHeading()
-
-      const licenseSetting = new Setting(containerEl)
-        .setName(
-          this.plugin.t('plugin_settings_license_name', 'License key'),
-        )
-        .setDesc('')
-      this.bindLicenseSetting(licenseSetting)
+      // new Setting(containerEl)
+      //   .setName(this.plugin.t('plugin_settings_license_heading', 'License'))
+      //   .setHeading()
+      //
+      // const licenseSetting = new Setting(containerEl)
+      //   .setName(
+      //     this.plugin.t('plugin_settings_license_name', 'License key'),
+      //   )
+      //   .setDesc('')
+      // this.bindLicenseSetting(licenseSetting)
     })
   }
 

@@ -58,12 +58,6 @@ export class CustomPdfOptions extends PdfOptions {
   getLinkSource?: () => PdfImageLinkSource | null
 
   /**
-   * Runtime-only: gate premium image actions (browse / copy / download / reference).
-   * Return false to block (caller may show a notice). Not persisted in settings.
-   */
-  ensureEntitled?: () => boolean
-
-  /**
    * Runtime-only: install disk-backed CMap / standard-font factories on getDocument.
    * Not persisted in settings.
    */

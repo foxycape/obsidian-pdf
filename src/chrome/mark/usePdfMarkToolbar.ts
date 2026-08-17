@@ -61,8 +61,6 @@ export const usePdfMarkToolbar = (options: {
   hostEl: Ref<HTMLElement | null>
   t: (key: string, fallback: string) => string
   getLinkSource?: () => PdfMarkToolbarLinkSource | null
-  /** Returns false (and may show a notice) when premium actions are blocked. */
-  ensureEntitled?: () => boolean
 }) => {
   const state = reactive<PdfMarkToolbarState>({
     visible: false,
@@ -435,9 +433,6 @@ export const usePdfMarkToolbar = (options: {
   }
 
   const drawline = async (styleName: MarkStyleName, customColor?: string) => {
-    if (options.ensureEntitled && !options.ensureEntitled()) {
-      return
-    }
     const marker = getMarker()
     if (!marker) {
       return
@@ -645,9 +640,6 @@ export const usePdfMarkToolbar = (options: {
    */
   const copyTextReference = async () => {
     if (isCopying) {
-      return
-    }
-    if (options.ensureEntitled && !options.ensureEntitled()) {
       return
     }
     isCopying = true

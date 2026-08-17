@@ -441,7 +441,6 @@ export class PdfReaderView extends ItemView {
           enableAutoCreateHighlightNotes: settings.enableAutoCreateHighlightNotes,
         },
         getLinkSource: this.resolveLinkSource,
-        ensureEntitled: () => this.plugin.ensureLicenseEntitlement(),
         onRequirePassword: async (callback, reason) => {
           const password = await promptPdfPassword(
             this.app,
@@ -675,7 +674,6 @@ export class PdfReaderView extends ItemView {
       getMarker,
       t: this.plugin.t,
       getLinkSource: this.resolveLinkSource,
-      ensureEntitled: () => this.plugin.ensureLicenseEntitlement(),
     })
   }
 
@@ -708,7 +706,6 @@ export class PdfReaderView extends ItemView {
         reader,
         t: this.plugin.t,
         getLinkSource: this.resolveLinkSource,
-        ensureEntitled: () => this.plugin.ensureLicenseEntitlement(),
         onActiveChange: (active) => {
           this.syncScreenshotMode(active)
         },

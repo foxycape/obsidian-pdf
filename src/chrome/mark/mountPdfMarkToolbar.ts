@@ -16,7 +16,6 @@ export const mountPdfMarkToolbar = (options: {
   getMarker: () => IMarker | undefined
   t: (key: string, fallback: string) => string
   getLinkSource?: () => PdfMarkToolbarLinkSource | null
-  ensureEntitled?: () => boolean
 }): PdfMarkToolbarMount => {
   const doc = options.hostEl.ownerDocument
   injectToolbarIcons(doc)
@@ -35,7 +34,6 @@ export const mountPdfMarkToolbar = (options: {
         hostEl: options.hostEl,
         t: options.t,
         getLinkSource: options.getLinkSource,
-        ensureEntitled: options.ensureEntitled,
       }),
   })
   app.mount(root)

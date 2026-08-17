@@ -70,7 +70,6 @@ export const usePdfScreenshot = (options: {
   hostEl: HTMLElement
   t: (key: string, fallback: string) => string
   getLinkSource?: () => PdfImageLinkSource | null
-  ensureEntitled?: () => boolean
   onActiveChange?: (active: boolean) => void
 }) => {
   const state = reactive<ScreenshotUiState>({
@@ -410,9 +409,6 @@ export const usePdfScreenshot = (options: {
   }
 
   const copyImage = async () => {
-    if (options.ensureEntitled && !options.ensureEntitled()) {
-      return
-    }
     if (state.busy) {
       return
     }
@@ -435,9 +431,6 @@ export const usePdfScreenshot = (options: {
   }
 
   const copyImageReference = async () => {
-    if (options.ensureEntitled && !options.ensureEntitled()) {
-      return
-    }
     if (state.busy) {
       return
     }

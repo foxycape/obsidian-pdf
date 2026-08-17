@@ -351,7 +351,7 @@ export class FoxycapePdfPlugin extends Plugin {
 
   /**
    * Returns false and shows a dialog when trial expired without a valid license.
-   * Used to gate premium actions (highlight, citations, image tools); opening PDF stays allowed.
+   * Reserved for future paid features; current reader actions are free.
    */
   ensureLicenseEntitlement = (): boolean => {
     if (this.licenseService.isEntitled()) {

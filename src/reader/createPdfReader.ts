@@ -34,8 +34,6 @@ export type CreatePdfReaderOptions = {
   viewPreferences?: Partial<PdfViewPreferences>
   /** Runtime callback for image reference copy / paste pipeline. */
   getLinkSource?: () => PdfImageLinkSource | null
-  /** Runtime gate for premium image actions after trial ends. */
-  ensureEntitled?: () => boolean
   onRequirePassword: (
     callback: (password: string | Error) => Promise<void> | void,
     reason: string,
@@ -91,7 +89,6 @@ export const createPdfReader = async (
   pdfOptions.textLayerMode = Platform.isMobile ? 1 : 2;
   Object.assign(pdfOptions, DEFAULT_PDF_VIEW_PREFERENCES, options.viewPreferences)
   pdfOptions.getLinkSource = options.getLinkSource
-  pdfOptions.ensureEntitled = options.ensureEntitled
   pdfOptions.documentInitParametersCallback = createDiskPdfAssetInitializer(
     options.plugin,
   )

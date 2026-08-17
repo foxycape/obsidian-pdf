@@ -22,7 +22,6 @@ export const mountPdfScreenshot = (options: {
   reader: Reader
   t: (key: string, fallback: string) => string
   getLinkSource?: () => PdfImageLinkSource | null
-  ensureEntitled?: () => boolean
   onActiveChange?: (active: boolean) => void
 }): PdfScreenshotMount => {
   const root = options.viewEl.createDiv({ cls: 'foxycape-pdf-screenshot-root' })
@@ -36,7 +35,6 @@ export const mountPdfScreenshot = (options: {
         hostEl: options.hostEl,
         t: options.t,
         getLinkSource: options.getLinkSource,
-        ensureEntitled: options.ensureEntitled,
         onActiveChange: options.onActiveChange,
       }),
   })

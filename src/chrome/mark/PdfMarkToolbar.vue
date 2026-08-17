@@ -19,7 +19,6 @@ const props = defineProps<{
   hostEl: HTMLElement
   t: (key: string, fallback: string) => string
   getLinkSource?: () => PdfMarkToolbarLinkSource | null
-  ensureEntitled?: () => boolean
 }>()
 
 const hostElRef = shallowRef<HTMLElement | null>(props.hostEl)
@@ -49,7 +48,6 @@ const {
   hostEl: hostElRef,
   t: props.t,
   getLinkSource: props.getLinkSource,
-  ensureEntitled: props.ensureEntitled,
 })
 
 const toolbarClass = computed(() => [

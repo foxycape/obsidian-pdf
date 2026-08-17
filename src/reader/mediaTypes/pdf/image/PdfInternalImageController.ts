@@ -708,9 +708,6 @@ export class PdfInternalImageController implements IDisposable {
       copyReferenceButton: HTMLButtonElement
     },
   ) {
-    if (this.options.ensureEntitled && !this.options.ensureEntitled()) {
-      return
-    }
     if (this.busyAction) {
       return
     }
@@ -864,9 +861,6 @@ export class PdfInternalImageController implements IDisposable {
   }
 
   private async openViewer(doc: IPdfDocument, descriptor: ImageDescriptor) {
-    if (this.options.ensureEntitled && !this.options.ensureEntitled()) {
-      return
-    }
     this.browseButton.classList.add('is-loading')
     try {
       // 1-based page number for getImage / PdfImageViewer.resolvePageNumber
