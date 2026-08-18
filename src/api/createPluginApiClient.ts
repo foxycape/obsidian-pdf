@@ -1,5 +1,5 @@
 import type { IDevice } from '@foxycape/core/kernal'
-import { WebBrowser, WebEnvironment, WebPlatform } from '@foxycape/core/kernal'
+import { WebBrowser } from '@foxycape/core/kernal'
 import { WebCrypto } from '@foxycape/core/kernal/crypto/WebCrypto'
 import {
   ApiClient,
@@ -28,7 +28,7 @@ export const createPluginApiClient = (
   plugin: Plugin,
   config: PluginApiConfig = {},
 ): PluginApiContext => {
-  const device: IDevice = new WebBrowser(new WebPlatform(), new WebEnvironment())
+  const device: IDevice = new WebBrowser()
   const apiSettings: ApiSettings = {
     endPoint: config.endPoint ?? API_ENDPOINT,
     appId: config.appId ?? '20',
