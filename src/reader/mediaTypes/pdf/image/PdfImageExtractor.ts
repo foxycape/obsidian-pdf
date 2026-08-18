@@ -1,5 +1,5 @@
 import type { ExtractImageOptions, IDisposable, ILogger, ImageDescriptor } from '@foxycape/core/kernal'
-import { BrowserCapabilities } from '@foxycape/core/kernal'
+import { yieldToMain } from '@foxycape/core/kernal'
 import * as pdfjsLib from '@foxycape/core/pdfjs/legacy/build/pdf.mjs'
 import { asAugmentedCanvasContext } from '../canvasContextHooks'
 import { handleOnlyImages } from './pdfImageHandler'
@@ -113,7 +113,7 @@ export class PdfImageExtractor implements IDisposable {
             callback?.(pageNumber.toString(), filteredImages)
           }
         }
-        await BrowserCapabilities.yieldToMain()
+        await yieldToMain()
       } catch {
         // ignore per-page failures
       }
