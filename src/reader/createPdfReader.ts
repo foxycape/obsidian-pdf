@@ -2,6 +2,7 @@ import {
   EventNames,
   Options,
   Reader,
+  type IDevice,
   type ILocale,
   type IMarker,
   type IStorage,
@@ -29,6 +30,7 @@ export type CreatePdfReaderOptions = {
   plugin: Plugin
   assets: PdfAssetUrls
   locale: ILocale
+  device: IDevice
   /** Shared plugin storage (Dexie). Must outlive individual reader sessions. */
   storage: IStorage
   viewPreferences?: Partial<PdfViewPreferences>
@@ -57,6 +59,7 @@ export const createPdfReader = async (
   readerOptions.themeName = OBSIDIAN_THEME_NAME
 
   const reader = new Reader(readerOptions, {
+    device: options.device,
     locale: options.locale,
     storage: options.storage,
     // requestUrl is not subject to browser CORS (Drive / other hosts block fetch).

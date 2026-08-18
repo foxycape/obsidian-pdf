@@ -432,6 +432,7 @@ export class PdfReaderView extends ItemView {
         app: this.app,
         plugin: this.plugin,
         assets,
+        device: this.plugin.device,
         locale: this.plugin.locale,
         storage: this.plugin.storage,
         viewPreferences: {
