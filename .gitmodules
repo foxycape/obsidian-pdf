@@ -1,3 +1,0 @@
-[submodule "vendor/core"]
-	path = vendor/core
-	url = https://github.com/foxycape/core.git
