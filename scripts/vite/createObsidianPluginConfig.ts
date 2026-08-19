@@ -3,7 +3,7 @@ import { resolve } from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig, type Plugin, type UserConfig } from 'vite'
-import { createFoxycapeCoreAliases } from '../resolveFoxycapeCore'
+import { createFoxycapeCoreAliases, resolveFoxycapeCore } from '../resolveFoxycapeCore'
 
 type CreateObsidianPluginConfigOptions = {
   packageDir: string
@@ -77,6 +77,7 @@ export const createObsidianPluginConfig = (
   const packageDir = options.packageDir
   const entry = options.entry ?? resolve(packageDir, 'src/main.ts')
   const outDir = resolve(packageDir, options.outDirName ?? 'dist')
+  const { root: coreRoot } = resolveFoxycapeCore(packageDir)
 
   return defineConfig({
     plugins: [vue(), tailwindcss(), copyPluginManifestPlugin(packageDir, outDir)],
@@ -133,7 +134,7 @@ export const createObsidianPluginConfig = (
     },
     server: {
       fs: {
-        allow: [packageDir],
+        allow: [packageDir, coreRoot],
       },
     },
   })

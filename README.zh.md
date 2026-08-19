@@ -116,7 +116,6 @@ PDF 排版常把句子拦腰截断，复制后满是多余换行。照常选中�
 ## 开发
 
 ```bash
-git submodule update --init --recursive   # 若 vendor/core 以 submodule 检出
 npm install
 npm run build      # → dist/main.js、styles.css、manifest.json + foxycape-pdf-assets.zip
 npm run dev        # 监听构建（会把 pdfjs/static sidecar 拷到 dist/）

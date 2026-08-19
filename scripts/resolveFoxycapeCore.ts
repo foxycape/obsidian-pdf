@@ -5,24 +5,25 @@ import { dirname, resolve } from 'node:path'
 const require = createRequire(import.meta.url)
 
 export type FoxycapeCoreResolution = {
-  /** Absolute path to package / vendor root */
+  /** Absolute path to workspace core / npm package root */
   root: string
-  /** Prefer TypeScript source under vendor/core when present */
+  /** True when resolving TypeScript source under ../core */
   isSource: boolean
   /** Absolute path to pdfjs assets (source pdfjs/ or package dist/pdfjs/) */
   pdfjsDir: string
 }
 
 /**
- * Local vendor/core wins for source editing; otherwise resolve the installed package.
+ * Workspace `../core` is the single local source of truth.
+ * Standalone clones fall back to the installed npm package.
  */
 export const resolveFoxycapeCore = (packageDir: string): FoxycapeCoreResolution => {
-  const vendorRoot = resolve(packageDir, 'vendor/core')
-  if (existsSync(resolve(vendorRoot, 'package.json'))) {
+  const workspaceRoot = resolve(packageDir, '../core')
+  if (existsSync(resolve(workspaceRoot, 'package.json'))) {
     return {
-      root: vendorRoot,
+      root: workspaceRoot,
       isSource: true,
-      pdfjsDir: resolve(vendorRoot, 'pdfjs'),
+      pdfjsDir: resolve(workspaceRoot, 'pdfjs'),
     }
   }
 
@@ -39,7 +40,7 @@ export const resolveFoxycapeCore = (packageDir: string): FoxycapeCoreResolution 
   }
 }
 
-/** Vite aliases: map @foxycape/core → local source when vendor/core is present. */
+/** Vite aliases: map @foxycape/core → local TypeScript source when present. */
 export const createFoxycapeCoreAliases = (
   packageDir: string,
 ): Array<{ find: RegExp | string; replacement: string }> => {

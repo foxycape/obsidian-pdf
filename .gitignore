@@ -11,3 +11,6 @@ packages/
 
 # TypeScript
 *.tsbuildinfo
+
+# core is maintained at ../core, not as a vendored checkout
+vendor/core/

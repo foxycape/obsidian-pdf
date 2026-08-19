@@ -20,11 +20,11 @@
     "paths": {
       "@/*": ["./src/*"],
       "@foxycape/core": [
-        "./vendor/core/kernal/index.ts",
+        "../core/kernal/index.ts",
         "./node_modules/@foxycape/core/dist/kernal/index.d.ts"
       ],
       "@foxycape/core/*": [
-        "./vendor/core/*",
+        "../core/*",
         "./node_modules/@foxycape/core/dist/*"
       ]
     }
@@ -32,7 +32,7 @@
   "include": ["src/**/*.ts", "src/**/*.vue", "src/**/*.d.ts", "tests/**/*.ts"],
   "exclude": [
     "node_modules",
-    "vendor/core",
+    "../core",
     "vite.config.ts",
     "vite.copy-pdfjs.ts",
     "vite.patch-pdf-viewer.ts",

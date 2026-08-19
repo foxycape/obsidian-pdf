@@ -116,7 +116,6 @@ For the smoothest experience—deep links, highlights, and theme-aware pages—t
 ## Develop
 
 ```bash
-git submodule update --init --recursive   # if vendor/core is checked out as a submodule
 npm install
 npm run build      # → dist/main.js, styles.css, manifest.json + foxycape-pdf-assets.zip
 npm run dev        # watch build (copies pdfjs/static sidecars into dist/)
