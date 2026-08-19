@@ -6,7 +6,7 @@ import {
   type SettingDefinitionItem,
   type TextComponent,
 } from 'obsidian'
-import { debounce } from '@foxycape/core/kernal/Debounce'
+import { debounce } from '@foxycape/core/kernal/web/debounce'
 import {
   LICENSE_INPUT_DEBOUNCE_MS,
   LICENSE_PURCHASE_URL,
