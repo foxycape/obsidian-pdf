@@ -31,8 +31,7 @@
     "type-detect": "^4.1.0",
     "ua-parser-js": "^2.0.10",
     "vue": "^3.5.16",
-    "vue-virtual-scroller": "^2.0.1",
-    "xxhashjs": "^0.2.2"
+    "vue-virtual-scroller": "^2.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
@@ -40,7 +39,6 @@
     "@tailwindcss/vite": "^4.1.16",
     "@types/node": "^22.15.21",
     "@types/ua-parser-js": "^0.7.39",
-    "@types/xxhashjs": "^0.2.4",
     "@typescript-eslint/parser": "^8.67.0",
     "@vitejs/plugin-vue": "^5.2.4",
     "@vue/test-utils": "^2.4.6",
