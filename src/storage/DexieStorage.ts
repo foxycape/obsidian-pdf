@@ -37,11 +37,6 @@ export class DexieStorage implements IStorage {
     return this.defaultDbName
   }
 
-  async getString(tableName: string, key: string): Promise<string> {
-    const value = await this.get<string>(tableName, key)
-    return value ?? ''
-  }
-
   async get<T>(tableName: string, key: string): Promise<T> {
     const normalizedTable = this.formatTableName(tableName)
     const normalizedKey = this.formatKey(key)
@@ -130,6 +125,10 @@ export class DexieStorage implements IStorage {
       return
     }
     await this.db.kv.delete([normalizedTable, normalizedKey])
+  }
+
+  async count(tableName: string): Promise<number> {
+    return this.getKeyCount(tableName)
   }
 
   async getKeyCount(tableName: string): Promise<number> {
