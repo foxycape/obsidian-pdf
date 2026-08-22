@@ -1,3 +1,4 @@
+export * from './PdfHighlighter'
 export * from './PdfMarkConstants'
 export * from './PdfMarkStyles'
 export * from './PdfMarkOverlay'

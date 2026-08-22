@@ -1,6 +1,8 @@
 import type { PDFPageProxy } from '@foxycape/core/pdfjs/types/src/display/api'
 import { EventNames } from '@foxycape/core/kernal'
 import { scrollElementIntoView } from '@foxycape/core/kernal/html/style'
+import type { HighlightItem, IHighlighter } from '@foxycape/core/kernal/mark/IHighlighter'
+import { PdfHighlighter } from '@/marker/PdfHighlighter'
 import type { IPdfDocument } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfDocument'
 import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
 import type { IPdfSearcher } from './IPdfSearcher'
@@ -15,7 +17,6 @@ import {
 } from './matchGeometry'
 import {
   clearActiveSearchHits,
-  paintSearchHitOnPage,
   removeAllSearchOverlays,
   setSearchHitActive,
 } from './PdfSearchOverlay'
@@ -45,6 +46,7 @@ const isPdfPageProxy = (value: unknown): value is PDFPageProxy => {
 };
 
 export class PdfSearcher implements IPdfSearcher {
+    private readonly highlighter: IHighlighter
     private result: PdfSearchResult = emptyResult();
     private options: PdfSearchMatchOptions = {
         caseSensitive: false,
@@ -64,6 +66,7 @@ export class PdfSearcher implements IPdfSearcher {
     };
 
     constructor(private readonly renderer: IPdfRenderer) {
+        this.highlighter = new PdfHighlighter(renderer)
         this.bindEvents();
     }
 
@@ -98,6 +101,7 @@ export class PdfSearcher implements IPdfSearcher {
         this.pendingResolve = undefined;
         const generation = ++this.searchGeneration;
         this.pageLayerTextCache.clear();
+        this.highlighter.removeAll()
         removeAllSearchOverlays(this.renderer.getRendererContainer());
         this.result = {
             keyword: query,
@@ -230,6 +234,7 @@ export class PdfSearcher implements IPdfSearcher {
             window.clearTimeout(this.pendingResolve.timer);
         }
         this.pendingResolve = undefined;
+        this.highlighter.removeAll()
         const root = this.renderer.getRendererContainer();
         removeAllSearchOverlays(root);
         clearActiveSearchHits(root);
@@ -251,6 +256,7 @@ export class PdfSearcher implements IPdfSearcher {
         this.disposed = true;
         this.unbindEvents();
         await this.removeAll(true);
+        await this.highlighter.dispose()
     }
 
     private bindEvents() {
@@ -554,12 +560,22 @@ export class PdfSearcher implements IPdfSearcher {
         }
         const activeId =
             this.result.index >= 0 ? this.result.items[this.result.index]?.id : undefined;
+        const highlights: HighlightItem[] = []
         for (const item of pageItems) {
             await this.ensureMatchRects(item);
             if (!item.rects?.length) {
                 continue;
             }
-            paintSearchHitOnPage(doc, item, item.rects, item.id === activeId);
+            highlights.push({
+                id: item.id,
+                type: 'search',
+                pageNumber,
+                rects: item.rects,
+                active: item.id === activeId,
+            })
+        }
+        if (highlights.length > 0) {
+            this.highlighter.paint(highlights)
         }
     }
 }

@@ -8,6 +8,7 @@ import {
   measureConvertedMatchRects,
   type PdfConvertedMatch,
 } from '@/search/matchGeometry'
+import { MARK_HIGHLIGHT_ID_ATTR } from '@foxycape/core/kernal/mark/MarkConstants'
 import {
   paintSearchHitOnPage,
   removeAllSearchOverlays,
@@ -94,7 +95,7 @@ const flashPageRects = async (
   }
   paintSearchHitOnPage(doc, match, rects, true)
   const hits = root
-    ? Array.from(root.querySelectorAll(`[data-search-hit-id="${DEEP_LINK_HIT_ID}"]`))
+    ? Array.from(root.querySelectorAll(`[${MARK_HIGHLIGHT_ID_ATTR}="${DEEP_LINK_HIT_ID}"]`))
     : []
   hits[0]?.scrollIntoView({ block: 'center', inline: 'nearest' })
   playGotoHighlightAnimation(hits, { removeElements: true })

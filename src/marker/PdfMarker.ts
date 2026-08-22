@@ -3,8 +3,9 @@ import type { FixedContentRange } from '@foxycape/core/kernal/ContentRange'
 import { EventNames } from '@foxycape/core/kernal/EventNames'
 import { injectCssContent } from '@foxycape/core/kernal/html/injector'
 import type { ILogger } from '@foxycape/core/kernal/logger/ILogger'
+import type { IHighlighter } from '@foxycape/core/kernal/mark/IHighlighter'
+import { markToHighlightItem } from '@foxycape/core/kernal/mark/IHighlighter'
 import type { IMarker } from '@foxycape/core/kernal/mark/IMarker'
-import { MARK_HIGHLIGHT_ID_ATTR, MARK_TYPE_ATTR } from '@foxycape/core/kernal/mark/MarkConstants'
 import {
   buildMark,
   getFixedContentRange,
@@ -33,13 +34,8 @@ import {
   playGotoHighlightAnimation,
   waitForPageRendered,
 } from './PdfGotoAnimation'
+import { PdfHighlighter } from './PdfHighlighter'
 import { DEFAULT_MARK_COLORS, PDF_MARK_STYLE_ELEMENT_ID } from './PdfMarkConstants'
-import {
-  findMarkIdAtPoint,
-  paintMarkOnPage,
-  removeAllMarkOverlays,
-  removeMarkOverlays,
-} from './PdfMarkOverlay'
 import { buildMarkStylesCss, getDefaultMarkStyles } from './PdfMarkStyles'
 
 export type MarkDataChangePayload = {
@@ -57,6 +53,7 @@ type PdfPageRenderedPayload = {
 export class PdfMarker implements IMarker {
   private readonly renderer: IPdfRenderer
   private readonly logger: ILogger
+  private readonly highlighter: IHighlighter
   private storage: IStorage | undefined
   private resourceId = ''
   private tableName = ''
@@ -66,6 +63,7 @@ export class PdfMarker implements IMarker {
   constructor(renderer: IPdfRenderer) {
     this.renderer = renderer
     this.logger = this.renderer.owner.loggerFactory.getLogger(this.constructor.name)
+    this.highlighter = new PdfHighlighter(renderer)
   }
 
   async initialize(): Promise<void> {
@@ -154,20 +152,7 @@ export class PdfMarker implements IMarker {
   }
 
   async restoreMarks(marks: Mark[]): Promise<void> {
-    for (const mark of marks) {
-      const fixed = getFixedContentRange(mark)
-      if (!fixed) {
-        continue
-      }
-      const pageNumbers = new Set(fixed.geometries.map((g) => g.pageNumber))
-      for (const pageNumber of pageNumbers) {
-        const doc = this.getDocByPageNumber(pageNumber)
-        if (!doc) {
-          continue
-        }
-        paintMarkOnPage(doc, mark)
-      }
-    }
+    this.highlighter.paint(marks.map(markToHighlightItem))
   }
 
   async deleteMark(markId: string): Promise<void> {
@@ -220,19 +205,11 @@ export class PdfMarker implements IMarker {
   }
 
   async remove(markIds: string[]): Promise<void> {
-    const root = this.renderer.getRendererContainer()
-    if (!root) {
-      return
-    }
-    removeMarkOverlays(root, markIds)
+    this.highlighter.remove(markIds)
   }
 
   async removeAll(): Promise<void> {
-    const root = this.renderer.getRendererContainer()
-    if (!root) {
-      return
-    }
-    removeAllMarkOverlays(root)
+    this.highlighter.removeAll()
   }
 
   async goto(mark: Mark): Promise<void> {
@@ -251,48 +228,22 @@ export class PdfMarker implements IMarker {
     await waitForPageRendered(this.renderer, pageNumber)
     await this.restoreMarks([mark])
 
-    const root = this.renderer.getRendererContainer()
-    const masks = root
-      ? Array.from(
-          root.querySelectorAll(`[${MARK_HIGHLIGHT_ID_ATTR}="${CSS.escape(mark.markId)}"]`),
-        )
-      : []
+    const masks = this.highlighter.getElements(mark.markId)
     masks[0]?.scrollIntoView({ block: 'center', inline: 'nearest' })
     playGotoHighlightAnimation(masks)
   }
 
   async findMark(target: FindMarkTarget): Promise<{ id: string; type: MarkType } | undefined> {
-    if (target.element) {
-      const host = target.element.closest<HTMLElement>(`[${MARK_HIGHLIGHT_ID_ATTR}]`)
-      if (host) {
-        const id = host.getAttribute(MARK_HIGHLIGHT_ID_ATTR)
-        const type = host.getAttribute(MARK_TYPE_ATTR) ?? 'drawline'
-        if (id) {
-          return { id, type }
-        }
-      }
-    }
-
-    const pageNumber = target.pageNumber
-    if (pageNumber == null || target.offsetX == null || target.offsetY == null) {
+    const found = this.highlighter.findAt(target)
+    if (!found) {
       return undefined
     }
-    const doc = this.getDocByPageNumber(pageNumber)
-    const pageEl = doc?.getContentContainer()
-    if (!pageEl) {
-      return undefined
-    }
-    const id = findMarkIdAtPoint(pageEl, target.offsetX, target.offsetY)
-    if (!id) {
-      return undefined
-    }
-    const mark = this.cache.get(id)
-    return { id, type: mark?.type ?? 'drawline' }
+    return { id: found.id, type: this.cache.get(found.id)?.type ?? found.type }
   }
 
   async dispose(): Promise<void> {
     this.unbindEvents()
-    await this.removeAll()
+    await this.highlighter.dispose()
     this.cache.clear()
     this.isInitialized = false
   }
@@ -340,16 +291,17 @@ export class PdfMarker implements IMarker {
   }
 
   private onScaleChanging = () => {
-    void this.restoreLoadedPages()
+    this.highlighter.relayout()
   }
 
   private async restoreLoadedPages() {
     const docs = this.renderer.getLoadedDocuments()
+    const marks: Mark[] = []
     for (const doc of docs) {
-      const marks = await this.getMarks({ url: String(doc.pageNumber) })
-      for (const mark of marks) {
-        paintMarkOnPage(doc, mark)
-      }
+      marks.push(...(await this.getMarks({ url: String(doc.pageNumber) })))
+    }
+    if (marks.length > 0) {
+      await this.restoreMarks(marks)
     }
   }
 
