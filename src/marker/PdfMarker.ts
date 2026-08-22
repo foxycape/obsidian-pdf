@@ -6,8 +6,11 @@ import type { ILogger } from '@foxycape/core/kernal/logger/ILogger'
 import type { IMarker } from '@foxycape/core/kernal/mark/IMarker'
 import { MARK_HIGHLIGHT_ID_ATTR, MARK_TYPE_ATTR } from '@foxycape/core/kernal/mark/MarkConstants'
 import {
-  createMark as buildMark,
+  buildMark,
   getFixedContentRange,
+  hydrateLegacyMark,
+  markMatchesPageNumber,
+  parseMarkQueryPageNumber,
   type Mark,
 } from '@foxycape/core/kernal/mark/Mark'
 import type {
@@ -210,12 +213,8 @@ export class PdfMarker implements IMarker {
       const keyword = query.keyword.toLowerCase()
       marks = marks.filter((m) => m.text.toLowerCase().includes(keyword))
     }
-    if (query?.pageNumber != null) {
-      const pageNumber = query.pageNumber
-      marks = marks.filter((m) => {
-        const fixed = getFixedContentRange(m)
-        return fixed?.geometries.some((g) => g.pageNumber === pageNumber) ?? false
-      })
+    if (query?.url) {
+      marks = this.filterMarksByUrl(marks, query.url)
     }
     return marks
   }
@@ -334,7 +333,7 @@ export class PdfMarker implements IMarker {
     if (!pageNumber) {
       return
     }
-    const marks = await this.getMarks({ pageNumber })
+    const marks = await this.getMarks({ url: String(pageNumber) })
     if (marks.length > 0) {
       await this.restoreMarks(marks)
     }
@@ -347,7 +346,7 @@ export class PdfMarker implements IMarker {
   private async restoreLoadedPages() {
     const docs = this.renderer.getLoadedDocuments()
     for (const doc of docs) {
-      const marks = await this.getMarks({ pageNumber: doc.pageNumber })
+      const marks = await this.getMarks({ url: String(doc.pageNumber) })
       for (const mark of marks) {
         paintMarkOnPage(doc, mark)
       }
@@ -362,9 +361,9 @@ export class PdfMarker implements IMarker {
     this.cache.clear()
     for (const [key, value] of all) {
       if (value?.markId) {
-        this.cache.set(value.markId, value)
+        this.cache.set(value.markId, hydrateLegacyMark(value))
       } else if (value) {
-        this.cache.set(key, value)
+        this.cache.set(key, hydrateLegacyMark(value))
       }
     }
   }
@@ -374,6 +373,19 @@ export class PdfMarker implements IMarker {
       return
     }
     await this.storage.set(this.tableName, mark.markId, mark)
+  }
+
+  private filterMarksByUrl = (marks: Mark[], url: string): Mark[] => {
+    const trimmed = url.trim()
+    if (!trimmed) {
+      return marks
+    }
+    const pageNumber =
+      parseMarkQueryPageNumber(trimmed) ?? this.renderer.getDocument(trimmed)?.pageNumber
+    if (pageNumber != null) {
+      return marks.filter((m) => markMatchesPageNumber(m, pageNumber))
+    }
+    return marks.filter((m) => m.url === trimmed)
   }
 
   private getDocByPageNumber(pageNumber: number): IPdfDocument | undefined {
