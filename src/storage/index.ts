@@ -3,5 +3,5 @@ export type { IStorage } from './IStorage'
 export { DataStorageOptions } from './IStorage'
 export type { IReadingProgressStore } from './IReadingProgressStore'
 export { ReadingProgressStore } from './ReadingProgressStore'
-export { applyStoredReadingProgress, bindReadingProgress } from './bindReadingProgress'
+export { bindReadingProgress } from './bindReadingProgress'
 

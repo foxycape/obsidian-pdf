@@ -8,7 +8,7 @@ import {
   type ViewStateResult,
   type WorkspaceLeaf,
 } from 'obsidian'
-import { EventNames, formatFileSize, OpenOptions, type IMarker, type Reader } from '@foxycape/core/kernal'
+import { EventNames, FileLocation, formatFileSize, OpenOptions, type IMarker, type Reader } from '@foxycape/core/kernal'
 import type { FoxycapePdfPlugin } from '@/plugin/FoxycapePdfPlugin'
 import { createPdfReader } from '@/reader/createPdfReader'
 import { resolvePdfAssetUrls } from '@/reader/pdfAssets'
@@ -37,7 +37,6 @@ import {
 } from '@/sidebar/mountPdfMarkListPanel'
 import { getPdfRenderer } from '@/chrome/usePdfRenderer'
 import type { MarkDataChangePayload } from '@/marker/PdfMarker'
-import { applyStoredReadingProgress } from '@/storage/bindReadingProgress'
 import { MarkNoteCompanion, syncMarkToSidecarNote } from '@/obsidian/markNoteSync'
 import { applyPdfDeepLink } from '@/obsidian/pdfDeepLink'
 import {
@@ -471,20 +470,20 @@ export class PdfReaderView extends ItemView {
           fileName: source.file.name,
           fileSize: source.file.stat.size,
           abortController: this.fileReadAbort,
+          ...(this.pendingSubpath
+            ? { location: new FileLocation('0', 1, 'ratio') }
+            : {}),
         })
-        if (!this.pendingSubpath) {
-          await applyStoredReadingProgress(this.plugin.storage, data, openOptions)
-        }
         await session.reader.open(data, this.mountEl, this.contentEl, openOptions)
       } else {
         const openOptions = Object.assign(new OpenOptions(), {
           extension: '.pdf',
           fileName: fileNameFromRemotePdfUrl(source.url),
           abortController: this.fileReadAbort,
+          ...(this.pendingSubpath
+            ? { location: new FileLocation('0', 1, 'ratio') }
+            : {}),
         })
-        if (!this.pendingSubpath) {
-          await applyStoredReadingProgress(this.plugin.storage, source.url, openOptions)
-        }
         await session.reader.open(source.url, this.mountEl, this.contentEl, openOptions)
       }
       if (signal.aborted) {
