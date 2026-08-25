@@ -44,7 +44,6 @@ export const registerPdfMediaType = (
       const httpClient = await reader.services.get('httpClient', true)
       const fileDecrypter = await reader.services.get('fileDecrypter', false)
       const fileProvider = await reader.services.get('fileProvider', false)
-      const storage = await reader.services.get('storage', true)
       const context = reader.context
 
       if (!crypto || !fileUrlParser || !httpClient || !context) {
@@ -60,7 +59,6 @@ export const registerPdfMediaType = (
         reader.events,
         reader.locale,
         context,
-        storage ?? null,
         url,
         extension,
         {

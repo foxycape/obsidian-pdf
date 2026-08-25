@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto'
 import { afterEach, describe, expect, it } from 'vitest'
 import { DexieStorage } from '@/storage/DexieStorage'
-import type { DataStorageOptions } from '@foxycape/core/kernal/storage/IStorage'
+import type { DataStorageOptions } from '@/storage/IStorage'
 
 let dbSeq = 0
 const opened: DexieStorage[] = []

@@ -5,11 +5,12 @@ import {
   type IDevice,
   type ILocale,
   type IMarker,
-  type IStorage,
 } from '@foxycape/core/kernal'
 import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
 import { PdfMarker } from '@/marker/PdfMarker'
 import { ObsidianHttpClient } from '@/api/ObsidianHttpClient'
+import type { IStorage } from '@/storage/IStorage'
+import { bindReadingProgress } from '@/storage/bindReadingProgress'
 import { Platform, type App, type Plugin } from 'obsidian'
 import {
   CustomPdfOptions,
@@ -61,10 +62,10 @@ export const createPdfReader = async (
   const reader = new Reader(readerOptions, {
     device: options.device,
     locale: options.locale,
-    storage: options.storage,
     // requestUrl is not subject to browser CORS (Drive / other hosts block fetch).
     httpClient: new ObsidianHttpClient(),
   })
+  bindReadingProgress(reader, options.storage)
   let marker: PdfMarker | undefined
 
   const disposeMarker = async () => {
@@ -99,7 +100,7 @@ export const createPdfReader = async (
 
   reader.onRenderered = async (renderer) => {
     await disposeMarker()
-    marker = new PdfMarker(renderer as IPdfRenderer)
+    marker = new PdfMarker(renderer as IPdfRenderer, options.storage)
     await marker.initialize()
   }
 

@@ -2,11 +2,11 @@ import {
   EventNames,
   MARK_COLORS_TABLE,
   type IMarker,
-  type IStorage,
   type Mark,
   type MarkStyleName,
   type Reader,
 } from '@foxycape/core/kernal'
+import type { IStorage } from '@/storage/IStorage'
 import { getRange } from '@foxycape/core/kernal/html/selection'
 import { MARK_HIGHLIGHT_ID_ATTR } from '@foxycape/core/kernal/mark/MarkConstants'
 import { DEFAULT_MARK_COLORS } from '@/marker/PdfMarkConstants'
@@ -60,6 +60,7 @@ export const usePdfMarkToolbar = (options: {
   getMarker: () => IMarker | undefined
   hostEl: Ref<HTMLElement | null>
   t: (key: string, fallback: string) => string
+  storage: IStorage
   getLinkSource?: () => PdfMarkToolbarLinkSource | null
 }) => {
   const state = reactive<PdfMarkToolbarState>({
@@ -106,11 +107,7 @@ export const usePdfMarkToolbar = (options: {
   }
 
   const getStorage = async (): Promise<IStorage | undefined> => {
-    try {
-      return await options.reader.services.get('storage', true)
-    } catch {
-      return undefined
-    }
+    return options.storage
   }
 
   const getOwnerDocument = (): Document | null => {

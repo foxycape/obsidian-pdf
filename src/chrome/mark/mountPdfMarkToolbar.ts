@@ -1,5 +1,6 @@
 import { createApp, h, markRaw, type App } from 'vue'
 import type { IMarker, Reader } from '@foxycape/core/kernal'
+import type { IStorage } from '@/storage/IStorage'
 import { injectToolbarIcons } from './injectToolbarIcons'
 import PdfMarkToolbar from './PdfMarkToolbar.vue'
 import type { PdfMarkToolbarLinkSource } from './usePdfMarkToolbar'
@@ -15,6 +16,7 @@ export const mountPdfMarkToolbar = (options: {
   reader: Reader
   getMarker: () => IMarker | undefined
   t: (key: string, fallback: string) => string
+  storage: IStorage
   getLinkSource?: () => PdfMarkToolbarLinkSource | null
 }): PdfMarkToolbarMount => {
   const doc = options.hostEl.ownerDocument
@@ -33,6 +35,7 @@ export const mountPdfMarkToolbar = (options: {
         getMarker: currentGetMarker,
         hostEl: options.hostEl,
         t: options.t,
+        storage: options.storage,
         getLinkSource: options.getLinkSource,
       }),
   })

@@ -13,10 +13,7 @@ import {
 import { stubPdfWorkerRawPlugin } from './vite.stub-pdf-worker-raw'
 import { embedRuntimeAssetsPlugin } from './vite.embed-runtime-assets'
 import { buildPdfjsCmapsId } from './scripts/runtimeAssetsId.mjs'
-import {
-  assertNoDynamicScriptElementsPlugin,
-  stubVendorWebStoragePlugin,
-} from './vite.strip-localforage'
+import { assertNoDynamicScriptElementsPlugin } from './vite.strip-localforage'
 
 const packageDir = fileURLToPath(new URL('.', import.meta.url))
 const { pdfjsDir: corePdfjsDir } = resolveFoxycapeCore(packageDir)
@@ -68,7 +65,6 @@ export default {
   },
   plugins: [
     embedRuntimeAssetsPlugin({ corePdfjsDir, signerPath: signerSrcFile }),
-    stubVendorWebStoragePlugin(),
     stubPdfWorkerRawPlugin(),
     isolatePdfViewerPlugin(),
     renamePdfjsGlobalsPlugin(),

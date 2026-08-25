@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie'
-import type { DataStorageOptions, IStorage } from '@foxycape/core/kernal/storage/IStorage'
+import { DataStorageOptions, type IStorage } from './IStorage'
 
 type KvRow = {
   tableName: string
@@ -20,7 +20,7 @@ class FoxycapeKvDatabase extends Dexie {
 
 /**
  * Obsidian-side {@link IStorage} backed by a single Dexie object store.
- * Logical tables are encoded as `tableName` on each row so core can keep using
+ * Logical tables are encoded as `tableName` on each row so the host can keep using
  * dynamic table names without localforage.
  */
 export class DexieStorage implements IStorage {

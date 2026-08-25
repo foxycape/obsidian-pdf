@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { IMarker, MarkStyleName, Reader } from '@foxycape/core/kernal'
+import type { IStorage } from '@/storage/IStorage'
 import { computed, onMounted, shallowRef } from 'vue'
 import ObsidianIcon from '@/ui/ObsidianIcon.vue'
 import { injectToolbarIcons } from './injectToolbarIcons'
@@ -18,6 +19,7 @@ const props = defineProps<{
   getMarker: () => IMarker | undefined
   hostEl: HTMLElement
   t: (key: string, fallback: string) => string
+  storage: IStorage
   getLinkSource?: () => PdfMarkToolbarLinkSource | null
 }>()
 
@@ -47,6 +49,7 @@ const {
   getMarker: props.getMarker,
   hostEl: hostElRef,
   t: props.t,
+  storage: props.storage,
   getLinkSource: props.getLinkSource,
 })
 

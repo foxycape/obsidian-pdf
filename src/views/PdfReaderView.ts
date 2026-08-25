@@ -8,7 +8,7 @@ import {
   type ViewStateResult,
   type WorkspaceLeaf,
 } from 'obsidian'
-import { EventNames, formatFileSize, type IMarker, type Reader } from '@foxycape/core/kernal'
+import { EventNames, formatFileSize, OpenOptions, type IMarker, type Reader } from '@foxycape/core/kernal'
 import type { FoxycapePdfPlugin } from '@/plugin/FoxycapePdfPlugin'
 import { createPdfReader } from '@/reader/createPdfReader'
 import { resolvePdfAssetUrls } from '@/reader/pdfAssets'
@@ -37,6 +37,7 @@ import {
 } from '@/sidebar/mountPdfMarkListPanel'
 import { getPdfRenderer } from '@/chrome/usePdfRenderer'
 import type { MarkDataChangePayload } from '@/marker/PdfMarker'
+import { applyStoredReadingProgress } from '@/storage/bindReadingProgress'
 import { MarkNoteCompanion, syncMarkToSidecarNote } from '@/obsidian/markNoteSync'
 import { applyPdfDeepLink } from '@/obsidian/pdfDeepLink'
 import {
@@ -465,18 +466,26 @@ export class PdfReaderView extends ItemView {
         if (signal.aborted) {
           return
         }
-        await session.reader.open(data, this.mountEl, this.contentEl, {
+        const openOptions = Object.assign(new OpenOptions(), {
           extension: '.pdf',
           fileName: source.file.name,
           fileSize: source.file.stat.size,
           abortController: this.fileReadAbort,
         })
+        if (!this.pendingSubpath) {
+          await applyStoredReadingProgress(this.plugin.storage, data, openOptions)
+        }
+        await session.reader.open(data, this.mountEl, this.contentEl, openOptions)
       } else {
-        await session.reader.open(source.url, this.mountEl, this.contentEl, {
+        const openOptions = Object.assign(new OpenOptions(), {
           extension: '.pdf',
           fileName: fileNameFromRemotePdfUrl(source.url),
           abortController: this.fileReadAbort,
         })
+        if (!this.pendingSubpath) {
+          await applyStoredReadingProgress(this.plugin.storage, source.url, openOptions)
+        }
+        await session.reader.open(source.url, this.mountEl, this.contentEl, openOptions)
       }
       if (signal.aborted) {
         return
@@ -674,6 +683,7 @@ export class PdfReaderView extends ItemView {
       reader,
       getMarker,
       t: this.plugin.t,
+      storage: this.plugin.storage,
       getLinkSource: this.resolveLinkSource,
     })
   }

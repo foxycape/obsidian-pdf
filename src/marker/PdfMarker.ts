@@ -21,7 +21,7 @@ import type {
   MarkType,
   QueryMarkOptions,
 } from '@foxycape/core/kernal/mark/types'
-import type { IStorage } from '@foxycape/core/kernal/storage/IStorage'
+import type { IStorage } from '@/storage/IStorage'
 import {
   getPageLayoutRef,
   selectionToFixedContentRange,
@@ -60,8 +60,9 @@ export class PdfMarker implements IMarker {
   private readonly cache = new Map<string, Mark>()
   private isInitialized = false
 
-  constructor(renderer: IPdfRenderer) {
+  constructor(renderer: IPdfRenderer, storage: IStorage) {
     this.renderer = renderer
+    this.storage = storage
     this.logger = this.renderer.owner.loggerFactory.getLogger(this.constructor.name)
     this.highlighter = new PdfHighlighter(renderer)
   }
@@ -77,7 +78,6 @@ export class PdfMarker implements IMarker {
       return
     }
     this.tableName = `mark-${this.resourceId}`
-    this.storage = await this.renderer.owner.services.get('storage', true)
     this.injectStyles()
     this.bindEvents()
     await this.loadAllFromStorage()

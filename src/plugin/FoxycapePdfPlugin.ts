@@ -46,7 +46,7 @@ type ViewRegistryLike = {
 export class FoxycapePdfPlugin extends Plugin {
   settings: FoxycapePdfSettings = { ...DEFAULT_SETTINGS }
   locale = new ObsidianLocale(this)
-  /** Shared IndexedDB storage for marks / progress (injected into core Reader). */
+  /** Shared IndexedDB storage for marks / progress. */
   storage = new DexieStorage({ dbName: 'foxycape-pdf' })
   /** Shared signed API client (IApiClient + ObsidianHttpClient/requestUrl). */
   apiClient!: IApiClient
