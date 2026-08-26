@@ -25,7 +25,7 @@ class FoxycapeKvDatabase extends Dexie {
  */
 export class DexieStorage implements IStorage {
   private readonly defaultDbName: string
-  private readonly db: FoxycapeKvDatabase
+  private db: FoxycapeKvDatabase
   private disposed = false
 
   constructor(options?: DataStorageOptions) {
@@ -38,6 +38,9 @@ export class DexieStorage implements IStorage {
   }
 
   async get<T>(tableName: string, key: string): Promise<T> {
+    if (this.disposed) {
+      return this.emptyValue<T>()
+    }
     const normalizedTable = this.formatTableName(tableName)
     const normalizedKey = this.formatKey(key)
     if (!normalizedTable || !normalizedKey) {
@@ -55,15 +58,27 @@ export class DexieStorage implements IStorage {
     tableName: string,
     predicate: (value: T, key: string, index: number) => boolean,
   ): Promise<T> {
-    const rows = await this.listRows(tableName)
-    let index = 0
-    for (const row of rows) {
-      if (predicate(row.data as T, row.key, index)) {
-        return row.data as T
-      }
-      index += 1
+    if (this.disposed) {
+      return this.emptyValue<T>()
     }
-    return this.emptyValue<T>()
+    const normalizedTable = this.formatTableName(tableName)
+    if (!normalizedTable) {
+      return this.emptyValue<T>()
+    }
+
+    let index = 0
+    let found: T | undefined
+    await this.db.kv
+      .where('tableName')
+      .equals(normalizedTable)
+      .until(() => found !== undefined)
+      .each((row) => {
+        if (predicate(row.data as T, row.key, index)) {
+          found = row.data as T
+        }
+        index += 1
+      })
+    return found !== undefined ? found : this.emptyValue<T>()
   }
 
   private emptyValue<T>(): T {
@@ -101,6 +116,9 @@ export class DexieStorage implements IStorage {
     content: T,
     _from?: 'local' | 'server',
   ): Promise<void> {
+    if (this.disposed) {
+      return
+    }
     const normalizedTable = this.formatTableName(tableName)
     const normalizedKey = this.formatKey(key)
     if (!normalizedTable || !normalizedKey || normalizedKey === 'undefined') {
@@ -119,6 +137,9 @@ export class DexieStorage implements IStorage {
     key: string,
     _from?: 'local' | 'server',
   ): Promise<void> {
+    if (this.disposed) {
+      return
+    }
     const normalizedTable = this.formatTableName(tableName)
     const normalizedKey = this.formatKey(key)
     if (!normalizedTable || !normalizedKey) {
@@ -132,6 +153,9 @@ export class DexieStorage implements IStorage {
   }
 
   async getKeyCount(tableName: string): Promise<number> {
+    if (this.disposed) {
+      return 0
+    }
     const normalizedTable = this.formatTableName(tableName)
     if (!normalizedTable) {
       return 0
@@ -140,11 +164,21 @@ export class DexieStorage implements IStorage {
   }
 
   async dropDb(): Promise<void> {
+    if (this.disposed) {
+      return
+    }
     this.db.close()
     await Dexie.delete(this.defaultDbName)
+    if (this.disposed) {
+      return
+    }
+    this.db = new FoxycapeKvDatabase(this.defaultDbName)
   }
 
   async dropTable(tableName: string): Promise<void> {
+    if (this.disposed) {
+      return
+    }
     const normalizedTable = this.formatTableName(tableName)
     if (!normalizedTable) {
       return
@@ -153,6 +187,9 @@ export class DexieStorage implements IStorage {
   }
 
   async getTableNames(): Promise<string[]> {
+    if (this.disposed) {
+      return []
+    }
     const names = await this.db.kv.orderBy('tableName').uniqueKeys()
     return names.map((name) => String(name))
   }
@@ -166,6 +203,9 @@ export class DexieStorage implements IStorage {
   }
 
   private async listRows(tableName: string): Promise<KvRow[]> {
+    if (this.disposed) {
+      return []
+    }
     const normalizedTable = this.formatTableName(tableName)
     if (!normalizedTable) {
       return []

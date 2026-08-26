@@ -176,6 +176,26 @@ describe('DexieStorage', () => {
     await expect(next.count('books')).resolves.toBe(0)
   })
 
+  it('allows writing again after dropDb on the same instance', async () => {
+    const db = createStorage()
+    await db.set('books', 'id-1', 'old')
+    await db.dropDb()
+    await db.set('books', 'id-1', 'new')
+    await expect(db.get('books', 'id-1')).resolves.toBe('new')
+  })
+
+  it('returns empty results after dispose', async () => {
+    const db = createStorage()
+    await db.set('books', 'id-1', 'v')
+    await db.dispose()
+    await expect(db.get('books', 'id-1')).resolves.toBeNull()
+    await db.set('books', 'id-1', 'again')
+    await expect(db.get('books', 'id-1')).resolves.toBeNull()
+    await expect(db.getAll('books')).resolves.toEqual(new Map())
+    await expect(db.filter('books', () => true)).resolves.toEqual([])
+    await expect(db.count('books')).resolves.toBe(0)
+  })
+
   it('dispose is idempotent', async () => {
     const db = createStorage()
     await db.set('books', 'a', 1)
