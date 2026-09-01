@@ -38,7 +38,7 @@ const friendlyDate = computed(() => {
   const lang = document.documentElement.lang?.toLowerCase().startsWith('zh')
     ? 'zh-cn'
     : 'en'
-  return getFriendlyDate(new Date(props.mark.updateTime), lang)
+  return getFriendlyDate(new Date(props.mark.updatedAt), lang)
 })
 
 const pageLabel = computed(() => {

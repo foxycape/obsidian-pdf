@@ -9,11 +9,11 @@ import type { IMarker } from '@foxycape/core/kernal/mark/IMarker'
 import {
   buildMark,
   getFixedContentRange,
-  hydrateLegacyMark,
   markMatchesPageNumber,
   parseMarkQueryPageNumber,
   type Mark,
 } from '@foxycape/core/kernal/mark/Mark'
+import { hydrateLegacyMark } from './hydrateLegacyMark'
 import type {
   CreateMarkOptions,
   FindMarkTarget,
@@ -125,7 +125,7 @@ export class PdfMarker implements IMarker {
     if (existing) {
       existing.styleName = options.styleName
       existing.customColor = options.customColor
-      existing.updateTime = new Date().toISOString()
+      existing.updatedAt = Date.now()
       await this.persist(existing)
       await this.restoreMarks([existing])
       this.emitDataChange('update', [existing])
@@ -177,7 +177,7 @@ export class PdfMarker implements IMarker {
   async updateMark(markId: string, mark: Mark): Promise<void> {
     await this.ensureReady()
     mark.markId = markId
-    mark.updateTime = new Date().toISOString()
+    mark.updatedAt = Date.now()
     this.cache.set(markId, mark)
     await this.persist(mark)
     await this.restoreMarks([mark])

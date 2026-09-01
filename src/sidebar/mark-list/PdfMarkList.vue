@@ -17,7 +17,7 @@ import ObsidianIcon from '@/ui/ObsidianIcon.vue'
 import { isObsidianMobile } from '@/ui/isObsidianMobile'
 import PdfMarkListItem from './PdfMarkListItem.vue'
 
-type SortField = 'updateTime' | 'createTime'
+type SortField = 'updatedAt' | 'createdAt'
 type SortType = 'asc' | 'desc'
 
 const props = defineProps<{
@@ -31,7 +31,7 @@ const props = defineProps<{
 const keyword = ref('')
 const marks = ref<Mark[]>([])
 const loading = ref(true)
-const sortField = ref<SortField>('updateTime')
+const sortField = ref<SortField>('updatedAt')
 const sortType = ref<SortType>('desc')
 const sortMenuOpen = ref(false)
 const searchOpen = ref(false)
@@ -39,22 +39,22 @@ const searchInputEl = ref<HTMLInputElement | null>(null)
 
 const sortOptions = computed(() => [
   {
-    field: 'updateTime' as const,
+    field: 'updatedAt' as const,
     type: 'desc' as const,
     label: props.t('pdf_mark_list_sort_update_desc', 'Updated · newest'),
   },
   {
-    field: 'updateTime' as const,
+    field: 'updatedAt' as const,
     type: 'asc' as const,
     label: props.t('pdf_mark_list_sort_update_asc', 'Updated · oldest'),
   },
   {
-    field: 'createTime' as const,
+    field: 'createdAt' as const,
     type: 'desc' as const,
     label: props.t('pdf_mark_list_sort_create_desc', 'Created · newest'),
   },
   {
-    field: 'createTime' as const,
+    field: 'createdAt' as const,
     type: 'asc' as const,
     label: props.t('pdf_mark_list_sort_create_asc', 'Created · oldest'),
   },
@@ -64,8 +64,8 @@ const sortMarks = (items: Mark[]) => {
   const field = sortField.value
   const type = sortType.value
   return [...items].sort((a, b) => {
-    const av = new Date(a[field]).getTime()
-    const bv = new Date(b[field]).getTime()
+    const av = a[field] ?? 0
+    const bv = b[field] ?? 0
     if (av === bv) {
       return 0
     }
