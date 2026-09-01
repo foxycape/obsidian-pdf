@@ -11,7 +11,7 @@ const props = defineProps<{
   onClose: () => void
 }>()
 
-const DEFAULT_WIDTH = 280
+const DEFAULT_WIDTH = 300
 const MIN_WIDTH = 180
 const MAX_WIDTH = 480
 
