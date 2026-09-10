@@ -41,7 +41,7 @@ const gotoPage = async (page: number) => {
   if (!doc) {
     return
   }
-  await renderer.pagingNavigator.gotoPage(doc, page)
+  await renderer.pagingNavigator.gotoPage(doc, page, { trigger: 'user', triggerType: 'mouse' })
   currentPage.value = page
   open.value = false
 }
