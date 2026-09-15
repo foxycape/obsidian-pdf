@@ -55,8 +55,6 @@ export const createPdfReader = async (
   // Worker Blob URL + disk cmap/font factories are installed before open.
   const readerOptions = new Options()
   readerOptions.debug = false
-  readerOptions.enableHeader = false
-  readerOptions.enableFooter = false
   readerOptions.themeName = OBSIDIAN_THEME_NAME
 
   const reader = new Reader(readerOptions, {
