@@ -32,7 +32,7 @@ export class DeviceService {
       browserVersion: info.browserVersion,
       osType: info.osType,
       osVersion: info.osVersion,
-      browserLanguage: info.browserLanguage,
+      language: info.language,
       devicePixelRatio: window.devicePixelRatio,
       availableResolutionX: info.availableResolutionX,
       availableResolutionY: info.availableResolutionY,
@@ -42,7 +42,6 @@ export class DeviceService {
           ? `${info.availableResolutionX}x${info.availableResolutionY}`
           : undefined),
       deviceSize: info.deviceSize,
-      cpuType: info.cpuType,
       deviceType: this.device.getDeviceType(),
       deviceModel: this.device.getModel(),
       currentLanguage: this.plugin.locale.getCurrentLanguage(),
