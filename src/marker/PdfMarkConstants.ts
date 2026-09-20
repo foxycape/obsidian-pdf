@@ -7,6 +7,6 @@ export const DEFAULT_MARK_COLORS: Record<string, string> = {
     wavy_line: "#53b2fe",
     underline_straight: "#00b400",
     note: '#666666',
-    bookmark: '#14ae5c',
+    bookmark: '#163260',
     favorite: '#ff5722'
 };
