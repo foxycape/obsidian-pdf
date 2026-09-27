@@ -54,6 +54,7 @@ describe('runtime asset zip helpers', () => {
     expect(isEmbeddedZipEntryName('pdfjs/cmaps/Adobe-GB1-0.bcmap')).toBe(false)
     expect(isRemoteZipEntryName('pdfjs/cmaps/Adobe-GB1-0.bcmap')).toBe(true)
     expect(isRemoteZipEntryName('pdfjs/standard_fonts/FoxitSerif.pfb')).toBe(true)
+    expect(isRemoteZipEntryName('pdfjs/wasm/jbig2.wasm')).toBe(true)
     expect(isRemoteZipEntryName('pdfjs/pdf.worker.min.mjs')).toBe(false)
     expect(isRemoteZipEntryName('../secret.txt')).toBe(false)
     expect(isEmbeddedZipEntryName('pdfjs/cmaps/')).toBe(false)
@@ -102,6 +103,7 @@ describe('runtime asset install detection', () => {
     const { files, dirs, plugin } = createVault()
     dirs.add('plugins/foxycape-pdf/pdfjs/cmaps')
     dirs.add('plugins/foxycape-pdf/pdfjs/standard_fonts')
+    dirs.add('plugins/foxycape-pdf/pdfjs/wasm')
     files.set(
       `plugins/foxycape-pdf/${RUNTIME_CMAPS_VERSION_MARKER}`,
       `${RUNTIME_CMAPS_ID}\n`,

@@ -22,10 +22,11 @@ export const EMBEDDED_RUNTIME_MARKERS = [
   'static/signer.js',
 ] as const
 
-/** Paths that must exist after the remote cmaps/fonts install. */
+/** Paths that must exist after the remote cmaps/fonts/wasm install. */
 export const REMOTE_RUNTIME_MARKERS = [
   'pdfjs/cmaps',
   'pdfjs/standard_fonts',
+  'pdfjs/wasm',
 ] as const
 
 /** Zip lives on the current plugin GitHub Release; only fetched when the cmaps id mismatches. */

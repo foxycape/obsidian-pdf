@@ -128,9 +128,11 @@ export const buildImageDescriptors = (
   }
 
   const { a, b, c, d, e, f } = transform
-  const rect = pdfjsLib.Util.getAxialAlignedBoundingBox(
+  const rect = [Infinity, Infinity, -Infinity, -Infinity]
+  pdfjsLib.Util.axialAlignedBoundingBox(
     [destX, destY, destX + destW, destY + destH],
     [a, b, c, d, e, f],
+    rect,
   )
   const minX = rect[0] ?? 0
   const minY = rect[1] ?? 0

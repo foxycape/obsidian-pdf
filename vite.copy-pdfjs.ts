@@ -13,7 +13,7 @@ type CopyPdfjsAssetsOptions = {
 
 /**
  * Copy pdf.js runtime assets into dist/pdfjs:
- * - cmaps / standard_fonts (served by disk factories)
+ * - cmaps / standard_fonts / wasm (served by disk factories)
  * - pdf.worker.min.mjs (read at runtime → Blob URL; not inlined into main.js)
  */
 export const copyPdfjsAssetsPlugin = (options: CopyPdfjsAssetsOptions): Plugin => {
@@ -37,6 +37,7 @@ export const copyPdfjsAssetsPlugin = (options: CopyPdfjsAssetsOptions): Plugin =
     cpSync(join(corePdfjsDir, 'standard_fonts'), join(pdfjsOutDir, 'standard_fonts'), {
       recursive: true,
     })
+    cpSync(join(corePdfjsDir, 'wasm'), join(pdfjsOutDir, 'wasm'), { recursive: true })
     cpSync(workerFrom, join(pdfjsOutDir, 'pdf.worker.min.mjs'))
     writeFileSync(join(pdfjsOutDir, '.foxycape-cmaps-version'), `${cmapsId}\n`)
   }

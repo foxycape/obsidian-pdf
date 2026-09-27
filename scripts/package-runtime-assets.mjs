@@ -13,10 +13,11 @@ const packageDir = fileURLToPath(new URL('..', import.meta.url))
 const distDir = resolve(packageDir, 'dist')
 const zipPath = resolve(distDir, 'foxycape-pdf-assets.zip')
 
-/** Remote pack: cmaps + standard_fonts. Worker/signer are zipped into main.js. */
+/** Remote pack: cmaps + standard_fonts + wasm. Worker/signer are zipped into main.js. */
 const INCLUDE_ROOTS = [
   join('pdfjs', 'cmaps'),
   join('pdfjs', 'standard_fonts'),
+  join('pdfjs', 'wasm'),
 ]
 
 const walkFiles = (dir, files = []) => {

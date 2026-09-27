@@ -1,13 +1,11 @@
 import { normalizePath, type Plugin } from 'obsidian'
 
-/** Matches pdf.js CMapCompressionType.BINARY */
-const CMAP_COMPRESSION_BINARY = 1
-
 const DISK_CMAP_URL = 'foxycape-pdf://cmaps/'
 const DISK_STANDARD_FONT_URL = 'foxycape-pdf://standard_fonts/'
+const DISK_WASM_URL = 'foxycape-pdf://wasm/'
 
 /**
- * pdf.js factories that read cmaps / standard fonts from the plugin directory
+ * pdf.js factory that reads cmaps, standard fonts, and wasm from the plugin directory
  * (populated by build copy or runtime asset zip). Uses vault.adapter so Obsidian
  * app:// fetch/worker limitations do not apply.
  */
@@ -22,61 +20,37 @@ export const createDiskPdfAssetInitializer = (plugin: Plugin) => {
     return new Uint8Array(buffer)
   }
 
-  class DiskCMapReaderFactory {
-    baseUrl: string
-    isCompressed: boolean
-
-    constructor({
-      baseUrl = DISK_CMAP_URL,
-      isCompressed = true,
-    }: {
-      baseUrl?: string | null
-      isCompressed?: boolean
-    } = {}) {
-      this.baseUrl = baseUrl ?? DISK_CMAP_URL
-      this.isCompressed = isCompressed
-    }
-
-    async fetch({ name }: { name: string }) {
-      if (!name) {
-        throw new Error('CMap name must be specified.')
-      }
-      const fileName = `${name}${this.isCompressed ? '.bcmap' : ''}`
-      return {
-        cMapData: await readPluginBinary(`pdfjs/cmaps/${fileName}`),
-        compressionType: this.isCompressed ? CMAP_COMPRESSION_BINARY : 0,
-      }
-    }
-  }
-
-  class DiskStandardFontDataFactory {
-    baseUrl: string
-
-    constructor({ baseUrl = DISK_STANDARD_FONT_URL }: { baseUrl?: string | null } = {}) {
-      this.baseUrl = baseUrl ?? DISK_STANDARD_FONT_URL
-    }
-
-    async fetch({ filename }: { filename: string }) {
+  class DiskBinaryDataFactory {
+    async fetch({ kind, filename }: { kind: string; filename: string }) {
       if (!filename) {
-        throw new Error('Font filename must be specified.')
+        throw new Error('Filename must be specified.')
       }
-      return readPluginBinary(`pdfjs/standard_fonts/${filename}`)
+      if (kind === 'cMapUrl') {
+        return readPluginBinary(`pdfjs/cmaps/${filename}`)
+      }
+      if (kind === 'standardFontDataUrl') {
+        return readPluginBinary(`pdfjs/standard_fonts/${filename}`)
+      }
+      if (kind === 'wasmUrl') {
+        return readPluginBinary(`pdfjs/wasm/${filename}`)
+      }
+      throw new Error(`Not implemented: ${kind}`)
     }
   }
 
   return (params: {
     useWorkerFetch?: boolean
-    CMapReaderFactory?: unknown
-    StandardFontDataFactory?: unknown
+    BinaryDataFactory?: unknown
     cMapUrl?: string
     standardFontDataUrl?: string
+    wasmUrl?: string
     cMapPacked?: boolean
   }) => {
     params.useWorkerFetch = false
-    params.CMapReaderFactory = DiskCMapReaderFactory
-    params.StandardFontDataFactory = DiskStandardFontDataFactory
+    params.BinaryDataFactory = DiskBinaryDataFactory
     params.cMapUrl = DISK_CMAP_URL
     params.standardFontDataUrl = DISK_STANDARD_FONT_URL
+    params.wasmUrl = DISK_WASM_URL
     params.cMapPacked = true
   }
 }

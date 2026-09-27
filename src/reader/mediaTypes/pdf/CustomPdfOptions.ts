@@ -58,7 +58,7 @@ export class CustomPdfOptions extends PdfOptions {
   getLinkSource?: () => PdfImageLinkSource | null
 
   /**
-   * Runtime-only: install disk-backed CMap / standard-font factories on getDocument.
+   * Runtime-only: install the disk-backed cmap / font / wasm factory on getDocument.
    * Not persisted in settings.
    */
   documentInitParametersCallback?: (documentInitParameters: Record<string, unknown>) => void
