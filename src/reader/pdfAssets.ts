@@ -6,12 +6,11 @@ import {
 } from './pdfDiskAssetFactories'
 
 export type PdfAssetUrls = {
-  workerSrc: string
   cMapUrl: string
   standardFontDataUrl: string
 }
 
-let cachedWorkerBlobSrc: string | null = null
+let cachedWorkerSource: string | null = null
 
 const readPluginText = async (plugin: Plugin, relativePath: string): Promise<string> => {
   const pluginDir = plugin.manifest.dir
@@ -23,33 +22,27 @@ const readPluginText = async (plugin: Plugin, relativePath: string): Promise<str
 }
 
 /**
- * Read external `pdfjs/pdf.worker.min.mjs` → Blob URL, then install via
- * `ensurePdfWebWorker(preferred)`. Cmap/font URLs are placeholders; bytes come
- * from disk factories if the remote pack is already on disk.
+ * Read external `pdfjs/pdf.worker.min.mjs` and install it via
+ * `ensurePdfWebWorker(scriptText)` before the document opens.
+ * Cmap/font URLs are placeholders; bytes come from disk factories.
  */
 export const resolvePdfAssetUrls = async (plugin: Plugin): Promise<PdfAssetUrls> => {
-  if (!cachedWorkerBlobSrc) {
+  if (!cachedWorkerSource) {
     const workerSource = await readPluginText(plugin, 'pdfjs/pdf.worker.min.mjs')
     if (!workerSource) {
       throw new Error('pdf.worker.min.mjs is empty or missing under the plugin directory.')
     }
-    const blob = new Blob([workerSource], { type: 'text/javascript' })
-    cachedWorkerBlobSrc = URL.createObjectURL(blob)
+    cachedWorkerSource = workerSource
   }
 
-  const workerSrc = ensurePdfWebWorker(cachedWorkerBlobSrc)
+  await ensurePdfWebWorker(cachedWorkerSource)
   return {
-    workerSrc,
     cMapUrl: DISK_PDF_CMAP_URL,
     standardFontDataUrl: DISK_PDF_STANDARD_FONT_URL,
   }
 }
 
-/** Revoke the worker Blob URL created from the on-disk worker file. */
+/** Drop the cached worker script text. The installed worker port stays in core. */
 export const disposePdfWorkerBlobSrc = () => {
-  if (!cachedWorkerBlobSrc) {
-    return
-  }
-  URL.revokeObjectURL(cachedWorkerBlobSrc)
-  cachedWorkerBlobSrc = null
+  cachedWorkerSource = null
 }
