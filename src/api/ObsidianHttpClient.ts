@@ -1,5 +1,5 @@
 import { requestUrl, type RequestUrlResponse } from 'obsidian'
-import type { HttpClientOptions, IHttpClient, ResponseType } from '@/network'
+import { HttpClient, type HttpClientOptions, type IHttpClient, type ResponseType } from '@/network'
 
 const isFormDataLike = (data: unknown): data is FormData =>
   !!data &&
@@ -42,6 +42,14 @@ export class ObsidianHttpClient implements IHttpClient {
     })
     this.throwIfFailed(response)
     return this.parseResponse(response, options?.responseType ?? 'json')
+  }
+
+  async getRange(url: string, range: ByteRange, options?: HttpClientOptions): Promise<RangeResult> {
+    if (options?.requireCORSProxy) {
+      const data = await this.get(url, { ...options, responseType: 'arraybuffer' })
+      return { data: toUint8Array(data), status: 200, partial: false }
+    }
+    return rangeClient(new HttpClient()).getRange(url, range, options)
   }
 
   async getConfig<T>(
@@ -265,4 +273,22 @@ export class ObsidianHttpClient implements IHttpClient {
     }
     return result
   }
+}
+
+type ByteRange = { start: number; end: number }
+type RangeResult = { data: Uint8Array; status: number; totalSize?: number; partial: boolean }
+
+const rangeClient = (client: HttpClient) =>
+  client as HttpClient & {
+    getRange(url: string, range: ByteRange, options?: HttpClientOptions): Promise<RangeResult>
+  }
+
+const toUint8Array = (data: unknown): Uint8Array => {
+  if (data instanceof Uint8Array) {
+    return data
+  }
+  if (data instanceof ArrayBuffer) {
+    return new Uint8Array(data)
+  }
+  return new Uint8Array()
 }
