@@ -39,19 +39,17 @@ export const registerPdfMediaType = (
   reader.mediaTypeRegistry.register(
     ['.pdf'],
     async (url, extension) => {
-      const crypto = await reader.services.get('crypto', true)
       const fileUrlParser = await reader.services.get('fileUrlParser', true)
       const httpClient = await reader.services.get('httpClient', true)
       const fileDecrypter = await reader.services.get('fileDecrypter', false)
       const fileProvider = await reader.services.get('fileProvider', false)
       const context = reader.context
 
-      if (!crypto || !fileUrlParser || !httpClient || !context) {
+      if (!fileUrlParser || !httpClient || !context) {
         throw new Error('Foxycape PDF: required reader services are unavailable')
       }
 
       return new PdfFileParser(
-        crypto,
         fileDecrypter,
         fileProvider,
         fileUrlParser,
