@@ -1,4 +1,4 @@
-import { getFixedContentRange, type Mark, type Note } from '@foxycape/core/kernal/mark/Mark'
+import { getFixedContentRange, type Mark, type Note } from '@/mark/Mark'
 
 type LegacyTimeFields = {
   createTime?: string | number

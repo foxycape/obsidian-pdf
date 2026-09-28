@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from 'vue'
-import type { IMarker, Reader } from '@foxycape/core/kernal'
+import type { Reader } from '@foxycape/core/kernal'
+import type { IMarker } from '@/mark'
 import PdfMarkList from './mark-list/PdfMarkList.vue'
 
 const props = defineProps<{

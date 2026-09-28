@@ -8,20 +8,20 @@ import type {
   HighlightItem,
   HighlightRelayoutScope,
   IHighlighter,
-} from '@foxycape/core/kernal/mark/IHighlighter'
+} from '@/mark/IHighlighter'
 import {
   MARK_HIGHLIGHT_ID_ATTR,
   MARK_STYLE_ATTR,
   MARK_TYPE_ATTR,
-} from '@foxycape/core/kernal/mark/MarkConstants'
-import type { FindMarkTarget } from '@foxycape/core/kernal/mark/types'
+} from '@/mark/MarkConstants'
+import type { FindMarkTarget } from '@/mark/types'
 import {
   ensureOverlayLayer,
   findOverlayIdAtPoint,
   paintRects,
   removeOverlaysById,
   type OverlayRect,
-} from '@foxycape/core/kernal/mark/overlay'
+} from '@/mark/overlay'
 import {
   PDF_MARK_LAYER_CLASS,
   PDF_MARK_MASK_CLASS,
@@ -29,12 +29,12 @@ import {
   PDF_SEARCH_HIT_ACTIVE_CLASS,
   PDF_SEARCH_HIT_CLASS,
   PDF_SEARCH_LAYER_CLASS,
-} from '@foxycape/core/mediaTypes/pdf/highlighter/PdfHighlightConstants'
+} from './PdfHighlightConstants'
 import {
   getCustomColorStyleText,
   resolveMarkStyleType,
   resolveWritingMode,
-} from '@foxycape/core/mediaTypes/pdf/highlighter/pdfHighlightStyles'
+} from './pdfHighlightStyles'
 import type { IPdfDocument } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfDocument'
 import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
 import { scaleGeometryCoords } from '@foxycape/core/mediaTypes/pdf/shared/geometry/selectionToFixedContentRange'

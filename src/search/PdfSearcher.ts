@@ -1,7 +1,7 @@
 import type { PDFPageProxy } from '@foxycape/core/pdfjs/types/src/display/api'
 import { EventNames } from '@foxycape/core/kernal'
 import { scrollElementIntoView } from '@foxycape/core/kernal/html/style'
-import type { HighlightItem, IHighlighter } from '@foxycape/core/kernal/mark/IHighlighter'
+import type { HighlightItem, IHighlighter } from '@/mark/IHighlighter'
 import { PdfHighlighter } from '@/marker/PdfHighlighter'
 import type { IPdfDocument } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfDocument'
 import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'

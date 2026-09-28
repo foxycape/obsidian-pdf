@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { IMarker } from '@foxycape/core/kernal'
 import { cutString } from '@foxycape/core/kernal/common/text'
 import { getFriendlyDate } from '@foxycape/core/kernal/common/date'
-import type { Mark } from '@foxycape/core/kernal/mark/Mark'
+import type { IMarker, Mark } from '@/mark'
 import { DEFAULT_MARK_COLORS } from '@/marker/PdfMarkConstants'
 import { getMarkListTextStyle } from '@/marker/PdfMarkStyles'
 import ClickableIconButton from '@/ui/ClickableIconButton.vue'

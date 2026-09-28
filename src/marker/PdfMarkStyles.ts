@@ -1,4 +1,4 @@
-import type { MarkStyle, MarkStyleName } from '@foxycape/core/kernal/mark/types'
+import type { MarkStyle, MarkStyleName } from '@/mark/types'
 import { DEFAULT_MARK_COLORS } from './PdfMarkConstants'
 
 export type MarkWritingMode = 'horizontal-tb' | 'horizontal-bt' | 'vertical-lr' | 'vertical-rl'

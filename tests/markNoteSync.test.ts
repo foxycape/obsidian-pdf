@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { App, TFile } from 'obsidian'
 import { buildMarkNoteAppendBlock, resolveSidecarNotePath } from '../src/obsidian/markNoteSync'
-import type { Mark } from '@foxycape/core/kernal/mark/Mark'
+import type { Mark } from '@/mark/Mark'
 
 describe('resolveSidecarNotePath', () => {
   it('uses same folder and basename as the PDF', () => {

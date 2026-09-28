@@ -1,4 +1,4 @@
-import type { IMarker } from '@foxycape/core/kernal/mark/IMarker'
+import type { IMarker } from '@/mark/IMarker'
 import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
 import {
   playGotoHighlightAnimation,
@@ -8,7 +8,7 @@ import {
   measureConvertedMatchRects,
   type PdfConvertedMatch,
 } from '@/search/matchGeometry'
-import { MARK_HIGHLIGHT_ID_ATTR } from '@foxycape/core/kernal/mark/MarkConstants'
+import { MARK_HIGHLIGHT_ID_ATTR } from '@/mark/MarkConstants'
 import {
   paintSearchHitOnPage,
   removeAllSearchOverlays,

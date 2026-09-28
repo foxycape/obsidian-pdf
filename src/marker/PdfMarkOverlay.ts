@@ -3,26 +3,26 @@ import {
   MARK_HIGHLIGHT_ID_ATTR,
   MARK_STYLE_ATTR,
   MARK_TYPE_ATTR,
-} from '@foxycape/core/kernal/mark/MarkConstants'
-import { getFixedContentRange, type Mark } from '@foxycape/core/kernal/mark/Mark'
+} from '@/mark/MarkConstants'
+import { getFixedContentRange, type Mark } from '@/mark/Mark'
 import {
   ensureOverlayLayer,
   findOverlayIdAtPoint,
   paintRects,
   removeOverlayLayers,
   removeOverlaysById,
-} from '@foxycape/core/kernal/mark/overlay'
+} from '@/mark/overlay'
 import { scaleGeometryCoords } from '@foxycape/core/mediaTypes/pdf/shared/geometry/selectionToFixedContentRange'
 import {
   PDF_MARK_LAYER_CLASS,
   PDF_MARK_MASK_CLASS,
   PDF_PAGE_RELATIVE_CLASS,
-} from '@foxycape/core/mediaTypes/pdf/highlighter/PdfHighlightConstants'
+} from './PdfHighlightConstants'
 import {
   getCustomColorStyleText,
   resolveMarkStyleType,
   resolveWritingMode,
-} from '@foxycape/core/mediaTypes/pdf/highlighter/pdfHighlightStyles'
+} from './pdfHighlightStyles'
 import type { IPdfDocument } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfDocument'
 
 const ensureMarkLayer = (pageEl: HTMLElement): HTMLElement =>

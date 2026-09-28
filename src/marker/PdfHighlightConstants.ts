@@ -1,0 +1,6 @@
+export const PDF_MARK_LAYER_CLASS = 'foxycape-pdf-mark-layer'
+export const PDF_MARK_MASK_CLASS = 'foxycape-pdf-mark-mask'
+export const PDF_PAGE_RELATIVE_CLASS = 'foxycape-pdf-page--relative'
+export const PDF_SEARCH_LAYER_CLASS = 'foxycape-pdf-search-layer'
+export const PDF_SEARCH_HIT_CLASS = 'foxycape-pdf-search-hit'
+export const PDF_SEARCH_HIT_ACTIVE_CLASS = 'foxycape-pdf-search-hit-active'

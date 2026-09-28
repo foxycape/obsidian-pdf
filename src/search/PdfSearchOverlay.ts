@@ -1,18 +1,18 @@
 import {
   MARK_HIGHLIGHT_ID_ATTR,
   MARK_TYPE_ATTR,
-} from '@foxycape/core/kernal/mark/MarkConstants'
+} from '@/mark/MarkConstants'
 import {
   ensureOverlayLayer,
   paintRects,
   removeOverlayLayers,
-} from '@foxycape/core/kernal/mark/overlay'
+} from '@/mark/overlay'
 import {
   PDF_PAGE_RELATIVE_CLASS,
   PDF_SEARCH_HIT_ACTIVE_CLASS,
   PDF_SEARCH_HIT_CLASS,
   PDF_SEARCH_LAYER_CLASS,
-} from '@foxycape/core/mediaTypes/pdf/highlighter/PdfHighlightConstants'
+} from '@/marker/PdfHighlightConstants'
 import type { IPdfDocument } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfDocument'
 import type { PdfSearchMatch, PdfSearchRect } from './types'
 

@@ -4,8 +4,8 @@ import {
   Reader,
   type IDevice,
   type ILocale,
-  type IMarker,
 } from '@foxycape/core/kernal'
+import type { IMarker } from '@/mark'
 import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
 import { PdfMarker } from '@/marker/PdfMarker'
 import { ObsidianHttpClient } from '@/api/ObsidianHttpClient'

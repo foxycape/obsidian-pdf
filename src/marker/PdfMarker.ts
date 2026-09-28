@@ -3,16 +3,16 @@ import type { FixedContentRange } from '@foxycape/core/kernal/ContentRange'
 import { EventNames } from '@foxycape/core/kernal/EventNames'
 import { injectCssContent } from '@foxycape/core/kernal/html/injector'
 import type { ILogger } from '@foxycape/core/kernal/logger/ILogger'
-import type { IHighlighter } from '@foxycape/core/kernal/mark/IHighlighter'
-import { markToHighlightItem } from '@foxycape/core/kernal/mark/IHighlighter'
-import type { IMarker } from '@foxycape/core/kernal/mark/IMarker'
+import type { IHighlighter } from '@/mark/IHighlighter'
+import { markToHighlightItem } from '@/mark/IHighlighter'
+import type { IMarker } from '@/mark/IMarker'
 import {
   buildMark,
   getFixedContentRange,
   markMatchesPageNumber,
   parseMarkQueryPageNumber,
   type Mark,
-} from '@foxycape/core/kernal/mark/Mark'
+} from '@/mark/Mark'
 import { hydrateLegacyMark } from './hydrateLegacyMark'
 import type {
   CreateMarkOptions,
@@ -20,7 +20,7 @@ import type {
   MarkStyle,
   MarkType,
   QueryMarkOptions,
-} from '@foxycape/core/kernal/mark/types'
+} from '@/mark/types'
 import type { IStorage } from '@/storage/IStorage'
 import {
   getPageLayoutRef,

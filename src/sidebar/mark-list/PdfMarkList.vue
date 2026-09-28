@@ -3,14 +3,8 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Notice } from 'obsidian'
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
-import {
-  debounce,
-  EventNames,
-  Theme,
-  type IMarker,
-  type Reader,
-} from '@foxycape/core/kernal'
-import type { Mark } from '@foxycape/core/kernal/mark/Mark'
+import { debounce, EventNames, Theme, type Reader } from '@foxycape/core/kernal'
+import type { IMarker, Mark } from '@/mark'
 import type { MarkDataChangePayload } from '@/marker/PdfMarker'
 import ClickableIconButton from '@/ui/ClickableIconButton.vue'
 import ObsidianIcon from '@/ui/ObsidianIcon.vue'

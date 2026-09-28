@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Mark } from '@foxycape/core/kernal/mark/Mark'
+import type { Mark } from '@/mark/Mark'
 import { hydrateLegacyMark } from '@/marker/hydrateLegacyMark'
 
 const baseMark = {

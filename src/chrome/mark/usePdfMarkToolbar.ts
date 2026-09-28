@@ -1,14 +1,13 @@
+import { EventNames, type Reader } from '@foxycape/core/kernal'
+import type { IStorage } from '@/storage/IStorage'
+import { getRange } from '@foxycape/core/kernal/html/selection'
 import {
-  EventNames,
   MARK_COLORS_TABLE,
+  MARK_HIGHLIGHT_ID_ATTR,
   type IMarker,
   type Mark,
   type MarkStyleName,
-  type Reader,
-} from '@foxycape/core/kernal'
-import type { IStorage } from '@/storage/IStorage'
-import { getRange } from '@foxycape/core/kernal/html/selection'
-import { MARK_HIGHLIGHT_ID_ATTR } from '@foxycape/core/kernal/mark/MarkConstants'
+} from '@/mark'
 import { DEFAULT_MARK_COLORS } from '@/marker/PdfMarkConstants'
 import {
   buildPdfDeepLinkFragment,
