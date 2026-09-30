@@ -88,7 +88,7 @@ export const createPdfReader = async (
   pdfOptions.cMapUrl = options.assets.cMapUrl
   pdfOptions.standardFontDataUrl = options.assets.standardFontDataUrl
   pdfOptions.showPasswordPrompt = true
-  pdfOptions.textLayerMode = Platform.isMobile ? 1 : 2;
+  pdfOptions.textLayerMode = Platform.isDesktop ? 2 : 1
   Object.assign(pdfOptions, DEFAULT_PDF_VIEW_PREFERENCES, options.viewPreferences)
   pdfOptions.getLinkSource = options.getLinkSource
   pdfOptions.documentInitParametersCallback = createDiskPdfAssetInitializer(
