@@ -42,7 +42,7 @@ export const resolvePdfAssetUrls = async (plugin: Plugin): Promise<PdfAssetUrls>
   }
 }
 
-/** Drop the cached worker script text. The installed worker port stays in core. */
+/** Drop the cached worker script text. Open documents keep their own workers. */
 export const disposePdfWorkerBlobSrc = () => {
   cachedWorkerSource = null
 }
