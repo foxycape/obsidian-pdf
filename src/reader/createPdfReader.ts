@@ -9,8 +9,9 @@ import type { IMarker } from '@/mark'
 import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
 import { PdfMarker } from '@/marker/PdfMarker'
 import { ObsidianHttpClient } from '@/api/ObsidianHttpClient'
-import type { IStorage } from '@/storage/IStorage'
+import type { PdfPluginStorage } from '@/storage'
 import { bindReadingProgress } from '@/storage/bindReadingProgress'
+import { SimpleIdProvider } from './SimpleIdProvider'
 import { Platform, type App, type Plugin } from 'obsidian'
 import {
   CustomPdfOptions,
@@ -33,7 +34,9 @@ export type CreatePdfReaderOptions = {
   locale: ILocale
   device: IDevice
   /** Shared plugin storage (Dexie). Must outlive individual reader sessions. */
-  storage: IStorage
+  storage: PdfPluginStorage
+  /** MD5 runs in the shared hash worker, not on the page WebAssembly. */
+  computeMd5: (bytes: Uint8Array) => Promise<string>
   viewPreferences?: Partial<PdfViewPreferences>
   /** Runtime callback for image reference copy / paste pipeline. */
   getLinkSource?: () => PdfImageLinkSource | null
@@ -57,13 +60,25 @@ export const createPdfReader = async (
   readerOptions.debug = false
   readerOptions.themeName = OBSIDIAN_THEME_NAME
 
-  const reader = new Reader(readerOptions, {
+  let reader: Reader | undefined
+  const simpleIdProvider = new SimpleIdProvider(async () => {
+    if (!reader) {
+      throw new Error('reader is not ready')
+    }
+    const parser = await reader.services.get('fileUrlParser')
+    if (!parser) {
+      throw new Error('fileUrlParser is not registered')
+    }
+    return parser
+  }, options.computeMd5)
+  reader = new Reader(readerOptions, {
     device: options.device,
     locale: options.locale,
     // requestUrl is not subject to browser CORS (Drive / other hosts block fetch).
     httpClient: new ObsidianHttpClient(),
+    simpleIdProvider,
   })
-  bindReadingProgress(reader, options.storage)
+  bindReadingProgress(reader, options.storage.readingProgress)
   let marker: PdfMarker | undefined
 
   const disposeMarker = async () => {
@@ -98,7 +113,7 @@ export const createPdfReader = async (
 
   reader.onRenderered = async (renderer) => {
     await disposeMarker()
-    marker = new PdfMarker(renderer as IPdfRenderer, options.storage)
+    marker = new PdfMarker(renderer as IPdfRenderer, options.storage.marks)
     await marker.initialize()
   }
 

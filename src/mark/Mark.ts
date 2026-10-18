@@ -25,7 +25,7 @@ export type UpsertNoteInput = {
  */
 export type Mark = {
     markId: string;
-    resourceId: string;
+    simpleId: string;
     type: MarkType;
     text: string;
     styleName: MarkStyleName;
@@ -121,7 +121,7 @@ export const markMatchesKeyword = (
 };
 
 export const buildMark = (
-    resourceId: string,
+    simpleId: string,
     type: MarkType,
     text: string,
     styleName: MarkStyleName,
@@ -137,7 +137,7 @@ export const buildMark = (
             : undefined;
     return {
         markId,
-        resourceId,
+        simpleId,
         type,
         text,
         styleName,

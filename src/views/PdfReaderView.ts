@@ -37,7 +37,11 @@ import {
   type PdfMarkListPanelMount,
 } from '@/sidebar/mountPdfMarkListPanel'
 import { getPdfRenderer } from '@/chrome/usePdfRenderer'
-import type { MarkDataChangePayload } from '@/marker/PdfMarker'
+import type { MarkDataChangePayload, PdfMarker } from '@/marker/PdfMarker'
+import { migrateOpenedDocument } from '@/storage/legacy/migrateLegacyMarks'
+import { openRemoteHeadReader } from '@/storage/legacy/openRemoteHeadReader'
+import { openVaultFileRange } from '@/storage/legacy/openVaultFileRange'
+import type { ByteRangeReader } from '@/storage/legacy/ByteRangeReader'
 import { MarkNoteCompanion, syncMarkToSidecarNote } from '@/obsidian/markNoteSync'
 import { applyPdfDeepLink } from '@/obsidian/pdfDeepLink'
 import {
@@ -436,6 +440,7 @@ export class PdfReaderView extends ItemView {
         device: this.plugin.device,
         locale: this.plugin.locale,
         storage: this.plugin.storage,
+        computeMd5: (bytes) => this.plugin.globalWorker.computeMd5(bytes),
         viewPreferences: {
           enableViewPdfImages: settings.enableViewPdfImages,
           enablePdfThemeColorRemap: settings.enablePdfThemeColorRemap,
@@ -490,6 +495,7 @@ export class PdfReaderView extends ItemView {
       if (signal.aborted) {
         return
       }
+      void this.migrateLegacyMarks(source, session.reader)
       this.mountChrome(session.reader)
       this.mountMarkToolbar(session.reader, session.getMarker)
       this.mountSearchBar(session.reader)
@@ -525,6 +531,52 @@ export class PdfReaderView extends ItemView {
           { message },
         ),
       )
+    }
+  }
+
+  private async migrateLegacyMarks(
+    source: { file: TFile } | { url: string },
+    reader: Reader,
+  ) {
+    const simpleId = reader.context?.id
+    const catalog = this.plugin.legacyMarkCatalog
+    if (!simpleId || !catalog.hasPending) {
+      return
+    }
+    let prefix: ByteRangeReader | undefined
+    let localFile: ByteRangeReader | undefined
+    try {
+      if ('file' in source) {
+        localFile = await openVaultFileRange(this.app, source.file)
+        prefix = localFile
+      } else if (catalog.md5.size > 0) {
+        const httpClient = await reader.services.get('httpClient')
+        if (httpClient) {
+          prefix = await openRemoteHeadReader(httpClient, source.url)
+        }
+      }
+      const changed = await migrateOpenedDocument({
+        kv: this.plugin.storage,
+        marks: this.plugin.storage.marks,
+        readingProgress: this.plugin.storage.readingProgress,
+        catalog,
+        simpleId,
+        prefix,
+        localFile,
+        hasher: this.plugin.globalWorker,
+      })
+      if (!changed || reader.disposed) {
+        return
+      }
+      const marker = this.getMarker() as PdfMarker | undefined
+      await marker?.reloadFromStorage()
+    } catch (error) {
+      console.error('[Foxycape PDF] failed to migrate legacy marks', error)
+    } finally {
+      await prefix?.close()
+      if (localFile && localFile !== prefix) {
+        await localFile.close()
+      }
     }
   }
 

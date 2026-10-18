@@ -9,6 +9,7 @@ import { BrowserCapabilities } from '@foxycape/core/kernal/web/BrowserCapabiliti
 import type { ApiSettings, FileInfo, IApiClient } from './IApiClient'
 import { IDevice } from '@foxycape/core/kernal'
 import { ICrypto } from '@foxycape/core/kernal/crypto/ICrypto'
+import { restoreWebAssemblyForHash } from './webAssemblyGuard'
 
 type WasmWindow = Window & {
   Module?: { asm?: unknown }
@@ -21,6 +22,15 @@ type WasmWindow = Window & {
 type ApiResult = {
   code?: number
   [key: string]: unknown
+}
+
+/**
+ * signer.js replaces the page WebAssembly while it initializes.
+ * Signing only needs Module.asm afterwards, so hash-wasm can have the runtime object back.
+ * That object may not have compile (Obsidian); restoreWebAssemblyForHash supplies it.
+ */
+export const restoreNativeWebAssembly = (nativeWebAssembly?: typeof WebAssembly) => {
+  restoreWebAssemblyForHash(nativeWebAssembly)
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -55,6 +65,7 @@ export class ApiClient implements IApiClient {
   private currentRefreshSecretTimes = 0
   private lastRefreshSecretTime: Date | null = null
   private loadedWasm = false
+  private nativeWebAssembly?: typeof WebAssembly
   private checkTimeout: number | null = null
   private ellapsedMillSeconds = 0
   private readonly crypto: ICrypto
@@ -359,6 +370,9 @@ export class ApiClient implements IApiClient {
       wasmSignerUrl = `${wasmSignerUrl}${separator}_custom_preventCacheHash=${Date.now()}`
     }
 
+    if (!this.nativeWebAssembly) {
+      this.nativeWebAssembly = globalThis.WebAssembly
+    }
     await injectExternalJS(
       document,
       wasmSignerUrl,
@@ -381,9 +395,16 @@ export class ApiClient implements IApiClient {
     this.ellapsedMillSeconds += 10
     const wasmWindow = window as WasmWindow
     if (wasmWindow.Module?.asm) {
+      restoreNativeWebAssembly(this.nativeWebAssembly)
       this.loadedWasm = true
       resolve()
       return
+    }
+
+    // The signer stub is installed before Module.asm exists. Once its instantiate
+    // tick has passed, put the runtime object back so opening a PDF can hash.
+    if (this.ellapsedMillSeconds >= 20) {
+      restoreNativeWebAssembly(this.nativeWebAssembly)
     }
 
     if (this.ellapsedMillSeconds >= 60 * 1000) {

@@ -34,8 +34,10 @@ import {
 import { disposeWasmSignerBlobUrl } from '@/api/resolveWasmSignerUrl'
 import { disposePdfWorkerBlobSrc } from '@/reader/pdfAssets'
 import { DexieStorage } from '@/storage'
+import { LegacyMarkCatalog } from '@/storage/legacy/LegacyMarkCatalog'
 import { applyFoxycapeMenuIcon, registerFoxycapeIcon } from '@/ui/foxycapeIcon'
 import { showLicenseRequiredModal } from '@/ui/LicenseRequiredModal'
+import { createGlobalWorker, type IGlobalWorker } from '@/workers'
 import { PDF_READER_VIEW_TYPE, PdfReaderView } from '@/views/PdfReaderView'
 
 type ViewRegistryLike = {
@@ -48,6 +50,10 @@ export class FoxycapePdfPlugin extends Plugin {
   locale = new ObsidianLocale(this)
   /** Shared IndexedDB storage for marks / progress. */
   storage = new DexieStorage({ dbName: 'foxycape-pdf' })
+  /** Leftover KV mark tables, classified once at startup. */
+  legacyMarkCatalog = new LegacyMarkCatalog()
+  /** Hashes and image work off the page thread so signer.js cannot replace WebAssembly. */
+  globalWorker: IGlobalWorker = createGlobalWorker()
   /** Shared signed API client (IApiClient + ObsidianHttpClient/requestUrl). */
   apiClient!: IApiClient
   /** Shared device identity used by API signing + registration. */
@@ -71,6 +77,7 @@ export class FoxycapePdfPlugin extends Plugin {
 
   async onload() {
     await this.loadSettings()
+    await this.legacyMarkCatalog.load(this.storage)
     const api = createPluginApiClient(this, {
       appId: '20',
       appVersion: this.manifest.version,
@@ -208,6 +215,7 @@ export class FoxycapePdfPlugin extends Plugin {
     }
     disposePdfWorkerBlobSrc()
     disposeWasmSignerBlobUrl()
+    void this.globalWorker.dispose()
     void this.storage.dispose()
     void this.locale.dispose()
   }

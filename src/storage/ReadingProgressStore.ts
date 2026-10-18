@@ -1,18 +1,59 @@
+import type { Table } from 'dexie'
 import type { Progress } from '@foxycape/core/kernal'
-import type { IStorage } from './IStorage'
 import type { IReadingProgressStore } from './IReadingProgressStore'
+import { ANONYMOUS_OWNER_ID } from './ownerId'
 
+export type ReadingProgressRow = Progress & { ownerId: string; simpleId: string }
+
+type ReadingProgressTableSource = () => Table<ReadingProgressRow, [string, string]> | undefined
+
+const toProgress = (row: ReadingProgressRow): Progress => {
+  const { ownerId: _ownerId, simpleId: _simpleId, ...progress } = row
+  return progress as Progress
+}
+
+/**
+ * Reading progress on the Dexie `readingprogress` object store, keyed by simpleId.
+ */
 export class ReadingProgressStore implements IReadingProgressStore {
-  private readonly storageKey = 'readingProgress'
-  constructor(private readonly storage: IStorage) {
+  constructor(private readonly getTable: ReadingProgressTableSource) {}
+
+  get = async (simpleId: string): Promise<Progress | undefined> => {
+    const table = this.getTable()
+    const id = this.formatSimpleId(simpleId)
+    if (!table || !id) {
+      return undefined
+    }
+    const row = await table.get([ANONYMOUS_OWNER_ID, id])
+    return row ? toProgress(row) : undefined
   }
-  async save(resourceId: string, progress: Progress): Promise<void> {
-    await this.storage.set(this.storageKey, resourceId, progress)
+
+  save = async (simpleId: string, progress: Progress): Promise<void> => {
+    const table = this.getTable()
+    const id = this.formatSimpleId(simpleId)
+    if (!table || !id || !progress) {
+      return
+    }
+    await table.put({
+      ...progress,
+      ownerId: ANONYMOUS_OWNER_ID,
+      simpleId: id,
+    })
   }
-  async delete(resourceId: string): Promise<void> {
-    await this.storage.delete(this.storageKey, resourceId)
+
+  delete = async (simpleId: string): Promise<void> => {
+    const table = this.getTable()
+    const id = this.formatSimpleId(simpleId)
+    if (!table || !id) {
+      return
+    }
+    await table.delete([ANONYMOUS_OWNER_ID, id])
   }
-  async get(resourceId: string): Promise<Progress | undefined> {
-    return await this.storage.get<Progress>(this.storageKey, resourceId)
+
+  private formatSimpleId = (simpleId: string | undefined): string | undefined => {
+    if (simpleId == null || simpleId === '' || simpleId === 'undefined') {
+      return undefined
+    }
+    return simpleId
   }
 }

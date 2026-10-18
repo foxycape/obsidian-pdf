@@ -3,17 +3,15 @@ import {
   type Progress,
   type Reader,
 } from '@foxycape/core/kernal'
-import type { IStorage } from './IStorage'
-import { ReadingProgressStore } from './ReadingProgressStore'
+import type { IReadingProgressStore } from './IReadingProgressStore'
 
-export const bindReadingProgress = (reader: Reader, storage: IStorage) => {
-  const store = new ReadingProgressStore(storage)
+export const bindReadingProgress = (reader: Reader, store: IReadingProgressStore) => {
   reader.onLocationRequest = async (simpleId) => {
     const progress = await store.get(simpleId)
     return progress?.location
   }
   const onProgress = async (progress: Progress) => {
-    const simpleId = reader.context?.simpleId
+    const simpleId = reader.context?.id
     if (!simpleId) {
       return
     }

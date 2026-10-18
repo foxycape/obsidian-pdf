@@ -5,6 +5,7 @@ import { hydrateLegacyMark } from '@/marker/hydrateLegacyMark'
 const baseMark = {
   markId: 'm1',
   resourceId: 'book-1',
+  simpleId: '',
   type: 'drawline',
   text: 'hello',
   styleName: 'mark_pen',
@@ -31,6 +32,8 @@ describe('hydrateLegacyMark', () => {
       updatedAt: 2,
     } as Mark)
     expect(mark.pageNumber).toBe(3)
+    expect(mark.simpleId).toBe('book-1')
+    expect((mark as { resourceId?: string }).resourceId).toBeUndefined()
   })
 
   it('migrates ISO createTime/updateTime to epoch createdAt/updatedAt', () => {

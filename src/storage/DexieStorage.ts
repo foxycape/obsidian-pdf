@@ -1,5 +1,9 @@
 import Dexie, { type Table } from 'dexie'
+import { DexieMarkStorage, type MarkRow } from './DexieMarkStorage'
+import type { IMarkStorage } from './IMarkStorage'
 import { DataStorageOptions, type IStorage } from './IStorage'
+import { ReadingProgressStore, type ReadingProgressRow } from './ReadingProgressStore'
+import type { IReadingProgressStore } from './IReadingProgressStore'
 
 type KvRow = {
   tableName: string
@@ -7,13 +11,20 @@ type KvRow = {
   data: unknown
 }
 
-class FoxycapeKvDatabase extends Dexie {
+class FoxycapePdfDatabase extends Dexie {
   kv!: Table<KvRow, [string, string]>
+  marks!: Table<MarkRow, [string, string]>
+  readingprogress!: Table<ReadingProgressRow, [string, string]>
 
   constructor(dbName: string) {
     super(dbName)
     this.version(1).stores({
       kv: '[tableName+key], tableName',
+    })
+    this.version(2).stores({
+      kv: '[tableName+key], tableName',
+      marks: '[ownerId+markId], [ownerId+simpleId+url], [ownerId+type]',
+      readingprogress: '[ownerId+simpleId]',
     })
   }
 }
@@ -24,13 +35,19 @@ class FoxycapeKvDatabase extends Dexie {
  * dynamic table names without localforage.
  */
 export class DexieStorage implements IStorage {
+  readonly marks: IMarkStorage
+  readonly readingProgress: IReadingProgressStore
   private readonly defaultDbName: string
-  private db: FoxycapeKvDatabase
+  private db: FoxycapePdfDatabase
   private disposed = false
 
   constructor(options?: DataStorageOptions) {
     this.defaultDbName = options?.dbName ?? 'foxycape-pdf'
-    this.db = new FoxycapeKvDatabase(this.defaultDbName)
+    this.db = new FoxycapePdfDatabase(this.defaultDbName)
+    this.marks = new DexieMarkStorage(() => (this.disposed ? undefined : this.db.marks))
+    this.readingProgress = new ReadingProgressStore(() =>
+      this.disposed ? undefined : this.db.readingprogress,
+    )
   }
 
   get dbName(): string {
@@ -172,7 +189,7 @@ export class DexieStorage implements IStorage {
     if (this.disposed) {
       return
     }
-    this.db = new FoxycapeKvDatabase(this.defaultDbName)
+    this.db = new FoxycapePdfDatabase(this.defaultDbName)
   }
 
   async dropTable(tableName: string): Promise<void> {

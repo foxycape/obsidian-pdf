@@ -1,4 +1,3 @@
-import { computeUniqueId } from '@foxycape/core/kernal/common/uuid'
 import type { FixedContentRange } from '@foxycape/core/kernal/ContentRange'
 import { EventNames } from '@foxycape/core/kernal/EventNames'
 import { injectCssContent } from '@foxycape/core/kernal/html/injector'
@@ -21,7 +20,9 @@ import type {
   MarkType,
   QueryMarkOptions,
 } from '@/mark/types'
-import type { IStorage } from '@/storage/IStorage'
+import { computePdfPositionMarkId } from '@/mark/positionMarkId'
+import type { IMarkStorage } from '@/storage/IMarkStorage'
+import { ANONYMOUS_OWNER_ID } from '@/storage/ownerId'
 import {
   getPageLayoutRef,
   selectionToFixedContentRange,
@@ -54,13 +55,12 @@ export class PdfMarker implements IMarker {
   private readonly renderer: IPdfRenderer
   private readonly logger: ILogger
   private readonly highlighter: IHighlighter
-  private storage: IStorage | undefined
-  private resourceId = ''
-  private tableName = ''
+  private storage: IMarkStorage | undefined
+  private simpleId = ''
   private readonly cache = new Map<string, Mark>()
   private isInitialized = false
 
-  constructor(renderer: IPdfRenderer, storage: IStorage) {
+  constructor(renderer: IPdfRenderer, storage: IMarkStorage) {
     this.renderer = renderer
     this.storage = storage
     this.logger = this.renderer.owner.loggerFactory.getLogger(this.constructor.name)
@@ -72,12 +72,11 @@ export class PdfMarker implements IMarker {
       return
     }
     const context = this.renderer.owner.context
-    this.resourceId = context?.id ?? context?.simpleId ?? ''
-    if (!this.resourceId) {
-      this.logger.warn('PdfMarker initialize skipped: missing resourceId')
+    this.simpleId = context?.id ?? ''
+    if (!this.simpleId) {
+      this.logger.warn('PdfMarker initialize skipped: missing simpleId')
       return
     }
-    this.tableName = `mark-${this.resourceId}`
     this.injectStyles()
     this.bindEvents()
     await this.loadAllFromStorage()
@@ -133,7 +132,7 @@ export class PdfMarker implements IMarker {
     }
 
     const mark = buildMark(
-      this.resourceId,
+      this.simpleId,
       options.type,
       text,
       options.styleName,
@@ -159,8 +158,8 @@ export class PdfMarker implements IMarker {
     await this.ensureReady()
     const mark = this.cache.get(markId)
     this.cache.delete(markId)
-    if (this.storage && this.tableName) {
-      await this.storage.delete(this.tableName, markId)
+    if (this.storage && this.simpleId) {
+      await this.storage.delete(ANONYMOUS_OWNER_ID, markId)
     }
     await this.remove([markId])
     if (mark) {
@@ -252,7 +251,7 @@ export class PdfMarker implements IMarker {
     if (!this.isInitialized) {
       await this.initialize()
     }
-    if (!this.storage || !this.tableName) {
+    if (!this.storage || !this.simpleId) {
       throw new Error('PdfMarker storage is not ready')
     }
   }
@@ -305,26 +304,37 @@ export class PdfMarker implements IMarker {
     }
   }
 
-  private async loadAllFromStorage() {
-    if (!this.storage || !this.tableName) {
+  async reloadFromStorage(): Promise<void> {
+    if (!this.isInitialized || !this.storage || !this.simpleId) {
       return
     }
-    const all = await this.storage.getAll<Mark>(this.tableName)
+    const previous = new Set(this.cache.keys())
+    await this.loadAllFromStorage()
+    const added = [...this.cache.values()].filter((mark) => !previous.has(mark.markId))
+    await this.restoreLoadedPages()
+    if (added.length > 0) {
+      this.emitDataChange('create', added)
+    }
+  }
+
+  private async loadAllFromStorage() {
+    if (!this.storage || !this.simpleId) {
+      return
+    }
+    const all = await this.storage.listByResource(ANONYMOUS_OWNER_ID, this.simpleId)
     this.cache.clear()
-    for (const [key, value] of all) {
+    for (const value of all) {
       if (value?.markId) {
         this.cache.set(value.markId, hydrateLegacyMark(value))
-      } else if (value) {
-        this.cache.set(key, hydrateLegacyMark(value))
       }
     }
   }
 
   private async persist(mark: Mark) {
-    if (!this.storage || !this.tableName) {
+    if (!this.storage || !this.simpleId) {
       return
     }
-    await this.storage.set(this.tableName, mark.markId, mark)
+    await this.storage.put(ANONYMOUS_OWNER_ID, mark)
   }
 
   private filterMarksByUrl = (marks: Mark[], url: string): Mark[] => {
@@ -346,10 +356,7 @@ export class PdfMarker implements IMarker {
   }
 
   private computeMarkId(contentRange: FixedContentRange, text: string): string {
-    const geometryKey = contentRange.geometries
-      .map((g) => `${g.pageNumber}:${g.coords.join(',')}`)
-      .join('|')
-    return computeUniqueId(`${this.resourceId}|${geometryKey}|${text}`)
+    return computePdfPositionMarkId(this.simpleId, contentRange, text)
   }
 
   private clearSelection(range: Range) {
