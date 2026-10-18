@@ -39,6 +39,8 @@ export type HighlightRelayoutScope = {
 export interface IHighlighter extends IDisposable {
     paint(items: HighlightItem[]): void
     remove(ids: string[]): void
+    /** Drop paint bookkeeping without removing the overlay nodes. */
+    detach(ids: string[]): void
     removeByType(types: string[]): void
     removeAll(): void
     getElements(id: string): Element[]

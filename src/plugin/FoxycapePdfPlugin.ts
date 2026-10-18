@@ -1,4 +1,5 @@
 import { Notice, Plugin, TFile } from 'obsidian'
+import { bindAiRuntime, tryGetAiRuntime } from '@/ai/runtime'
 import type { IDevice } from '@foxycape/core/kernal'
 import type { IApiClient } from '@/network'
 import { createPluginApiClient } from '@/api/createPluginApiClient'
@@ -35,6 +36,7 @@ import { disposeWasmSignerBlobUrl } from '@/api/resolveWasmSignerUrl'
 import { disposePdfWorkerBlobSrc } from '@/reader/pdfAssets'
 import { DexieStorage } from '@/storage'
 import { LegacyMarkCatalog } from '@/storage/legacy/LegacyMarkCatalog'
+import { registerAstroidIcon } from '@/ui/astroidIcon'
 import { applyFoxycapeMenuIcon, registerFoxycapeIcon } from '@/ui/foxycapeIcon'
 import { showLicenseRequiredModal } from '@/ui/LicenseRequiredModal'
 import { createGlobalWorker, type IGlobalWorker } from '@/workers'
@@ -86,9 +88,35 @@ export class FoxycapePdfPlugin extends Plugin {
     this.device = api.device
     this.deviceService = new DeviceService(this, this.device)
     this.licenseService = new LicenseService(this)
+    bindAiRuntime({
+      apiClient: this.apiClient,
+      storage: this.storage,
+      getLicense: () => this.settings.license,
+      onNeedLicense: () => {
+        const hooks = tryGetAiRuntime()?.chrome
+        if (hooks) {
+          hooks.openAccess('need-license')
+          return
+        }
+        const setting = (this.app as unknown as {
+          setting?: { open: () => void; openTabById?: (id: string) => void }
+        }).setting
+        setting?.open()
+        setting?.openTabById?.(this.manifest.id)
+      },
+      onQuotaExhausted: () => {
+        const hooks = tryGetAiRuntime()?.chrome
+        if (hooks) {
+          hooks.openAccess('quota')
+          return
+        }
+        new Notice(this.t('ai_quota_exhausted', 'Official AI quota is used up.'))
+      },
+    })
     await this.locale.initialize()
     this.lastSyncedLanguage = this.locale.getCurrentLanguage()
     registerFoxycapeIcon()
+    registerAstroidIcon()
 
     await this.licenseService.ensureTrialStarted()
     // Unpack worker+signer from main.js, then register device / validate license.

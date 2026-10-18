@@ -17,6 +17,7 @@ import { parseNumber } from '@foxycape/core/kernal/common/number'
 import type { IPdfDocument } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfDocument'
 import type * as pdfjsLib from '@foxycape/core/pdfjs/legacy/build/pdf.mjs'
 import { Notice, setIcon } from 'obsidian'
+import { historyBack, pushHistoryState } from '@/history/useMobileHistoryStack'
 import {
   clearPendingPdfImageRef,
   stagePdfImageRefCopy,
@@ -855,7 +856,15 @@ export class PdfInternalImageController implements IDisposable {
       this.renderer,
       document.body,
       callbacks,
-      { fullscreen: true, zIndex: 10000 },
+      {
+        fullscreen: true,
+        zIndex: 10000,
+        historyBridge: {
+          shouldTrack: () => true,
+          pushState: pushHistoryState,
+          back: historyBack,
+        },
+      },
     )
     return this.imageViewer
   }

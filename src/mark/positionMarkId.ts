@@ -12,3 +12,13 @@ export const computePdfPositionMarkId = (
     .join('|')
   return computeUniqueId(`${simpleId}|${geometryKey}|${text}|${imageUrl ?? ''}`)
 }
+
+/**
+ * Highlight, translate, explain, and lookup must call this with the same
+ * passage inputs. Feature names are not part of the hash.
+ */
+export const sharedPassageMarkId = (
+  simpleId: string,
+  contentRange: FixedContentRange,
+  text: string,
+): string => computePdfPositionMarkId(simpleId, contentRange, text.trim())

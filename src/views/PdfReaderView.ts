@@ -15,6 +15,7 @@ import { createPdfReader } from '@/reader/createPdfReader'
 import { resolvePdfAssetUrls } from '@/reader/pdfAssets'
 import { readVaultBinaryWithProgress } from '@/reader/readVaultBinaryWithProgress'
 import { promptPdfPassword } from '@/ui/PdfPasswordModal'
+import { ASTROID_ICON_ID } from '@/ui/astroidIcon'
 import {
   mountPdfViewChrome,
   type PdfChromeMount,
@@ -43,6 +44,9 @@ import { openRemoteHeadReader } from '@/storage/legacy/openRemoteHeadReader'
 import { openVaultFileRange } from '@/storage/legacy/openVaultFileRange'
 import type { ByteRangeReader } from '@/storage/legacy/ByteRangeReader'
 import { MarkNoteCompanion, syncMarkToSidecarNote } from '@/obsidian/markNoteSync'
+import { appendAiNote } from '@/ai/notes/appendAiNote'
+import { tryGetAiRuntime } from '@/ai/runtime'
+import { mountAiChatPanel, type AiChatPanelMount } from '@/ai/ui/mountAiChatPanel'
 import { applyPdfDeepLink } from '@/obsidian/pdfDeepLink'
 import {
   displayNameFromRemotePdfUrl,
@@ -76,6 +80,7 @@ export class PdfReaderView extends ItemView {
   private markPanelHost: HTMLElement | null = null
   private chromeMount: PdfChromeMount | null = null
   private markToolbarMount: PdfMarkToolbarMount | null = null
+  private aiChatMount: AiChatPanelMount | null = null
   private searchBarMount: PdfSearchBarMount | null = null
   private screenshotMount: PdfScreenshotMount | null = null
   private markListMount: PdfMarkListPanelMount | null = null
@@ -151,24 +156,7 @@ export class PdfReaderView extends ItemView {
   }
 
   onPaneMenu(menu: Menu, source: string): void {
-    menu.addItem((item) => {
-      item
-        .setTitle(this.plugin.t('pdf_search_find', 'Find'))
-        .setIcon('search')
-        .onClick(() => {
-          this.requestOpenFind()
-        })
-    })
-    menu.addItem((item) => {
-      item
-        .setTitle(this.plugin.t('pdf_mark_list', 'Highlight list'))
-        .setIcon('highlighter')
-        .setChecked(this.markPanelOpen)
-        .onClick(() => {
-          this.toggleMarkPanel()
-        })
-    })
-    // Phone chrome hides the header settings gear; expose it via the more menu.
+    this.addReadingMenuItems(menu)
     if (document.body.classList.contains('is-phone')) {
       menu.addItem((item) => {
         item
@@ -183,13 +171,17 @@ export class PdfReaderView extends ItemView {
   }
 
   /**
-   * Fallback-toolbar more menu: Find + Highlight list only
+   * Fallback-toolbar more menu: Find, Marks, and Ask AI
    * (no Obsidian Split right / Split down from onPaneMenu).
    */
   showPaneMenu(event: MouseEvent) {
     const menu = new Menu()
-    // Obsidian Menu exposes `dom` at runtime; typings omit it.
     ;(menu as Menu & { dom: HTMLElement }).dom.addClass('foxycape-pdf-chrome-more-menu')
+    this.addReadingMenuItems(menu)
+    menu.showAtMouseEvent(event)
+  }
+
+  private addReadingMenuItems(menu: Menu) {
     menu.addItem((item) => {
       item
         .setTitle(this.plugin.t('pdf_search_find', 'Find'))
@@ -200,14 +192,50 @@ export class PdfReaderView extends ItemView {
     })
     menu.addItem((item) => {
       item
-        .setTitle(this.plugin.t('pdf_mark_list', 'Highlight list'))
+        .setTitle(this.plugin.t('pdf_marks', 'Marks'))
         .setIcon('highlighter')
         .setChecked(this.markPanelOpen)
         .onClick(() => {
-          this.toggleMarkPanel()
+          this.toggleMarksFromMenu()
         })
     })
-    menu.showAtMouseEvent(event)
+    menu.addItem((item) => {
+      item
+        .setTitle(this.plugin.t('ai_chat_title', 'Ask AI'))
+        .setIcon(ASTROID_ICON_ID)
+        .setChecked(this.aiChatMount?.isOpen() ?? false)
+        .onClick(() => {
+          this.toggleAskAi()
+        })
+    })
+  }
+
+  private toggleMarksFromMenu() {
+    if (this.markPanelOpen) {
+      this.toggleMarkPanel(false)
+      return
+    }
+    this.markListMount?.openTab('highlights')
+    this.toggleMarkPanel(true)
+  }
+
+  private toggleAskAi() {
+    const chat = this.ensureAiChat()
+    if (chat.isOpen()) {
+      chat.close()
+      return
+    }
+    const reader = this.reader
+    const getMarker = this.getMarker
+    const simpleId = reader?.context?.id ?? ''
+    if (!reader || !getMarker || !simpleId) {
+      return
+    }
+    chat.open(reader, getMarker, {
+      simpleId,
+      quote: '',
+      pdfTitle: this.file?.basename ?? '',
+    })
   }
 
   toggleMarkPanel(value?: boolean) {
@@ -301,6 +329,8 @@ export class PdfReaderView extends ItemView {
     this.disposeScreenshot()
     this.disposeMarkToolbar()
     this.disposeMarkListPanel()
+    this.aiChatMount?.dispose()
+    this.aiChatMount = null
     this.disposeChrome()
     await this.disposeReader()
     this.markNoteCompanion.reset()
@@ -446,6 +476,8 @@ export class PdfReaderView extends ItemView {
           enablePdfThemeColorRemap: settings.enablePdfThemeColorRemap,
           pdfThemeColorRemapMode: settings.pdfThemeColorRemapMode,
           enableAutoCreateHighlightNotes: settings.enableAutoCreateHighlightNotes,
+          writeExplainToMarkdown: settings.writeExplainToMarkdown,
+          writeLookupToMarkdown: settings.writeLookupToMarkdown,
         },
         getLinkSource: this.resolveLinkSource,
         onRequirePassword: async (callback, reason) => {
@@ -465,6 +497,7 @@ export class PdfReaderView extends ItemView {
       this.reader = session.reader
       this.getMarker = session.getMarker
       this.bindMarkNoteSync(session.reader)
+      this.bindAiNoteWriter(session.reader)
 
       if ('file' in source) {
         const data = await this.readFileWithLoadingProgress(source.file, session.reader, signal)
@@ -688,6 +721,8 @@ export class PdfReaderView extends ItemView {
         pdfThemeColorRemapMode: this.plugin.settings.pdfThemeColorRemapMode,
         enableAutoCreateHighlightNotes:
           this.plugin.settings.enableAutoCreateHighlightNotes,
+        writeExplainToMarkdown: this.plugin.settings.writeExplainToMarkdown,
+        writeLookupToMarkdown: this.plugin.settings.writeLookupToMarkdown,
       }),
       onUpdateViewPreferences: async (patch) => {
         await this.plugin.updatePdfViewPreferences(patch)
@@ -736,8 +771,103 @@ export class PdfReaderView extends ItemView {
       getMarker,
       t: this.plugin.t,
       storage: this.plugin.storage,
+      passageStorage: this.plugin.storage,
+      httpClient: this.plugin.apiClient.httpClient,
       getLinkSource: this.resolveLinkSource,
+      onOpenAi: (draft) => {
+        const title = this.file?.basename ?? ''
+        this.ensureAiChat().open(reader, getMarker, {
+          simpleId: draft.simpleId,
+          quote: draft.quote,
+          prompt: draft.prompt,
+          autoSend: draft.autoSend,
+          displayInput: draft.displayInput,
+          pdfTitle: title,
+        })
+      },
+      onNeedAccess: (mode) => {
+        this.ensureAiChat().openAccess(mode)
+      },
+      onOpenModel: () => {
+        this.ensureAiChat().openModel()
+      },
+      onOpenLanguage: () => {
+        this.ensureAiChat().openLanguage()
+      },
+      onOpenTranslateList: () => {
+        this.markListMount?.openTab('translates')
+        this.toggleMarkPanel(true)
+      },
+      getVisibility: () => ({
+        displayMarkPenInToolbar: this.plugin.settings.displayMarkPenInToolbar,
+        displayWavyInToolbar: this.plugin.settings.displayWavyInToolbar,
+        displayUnderlineInToolbar: this.plugin.settings.displayUnderlineInToolbar,
+        displayTranslateInToolbar: this.plugin.settings.displayTranslateInToolbar,
+        displayExplainPassageInToolbar: this.plugin.settings.displayExplainPassageInToolbar,
+        displayLookupWordInToolbar: this.plugin.settings.displayLookupWordInToolbar,
+        displayAiInToolbar: this.plugin.settings.displayAiInToolbar,
+      }),
+      setVisibility: (next) => {
+        this.plugin.settings = { ...this.plugin.settings, ...next }
+        void this.plugin.saveSettings()
+      },
     })
+  }
+
+  private ensureAiChat(): AiChatPanelMount {
+    if (!this.aiChatMount) {
+      const hostEl = this.bodyEl
+      if (!hostEl) {
+        return {
+          open: () => {},
+          isOpen: () => false,
+          openAccess: () => {},
+          openModel: () => {},
+          openLanguage: () => {},
+          close: () => {},
+          dispose: () => {},
+        }
+      }
+      this.aiChatMount = mountAiChatPanel({
+        hostEl,
+        storage: this.plugin.storage,
+        t: this.plugin.t,
+        openSettings: () => {
+          const setting = (this.app as unknown as {
+            setting?: { open: () => void; openTabById?: (id: string) => void }
+          }).setting
+          setting?.open()
+          setting?.openTabById?.(this.plugin.manifest.id)
+        },
+      })
+    }
+    return this.aiChatMount
+  }
+
+  private bindAiNoteWriter(reader: Reader) {
+    const runtime = tryGetAiRuntime()
+    if (!runtime) {
+      return
+    }
+    runtime.writePassageNote = async (input) => {
+      if (reader.context?.id && input.simpleId !== reader.context.id) {
+        return
+      }
+      if (input.kind === 'explain' && !this.plugin.settings.writeExplainToMarkdown) {
+        return
+      }
+      if (input.kind === 'lookup' && !this.plugin.settings.writeLookupToMarkdown) {
+        return
+      }
+      await appendAiNote(
+        this.app,
+        {
+          pdfFile: this.file ?? undefined,
+          sourceUrl: this.sourceUrl ?? undefined,
+        },
+        input,
+      )
+    }
   }
 
   private mountSearchBar(reader: Reader) {
@@ -798,6 +928,7 @@ export class PdfReaderView extends ItemView {
       this.markListMount = mountPdfMarkListPanel({
         hostEl: this.markPanelHost,
         reader,
+        storage: this.plugin.storage,
         getMarker,
         open: this.markPanelOpen,
         t: this.plugin.t,

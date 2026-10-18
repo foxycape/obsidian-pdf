@@ -20,7 +20,7 @@ import type {
   MarkType,
   QueryMarkOptions,
 } from '@/mark/types'
-import { computePdfPositionMarkId } from '@/mark/positionMarkId'
+import { sharedPassageMarkId } from '@/mark/positionMarkId'
 import type { IMarkStorage } from '@/storage/IMarkStorage'
 import { ANONYMOUS_OWNER_ID } from '@/storage/ownerId'
 import {
@@ -31,6 +31,7 @@ import { getSelectionText } from '@foxycape/core/mediaTypes/pdf/shared/geometry/
 import type { IPdfDocument } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfDocument'
 import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
 import { rangeToObsidianSelection } from '@/obsidian/selectionLink'
+import { resolvePdfNavMeta } from './pdfNavMeta'
 import {
   playGotoHighlightAnimation,
   waitForPageRendered,
@@ -100,31 +101,20 @@ export class PdfMarker implements IMarker {
 
   async createMark(options: CreateMarkOptions): Promise<Mark | null> {
     await this.ensureReady()
-    const text = options.text || getSelectionText(options.target)
-    const contentRange = selectionToFixedContentRange(options.target, (pageNumber) => {
-      const doc = this.getDocByPageNumber(pageNumber)
-      const pageEl = doc?.getContentContainer() ?? this.renderer.getPageView(pageNumber)?.div
-      if (!pageEl) {
-        return undefined
-      }
-      const layout = getPageLayoutRef(pageEl)
-      if (!layout) {
-        return undefined
-      }
-      const rotation = doc?.getPageGeometry()?.rotation ?? 0
-      return { ...layout, rotation }
-    })
-    if (!contentRange) {
+    const text = (options.text || getSelectionText(options.target)).trim()
+    const contentRange = this.rangeToContentRange(options.target)
+    if (!contentRange || !text) {
       this.logger.warn('createMark failed: empty contentRange')
       return null
     }
 
-    const markId = this.computeMarkId(contentRange, text)
+    const markId = sharedPassageMarkId(this.simpleId, contentRange, text)
     const existing = this.cache.get(markId)
     if (existing) {
       existing.styleName = options.styleName
       existing.customColor = options.customColor
       existing.updatedAt = Date.now()
+      await this.applyNavMeta(existing)
       await this.persist(existing)
       await this.restoreMarks([existing])
       this.emitDataChange('update', [existing])
@@ -140,6 +130,7 @@ export class PdfMarker implements IMarker {
       markId,
       options.customColor,
     )
+    await this.applyNavMeta(mark)
     // Capture before clearSelection — DOM Range is empty afterwards.
     const selection = rangeToObsidianSelection(options.target)
     this.cache.set(mark.markId, mark)
@@ -230,6 +221,58 @@ export class PdfMarker implements IMarker {
     const masks = this.highlighter.getElements(mark.markId)
     masks[0]?.scrollIntoView({ block: 'center', inline: 'nearest' })
     playGotoHighlightAnimation(masks)
+  }
+
+  captureFixedRange(range: Range): FixedContentRange | undefined {
+    return this.rangeToContentRange(range)
+  }
+
+  async flashFixedRange(contentRange: FixedContentRange): Promise<boolean> {
+    const geometries = contentRange.geometries.filter(
+      (geometry) => geometry.pageNumber > 0 && geometry.coords.length >= 4,
+    )
+    if (geometries.length === 0) {
+      return false
+    }
+    const pageNumber = geometries[0].pageNumber
+    const doc = this.getDocByPageNumber(pageNumber) ?? this.renderer.getDocuments()[0]
+    if (doc && this.renderer.pagingNavigator) {
+      await this.renderer.pagingNavigator.gotoPage(doc, pageNumber)
+    }
+    await waitForPageRendered(this.renderer, pageNumber)
+    const id = 'foxycape-pdf-passage-flash'
+    this.highlighter.remove([id])
+    this.highlighter.paint([
+      {
+        id,
+        type: 'drawline',
+        styleName: 'mark_pen',
+        contentRange: { kind: 'fixed', geometries },
+      },
+    ])
+    const masks = this.highlighter.getElements(id)
+    if (masks.length === 0) {
+      this.highlighter.remove([id])
+      return false
+    }
+    masks[0]?.scrollIntoView({ block: 'center', inline: 'nearest' })
+    this.highlighter.detach([id])
+    playGotoHighlightAnimation(masks, { removeElements: true })
+    return true
+  }
+
+  async ensureNavMeta(marks: Mark[]): Promise<Mark[]> {
+    for (const mark of marks) {
+      if (mark.navTitle?.trim() || mark.navUrl?.trim()) {
+        continue
+      }
+      const hadNav = Boolean(mark.navTitle || mark.navUrl)
+      await this.applyNavMeta(mark)
+      if (!hadNav && (mark.navTitle || mark.navUrl)) {
+        await this.persist(mark)
+      }
+    }
+    return marks
   }
 
   async findMark(target: FindMarkTarget): Promise<{ id: string; type: MarkType } | undefined> {
@@ -330,6 +373,19 @@ export class PdfMarker implements IMarker {
     }
   }
 
+  private async applyNavMeta(mark: Mark) {
+    if (mark.navTitle?.trim() || mark.navUrl?.trim()) {
+      return
+    }
+    const pageNumber = mark.pageNumber ?? getFixedContentRange(mark)?.geometries[0]?.pageNumber
+    const nav = await resolvePdfNavMeta(this.renderer, pageNumber)
+    if (!nav) {
+      return
+    }
+    mark.navTitle = nav.navTitle
+    mark.navUrl = nav.navUrl
+  }
+
   private async persist(mark: Mark) {
     if (!this.storage || !this.simpleId) {
       return
@@ -355,8 +411,32 @@ export class PdfMarker implements IMarker {
     return docs.find((d) => d.pageNumber === pageNumber)
   }
 
-  private computeMarkId(contentRange: FixedContentRange, text: string): string {
-    return computePdfPositionMarkId(this.simpleId, contentRange, text)
+  resolveSelectionMarkId = async (range: Range | null, text: string): Promise<string | undefined> => {
+    const source = text.trim()
+    if (!range || !source || !this.simpleId) {
+      return undefined
+    }
+    const contentRange = this.rangeToContentRange(range)
+    if (!contentRange) {
+      return undefined
+    }
+    return sharedPassageMarkId(this.simpleId, contentRange, source)
+  }
+
+  private rangeToContentRange(range: Range): FixedContentRange | undefined {
+    return selectionToFixedContentRange(range, (pageNumber) => {
+      const doc = this.getDocByPageNumber(pageNumber)
+      const pageEl = doc?.getContentContainer() ?? this.renderer.getPageView(pageNumber)?.div
+      if (!pageEl) {
+        return undefined
+      }
+      const layout = getPageLayoutRef(pageEl)
+      if (!layout) {
+        return undefined
+      }
+      const rotation = doc?.getPageGeometry()?.rotation ?? 0
+      return { ...layout, rotation }
+    })
   }
 
   private clearSelection(range: Range) {

@@ -26,7 +26,25 @@ export type FoxycapePdfSettings = {
   licenseLifetime: boolean
   /** Epoch ms of the last successful or definitive license check. */
   lastLicenseCheckAt: number
+  displayMarkPenInToolbar: boolean
+  displayWavyInToolbar: boolean
+  displayUnderlineInToolbar: boolean
+  displayTranslateInToolbar: boolean
+  displayExplainPassageInToolbar: boolean
+  displayLookupWordInToolbar: boolean
+  displayAiInToolbar: boolean
 } & PdfViewPreferences
+
+export type ToolbarVisibility = Pick<
+  FoxycapePdfSettings,
+  | 'displayMarkPenInToolbar'
+  | 'displayWavyInToolbar'
+  | 'displayUnderlineInToolbar'
+  | 'displayTranslateInToolbar'
+  | 'displayExplainPassageInToolbar'
+  | 'displayLookupWordInToolbar'
+  | 'displayAiInToolbar'
+>
 
 export const DEFAULT_SETTINGS: FoxycapePdfSettings = {
   useAsDefaultPdfViewer: false,
@@ -35,6 +53,13 @@ export const DEFAULT_SETTINGS: FoxycapePdfSettings = {
   licenseValid: false,
   licenseLifetime: false,
   lastLicenseCheckAt: 0,
+  displayMarkPenInToolbar: true,
+  displayWavyInToolbar: true,
+  displayUnderlineInToolbar: false,
+  displayTranslateInToolbar: true,
+  displayExplainPassageInToolbar: true,
+  displayLookupWordInToolbar: true,
+  displayAiInToolbar: false,
   ...DEFAULT_PDF_VIEW_PREFERENCES,
 }
 

@@ -147,7 +147,7 @@ onBeforeUnmount(() => {
   min-width: 180px;
   max-width: 480px;
   background: var(--background-secondary);
-  overflow: hidden;
+  overflow: visible;
   flex: 0 0 auto;
 }
 
@@ -192,11 +192,11 @@ onBeforeUnmount(() => {
 .foxycape-pdf-left-nav__resizer {
   position: absolute;
   top: 0;
-  inset-inline-end: -3px;
-  width: 6px;
+  inset-inline-end: 0;
+  width: 1px;
   height: 100%;
   cursor: col-resize;
-  z-index: 5;
+  z-index: 6;
   background-color: transparent;
   border-inline-start: 1px solid var(--divider-color);
   box-sizing: border-box;

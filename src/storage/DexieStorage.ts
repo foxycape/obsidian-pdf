@@ -1,6 +1,7 @@
 import Dexie, { type Table } from 'dexie'
 import { DexieMarkStorage, type MarkRow } from './DexieMarkStorage'
 import type { IMarkStorage } from './IMarkStorage'
+import { toStorageValue } from './toStorageValue'
 import { DataStorageOptions, type IStorage } from './IStorage'
 import { ReadingProgressStore, type ReadingProgressRow } from './ReadingProgressStore'
 import type { IReadingProgressStore } from './IReadingProgressStore'
@@ -15,6 +16,11 @@ class FoxycapePdfDatabase extends Dexie {
   kv!: Table<KvRow, [string, string]>
   marks!: Table<MarkRow, [string, string]>
   readingprogress!: Table<ReadingProgressRow, [string, string]>
+  translates!: Table<Record<string, unknown>, [string, string]>
+  explains!: Table<Record<string, unknown>, [string, string]>
+  lookups!: Table<Record<string, unknown>, [string, string]>
+  llmChats!: Table<Record<string, unknown>, [string, string]>
+  segments!: Table<Record<string, unknown>, [string, string]>
 
   constructor(dbName: string) {
     super(dbName)
@@ -25,6 +31,16 @@ class FoxycapePdfDatabase extends Dexie {
       kv: '[tableName+key], tableName',
       marks: '[ownerId+markId], [ownerId+simpleId+url], [ownerId+type]',
       readingprogress: '[ownerId+simpleId]',
+    })
+    this.version(3).stores({
+      kv: '[tableName+key], tableName',
+      marks: '[ownerId+markId], [ownerId+simpleId+url], [ownerId+type]',
+      readingprogress: '[ownerId+simpleId]',
+      translates: '[ownerId+markId], [ownerId+simpleId+url], [ownerId+simpleId]',
+      explains: '[ownerId+markId], [ownerId+simpleId]',
+      lookups: '[ownerId+markId], [ownerId+simpleId]',
+      llmChats: '[ownerId+id], [ownerId+updatedAt]',
+      segments: '[ownerId+simpleId]',
     })
   }
 }
@@ -52,6 +68,16 @@ export class DexieStorage implements IStorage {
 
   get dbName(): string {
     return this.defaultDbName
+  }
+
+  /** Indexed tables added for translate / explain / lookup / chat / segment summaries. */
+  getAiTable = (
+    name: 'translates' | 'explains' | 'lookups' | 'llmChats' | 'segments',
+  ): Table<Record<string, unknown>, [string, string]> | undefined => {
+    if (this.disposed) {
+      return undefined
+    }
+    return this.db[name]
   }
 
   async get<T>(tableName: string, key: string): Promise<T> {
@@ -142,11 +168,13 @@ export class DexieStorage implements IStorage {
       return
     }
 
-    await this.db.kv.put({
-      tableName: normalizedTable,
-      key: normalizedKey,
-      data: content,
-    })
+    await this.db.kv.put(
+      toStorageValue({
+        tableName: normalizedTable,
+        key: normalizedKey,
+        data: content,
+      }),
+    )
   }
 
   async delete(

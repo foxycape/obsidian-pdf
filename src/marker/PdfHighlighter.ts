@@ -87,6 +87,13 @@ export class PdfHighlighter implements IHighlighter {
     }
   }
 
+  /** Drop paint bookkeeping without removing the overlay nodes. */
+  detach(ids: string[]): void {
+    for (const id of ids) {
+      this.items.delete(id)
+    }
+  }
+
   removeByType(types: string[]): void {
     const ids = Array.from(this.items.values())
       .filter((item) => types.includes(item.type))

@@ -1,16 +1,65 @@
 <script setup lang="ts">
-import { onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import type { Swiper as SwiperInstance } from 'swiper'
+import { Swiper, SwiperSlide } from 'swiper/vue'
+import 'swiper/css'
 import type { Reader } from '@foxycape/core/kernal'
 import type { IMarker } from '@/mark'
+import type { DexieStorage } from '@/storage/DexieStorage'
+import { isObsidianMobile } from '@/ui/isObsidianMobile'
 import PdfMarkList from './mark-list/PdfMarkList.vue'
+import PdfPassageList from './mark-list/PdfPassageList.vue'
+
+type MarksTab = 'highlights' | 'translates' | 'explains' | 'lookups'
 
 const props = defineProps<{
   reader: Reader
+  storage: DexieStorage
   getMarker: () => IMarker | undefined
   open: boolean
+  requestedTab?: MarksTab
+  tabNonce?: number
   t: (key: string, fallback: string, vars?: Record<string, string | number>) => string
   onClose: () => void
 }>()
+
+const canSwipe = isObsidianMobile()
+const currentTab = ref<MarksTab>('highlights')
+const swiperInstance = ref<SwiperInstance | null>(null)
+const tabs = computed(() => [
+  { id: 'highlights' as const, label: props.t('ai_marks_tab_highlights', 'Highlights') },
+  { id: 'translates' as const, label: props.t('ai_marks_tab_translate', 'Translate') },
+  { id: 'explains' as const, label: props.t('ai_marks_tab_explain', 'Explain') },
+  { id: 'lookups' as const, label: props.t('ai_marks_tab_lookup', 'Look up') },
+])
+
+const tabIndex = (tab: MarksTab) => tabs.value.findIndex((item) => item.id === tab)
+const selectTab = (tab: MarksTab) => {
+  currentTab.value = tab
+  const index = tabIndex(tab)
+  const swiper = swiperInstance.value
+  if (index >= 0 && swiper && swiper.activeIndex !== index) {
+    swiper.slideTo(index)
+  }
+}
+watch(
+  () => [props.requestedTab, props.tabNonce] as const,
+  ([tab]) => {
+    if (tab) {
+      selectTab(tab)
+    }
+  },
+)
+
+const onSwiper = (swiper: SwiperInstance) => {
+  swiperInstance.value = swiper
+}
+const onSlideChange = (swiper: SwiperInstance) => {
+  const tab = tabs.value[swiper.activeIndex]
+  if (tab) {
+    currentTab.value = tab.id
+  }
+}
 
 const DEFAULT_WIDTH = 300
 const MIN_WIDTH = 180
@@ -84,13 +133,46 @@ onBeforeUnmount(() => {
       @mousedown="startResize"
     />
     <div class="foxycape-pdf-mark-panel__body">
-      <PdfMarkList
-        :reader="reader"
-        :get-marker="getMarker"
-        :active="open"
-        :t="t"
-        :on-close="onClose"
-      />
+      <div class="foxycape-pdf-mark-tabs" role="tablist">
+        <button
+          v-for="tab in tabs"
+          :key="tab.id"
+          type="button"
+          class="foxycape-pdf-mark-tabs__tab"
+          :class="{ 'is-active': currentTab === tab.id }"
+          role="tab"
+          :aria-selected="currentTab === tab.id"
+          @click="selectTab(tab.id)"
+        >
+          {{ tab.label }}
+        </button>
+      </div>
+      <Swiper
+        v-if="canSwipe"
+        class="foxycape-pdf-mark-tabs__swiper"
+        :allow-touch-move="true"
+        @swiper="onSwiper"
+        @slide-change="onSlideChange"
+      >
+        <SwiperSlide>
+          <PdfMarkList :reader="reader" :get-marker="getMarker" :active="open && currentTab === 'highlights'" :t="t" :on-close="onClose" />
+        </SwiperSlide>
+        <SwiperSlide>
+          <PdfPassageList kind="translate" :reader="reader" :storage="storage" :get-marker="getMarker" :active="open && currentTab === 'translates'" :t="t" @navigated="onClose" />
+        </SwiperSlide>
+        <SwiperSlide>
+          <PdfPassageList kind="explain" :reader="reader" :storage="storage" :get-marker="getMarker" :active="open && currentTab === 'explains'" :t="t" @navigated="onClose" />
+        </SwiperSlide>
+        <SwiperSlide>
+          <PdfPassageList kind="lookup" :reader="reader" :storage="storage" :get-marker="getMarker" :active="open && currentTab === 'lookups'" :t="t" @navigated="onClose" />
+        </SwiperSlide>
+      </Swiper>
+      <div v-else class="foxycape-pdf-mark-tabs__page">
+        <PdfMarkList v-if="currentTab === 'highlights'" :reader="reader" :get-marker="getMarker" :active="open" :t="t" :on-close="onClose" />
+        <PdfPassageList v-else-if="currentTab === 'translates'" kind="translate" :reader="reader" :storage="storage" :get-marker="getMarker" :active="open" :t="t" />
+        <PdfPassageList v-else-if="currentTab === 'explains'" kind="explain" :reader="reader" :storage="storage" :get-marker="getMarker" :active="open" :t="t" />
+        <PdfPassageList v-else kind="lookup" :reader="reader" :storage="storage" :get-marker="getMarker" :active="open" :t="t" />
+      </div>
     </div>
   </aside>
 </template>
@@ -105,7 +187,7 @@ onBeforeUnmount(() => {
   min-width: 180px;
   max-width: 480px;
   background: var(--background-secondary);
-  overflow: hidden;
+  overflow: visible;
   flex: 0 0 auto;
 }
 
@@ -113,16 +195,58 @@ onBeforeUnmount(() => {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.foxycape-pdf-mark-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 6px 8px;
+}
+
+.foxycape-pdf-mark-tabs__tab {
+  height: 28px;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0 10px;
+  white-space: nowrap;
+  box-shadow: none;
+}
+
+.foxycape-pdf-mark-tabs__tab:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.foxycape-pdf-mark-tabs__tab.is-active {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.foxycape-pdf-mark-tabs__swiper,
+.foxycape-pdf-mark-tabs__page {
+  flex: 1;
+  min-height: 0;
+}
+
+.foxycape-pdf-mark-tabs__swiper :deep(.swiper-slide) {
+  height: 100%;
+  overflow: auto;
 }
 
 .foxycape-pdf-mark-panel__resizer {
   position: absolute;
   top: 0;
-  inset-inline-start: -3px;
-  width: 6px;
+  inset-inline-start: 0;
+  width: 1px;
   height: 100%;
   cursor: col-resize;
-  z-index: 5;
+  z-index: 6;
   background-color: transparent;
   border-inline-end: 1px solid var(--divider-color);
   box-sizing: border-box;

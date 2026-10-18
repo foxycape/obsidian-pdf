@@ -12,6 +12,8 @@ export type PdfViewPreferenceKey =
   | 'enablePdfThemeColorRemap'
   | 'pdfThemeColorRemapMode'
   | 'enableAutoCreateHighlightNotes'
+  | 'writeExplainToMarkdown'
+  | 'writeLookupToMarkdown'
 
 export type PdfViewPreferences = Pick<CustomPdfOptions, PdfViewPreferenceKey>
 export type PdfViewPreferencePatch = Partial<PdfViewPreferences>
@@ -43,6 +45,12 @@ export class CustomPdfOptions extends PdfOptions {
    */
   enableAutoCreateHighlightNotes = true
 
+  /** When true, explain-passage results are appended to the PDF's Markdown note. */
+  writeExplainToMarkdown = false
+
+  /** When true, word-lookup results are appended to the PDF's Markdown note. */
+  writeLookupToMarkdown = false
+
   /** Minimum original image width (px) to treat as previewable. */
   imageMinWidth = 100
 
@@ -72,5 +80,7 @@ export const DEFAULT_PDF_VIEW_PREFERENCES: PdfViewPreferences = (() => {
     enablePdfThemeColorRemap: defaults.enablePdfThemeColorRemap,
     pdfThemeColorRemapMode: defaults.pdfThemeColorRemapMode,
     enableAutoCreateHighlightNotes: defaults.enableAutoCreateHighlightNotes,
+    writeExplainToMarkdown: defaults.writeExplainToMarkdown,
+    writeLookupToMarkdown: defaults.writeLookupToMarkdown,
   }
 })()

@@ -28,6 +28,7 @@ export type ApiSettings = {
 }
 
 export type IApiClient = {
+  readonly apiSettings: ApiSettings
   /**
    * POST an API method.
    * @param methodName Relative path (`/a/b`) or absolute URL

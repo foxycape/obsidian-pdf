@@ -7,6 +7,17 @@ export const LICENSE_VERIFY_PATH = '/reader/license/verify'
 /** Relative path for unbinding a license from the current device. */
 export const LICENSE_UNBIND_PATH = '/reader/license/unbind'
 
+/**
+ * Exchange a license for the bound user's AI access token.
+ * The server looks up the user the same way login does.
+ */
+export const LICENSE_AI_SESSION_PATH = '/reader/license/session'
+
+/** Official chat-completions base. OpenAI SDK appends `/chat/completions`. */
+export const OFFICIAL_AI_GENERATE_PATH = '/reader/ai/generate'
+
+export const OFFICIAL_AI_TOKEN_INFO_PATH = '/reader/ai/tokeninfo'
+
 /** Absolute license validation URL (debug / docs). */
 export const LICENSE_API_URL = `${API_ENDPOINT}${LICENSE_VERIFY_PATH}`
 

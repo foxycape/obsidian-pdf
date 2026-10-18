@@ -1,10 +1,13 @@
 import { createApp, h, markRaw, type App } from 'vue'
 import type { Reader } from '@foxycape/core/kernal'
 import type { IMarker } from '@/mark'
+import type { IHttpClient } from '@foxycape/core/kernal/network/IHttpClient'
+import type { DexieStorage } from '@/storage/DexieStorage'
 import type { IStorage } from '@/storage/IStorage'
 import { injectToolbarIcons } from './injectToolbarIcons'
 import PdfMarkToolbar from './PdfMarkToolbar.vue'
 import type { PdfMarkToolbarLinkSource } from './usePdfMarkToolbar'
+import type { ToolbarVisibility } from '@/settings/types'
 
 export type PdfMarkToolbarMount = {
   updateSession: (reader: Reader, getMarker: () => IMarker | undefined) => void
@@ -18,7 +21,24 @@ export const mountPdfMarkToolbar = (options: {
   getMarker: () => IMarker | undefined
   t: (key: string, fallback: string) => string
   storage: IStorage
+  passageStorage: DexieStorage
+  httpClient: IHttpClient
   getLinkSource?: () => PdfMarkToolbarLinkSource | null
+  onOpenAi?: (draft: {
+    simpleId: string
+    quote: string
+    markId: string
+    pageNumber?: number
+    prompt?: string
+    autoSend?: boolean
+    displayInput?: string
+  }) => void
+  onNeedAccess?: (mode: 'need-license' | 'quota') => void
+  onOpenModel?: () => void
+  onOpenLanguage?: () => void
+  onOpenTranslateList?: () => void
+  getVisibility: () => ToolbarVisibility
+  setVisibility: (next: ToolbarVisibility) => void
 }): PdfMarkToolbarMount => {
   const doc = options.hostEl.ownerDocument
   injectToolbarIcons(doc)
@@ -37,7 +57,16 @@ export const mountPdfMarkToolbar = (options: {
         hostEl: options.hostEl,
         t: options.t,
         storage: options.storage,
+        passageStorage: options.passageStorage,
+        httpClient: options.httpClient,
         getLinkSource: options.getLinkSource,
+        onOpenAi: options.onOpenAi,
+        onNeedAccess: options.onNeedAccess,
+        onOpenModel: options.onOpenModel,
+        onOpenLanguage: options.onOpenLanguage,
+        onOpenTranslateList: options.onOpenTranslateList,
+        getVisibility: options.getVisibility,
+        setVisibility: options.setVisibility,
       }),
   })
   app.mount(root)

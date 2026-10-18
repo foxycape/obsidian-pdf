@@ -13,7 +13,9 @@ import {
 import { stubPdfWorkerRawPlugin } from './vite.stub-pdf-worker-raw'
 import { embedRuntimeAssetsPlugin } from './vite.embed-runtime-assets'
 import { buildPdfjsCmapsId } from './scripts/runtimeAssetsId.mjs'
+import { readObsidianPluginDir } from './scripts/readObsidianPluginDir.mjs'
 import { assertNoDynamicScriptElementsPlugin } from './vite.strip-localforage'
+import { copyToVaultPlugin } from './vite.copy-to-vault'
 
 const packageDir = fileURLToPath(new URL('.', import.meta.url))
 const { pdfjsDir: corePdfjsDir } = resolveFoxycapeCore(packageDir)
@@ -21,6 +23,7 @@ const outDir = resolve(packageDir, 'dist')
 const mainJsPath = resolve(outDir, 'main.js')
 const signerSrcFile = resolve(packageDir, 'static/signer.js')
 const pdfjsCmapsId = buildPdfjsCmapsId(corePdfjsDir)
+const vaultPluginDir = readObsidianPluginDir(packageDir)
 const foxycapePdfViewer = resolve(packageDir, 'src/reader/foxycapePdfViewer.ts')
 const pdfViewerPath = resolve(corePdfjsDir, 'legacy/web/pdf_viewer.mjs').replace(
   /\\/g,
@@ -78,6 +81,7 @@ export default {
     copySignerAssetsPlugin(outDir, signerSrcFile),
     assertNoHostPdfjsGlobalsPlugin(mainJsPath),
     assertNoDynamicScriptElementsPlugin(mainJsPath),
+    copyToVaultPlugin(outDir, vaultPluginDir),
   ],
   css: {
     preprocessorOptions: {

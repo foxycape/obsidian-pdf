@@ -14,3 +14,9 @@ packages/
 
 # core is maintained at ../core, not as a vendored checkout
 vendor/core/
+
+# Local vault path (see .env.example)
+.env
+.env.local
+.env.*.local
+

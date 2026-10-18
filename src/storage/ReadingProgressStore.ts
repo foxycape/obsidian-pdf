@@ -2,6 +2,7 @@ import type { Table } from 'dexie'
 import type { Progress } from '@foxycape/core/kernal'
 import type { IReadingProgressStore } from './IReadingProgressStore'
 import { ANONYMOUS_OWNER_ID } from './ownerId'
+import { toStorageValue } from './toStorageValue'
 
 export type ReadingProgressRow = Progress & { ownerId: string; simpleId: string }
 
@@ -34,11 +35,13 @@ export class ReadingProgressStore implements IReadingProgressStore {
     if (!table || !id || !progress) {
       return
     }
-    await table.put({
-      ...progress,
-      ownerId: ANONYMOUS_OWNER_ID,
-      simpleId: id,
-    })
+    await table.put(
+      toStorageValue({
+        ...progress,
+        ownerId: ANONYMOUS_OWNER_ID,
+        simpleId: id,
+      }),
+    )
   }
 
   delete = async (simpleId: string): Promise<void> => {

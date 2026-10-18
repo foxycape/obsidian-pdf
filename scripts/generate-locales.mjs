@@ -36,6 +36,8 @@ const buildLocale = (code) => {
       locale[key] = FIXED_ENTRIES[key]
     } else if (key in strings) {
       locale[key] = strings[key]
+    } else if (key in allTranslations.en) {
+      locale[key] = allTranslations.en[key]
     } else {
       throw new Error(`Missing key "${key}" for language "${code}"`)
     }

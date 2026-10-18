@@ -1,4 +1,5 @@
 import '@/styles/pdf-view.css'
+import '@/styles/pdf-ai-chrome.css'
 
 // Foxycape pdf_viewer + pdf.mjs use private globals (__foxycapePdfjs*).
 // Worker: pluginDir/pdfjs/pdf.worker.min.mjs → Blob URL at open time

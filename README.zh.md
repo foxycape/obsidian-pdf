@@ -118,13 +118,13 @@ PDF 排版常把句子拦腰截断，复制后满是多余换行。照常选中�
 ```bash
 npm install
 npm run build      # → dist/main.js、styles.css、manifest.json + foxycape-pdf-assets.zip
-npm run dev        # 监听构建（会把 pdfjs/static sidecar 拷到 dist/）
+npm run dev        # 监听构建；若设置了 OBSIDIAN_PLUGIN_DIR，成功后拷到该插件目录
 npm test
 npm run typecheck
 npm run link       # 将 dist/ junction 到 vault 的 .obsidian/plugins/foxycape-pdf
 ```
 
-可用环境变量 `OBSIDIAN_PLUGIN_DIR` 覆盖 `npm run link` 的目标路径。
+在 `.env` 中设置 `OBSIDIAN_PLUGIN_DIR`（见 `.env.example`）后，`npm run dev` 会在每次构建成功时把产物拷到该目录；`npm run link` 也读取同一变量，未设置时仍使用默认 vault 路径。进程环境变量优先于文件。
 
 社区安装只会拿到 Obsidian 标准三文件。Worker 与 signer 在首次加载时从 `main.js` 解压（无需下载）。字符映射与标准字体（约 1.5 MB）在缺失时从 `foxycape-pdf-assets.zip` 静默下载，按 **PDF.js 版本** 识别，因此日常插件升级不会再次拉取。本地 `npm run link` 已带 sidecar，无需下载。
 

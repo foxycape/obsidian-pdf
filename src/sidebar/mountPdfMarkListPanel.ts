@@ -1,11 +1,15 @@
 import { createApp, h, markRaw, shallowReactive, type App } from 'vue'
 import type { Reader } from '@foxycape/core/kernal'
 import type { IMarker } from '@/mark'
+import type { DexieStorage } from '@/storage/DexieStorage'
 import { injectToolbarIcons } from '@/chrome/mark/injectToolbarIcons'
 import PdfMarkListPanel from './PdfMarkListPanel.vue'
 
+export type MarksTabId = 'highlights' | 'translates' | 'explains' | 'lookups'
+
 export type PdfMarkListPanelMount = {
   setOpen: (open: boolean) => void
+  openTab: (tab: MarksTabId) => void
   updateSession: (reader: Reader, getMarker: () => IMarker | undefined) => void
   dispose: () => void
 }
@@ -14,6 +18,8 @@ type PanelState = {
   reader: Reader
   getMarker: () => IMarker | undefined
   open: boolean
+  requestedTab: MarksTabId
+  tabNonce: number
   t: (key: string, fallback: string, vars?: Record<string, string | number>) => string
   onClose: () => void
 }
@@ -21,6 +27,7 @@ type PanelState = {
 export const mountPdfMarkListPanel = (options: {
   hostEl: HTMLElement
   reader: Reader
+  storage: DexieStorage
   getMarker: () => IMarker | undefined
   open: boolean
   t: (key: string, fallback: string, vars?: Record<string, string | number>) => string
@@ -32,6 +39,8 @@ export const mountPdfMarkListPanel = (options: {
     reader: markRaw(options.reader),
     getMarker: options.getMarker,
     open: options.open,
+    requestedTab: 'highlights' as MarksTabId,
+    tabNonce: 0,
     t: options.t,
     onClose: options.onClose,
   })
@@ -40,8 +49,11 @@ export const mountPdfMarkListPanel = (options: {
     setup: () => () =>
       h(PdfMarkListPanel, {
         reader: state.reader,
+        storage: options.storage,
         getMarker: state.getMarker,
         open: state.open,
+        requestedTab: state.requestedTab,
+        tabNonce: state.tabNonce,
         t: state.t,
         onClose: state.onClose,
       }),
@@ -51,6 +63,11 @@ export const mountPdfMarkListPanel = (options: {
   return {
     setOpen: (open: boolean) => {
       state.open = open
+    },
+    openTab: (tab: MarksTabId) => {
+      state.requestedTab = tab
+      state.tabNonce += 1
+      state.open = true
     },
     updateSession: (reader: Reader, getMarker: () => IMarker | undefined) => {
       state.reader = markRaw(reader)

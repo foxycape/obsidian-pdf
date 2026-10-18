@@ -2,12 +2,13 @@ import { existsSync, lstatSync, readlinkSync, renameSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
+import { readObsidianPluginDir } from './readObsidianPluginDir.mjs'
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const distPath = resolve(repoRoot, 'dist')
 const pluginId = 'foxycape-pdf'
 const vaultPluginPath = resolve(
-  process.env.OBSIDIAN_PLUGIN_DIR ??
+  readObsidianPluginDir(repoRoot) ||
     `E:\\obsidian\\foxycape-pdf-vault\\.obsidian\\plugins\\${pluginId}`,
 )
 

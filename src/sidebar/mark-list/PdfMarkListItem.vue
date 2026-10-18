@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { getLanguage } from 'obsidian'
 import { cutString } from '@foxycape/core/kernal/common/text'
-import { getFriendlyDate } from '@foxycape/core/kernal/common/date'
 import type { IMarker, Mark } from '@/mark'
 import { DEFAULT_MARK_COLORS } from '@/marker/PdfMarkConstants'
 import { getMarkListTextStyle } from '@/marker/PdfMarkStyles'
 import ClickableIconButton from '@/ui/ClickableIconButton.vue'
+import { formatDisplayDate } from './formatDisplayDate'
 
 /** Preview: hide type icon while testing text styles. */
 const showMarkTypeIcon = false
 
 const props = defineProps<{
   mark: Mark
+  hideDivider?: boolean
   getMarker: () => IMarker | undefined
   t: (key: string, fallback: string, vars?: Record<string, string | number>) => string
 }>()
@@ -33,12 +35,13 @@ const textStyle = computed(() => {
   return getMarkListTextStyle(styleName, color)
 })
 
-const friendlyDate = computed(() => {
-  const lang = document.documentElement.lang?.toLowerCase().startsWith('zh')
-    ? 'zh-cn'
-    : 'en'
-  return getFriendlyDate(new Date(props.mark.updatedAt), lang)
-})
+const displayDate = computed(() =>
+  formatDisplayDate(props.mark.updatedAt, {
+    locale: getLanguage() || 'en',
+    todayLabel: props.t('pdf_date_today', 'Today'),
+    yesterdayLabel: props.t('pdf_date_yesterday', 'Yesterday'),
+  }),
+)
 
 const pageLabel = computed(() => {
   const page = props.mark.pageNumber
@@ -60,7 +63,7 @@ const deleteMark = async () => {
 </script>
 
 <template>
-  <div class="foxycape-pdf-mark-item">
+  <div class="foxycape-pdf-mark-item" :class="{ 'is-last': hideDivider }">
     <button
       type="button"
       class="foxycape-pdf-mark-item__text"
@@ -80,8 +83,8 @@ const deleteMark = async () => {
           aria-hidden="true"
         />
         <span v-if="pageLabel">{{ pageLabel }}</span>
-        <span v-if="pageLabel && friendlyDate" class="foxycape-pdf-mark-item__dot">·</span>
-        <span v-if="friendlyDate">{{ friendlyDate }}</span>
+        <span v-if="pageLabel && displayDate.label" class="foxycape-pdf-mark-item__dot">·</span>
+        <span v-if="displayDate.label" :title="displayDate.title">{{ displayDate.label }}</span>
       </div>
       <ClickableIconButton
         icon="trash-2"
@@ -95,12 +98,22 @@ const deleteMark = async () => {
 
 <style scoped>
 .foxycape-pdf-mark-item {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 6px;
   padding-block: 10px;
   padding-inline: 12px;
-  /* border-bottom: 1px solid var(--background-modifier-border); */
+}
+
+.foxycape-pdf-mark-item:not(.is-last)::after {
+  content: '';
+  position: absolute;
+  inset-inline: 12px;
+  bottom: 0;
+  height: 1px;
+  background: var(--background-modifier-border);
+  pointer-events: none;
 }
 
 .foxycape-pdf-mark-item__text {

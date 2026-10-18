@@ -7,8 +7,11 @@ import {
   type IMarker,
   type Mark,
   type MarkStyleName,
+  getFixedContentRange,
 } from '@/mark'
 import { DEFAULT_MARK_COLORS } from '@/marker/PdfMarkConstants'
+import { resolvePdfNavMeta } from '@/marker/pdfNavMeta'
+import { getPdfRenderer } from '@/chrome/usePdfRenderer'
 import {
   buildPdfDeepLinkFragment,
   escapeMarkdownText,
@@ -21,6 +24,7 @@ import { PdfSelection } from '@foxycape/core/mediaTypes/pdf/shared/selection/Pdf
 import type { IPdfSelection } from '@foxycape/core/mediaTypes/pdf/shared/selection/IPdfSelection'
 import type { App, TFile } from 'obsidian'
 import { nextTick, onBeforeUnmount, reactive, ref, type Ref } from 'vue'
+import { useHistoryLayer } from '@/history/useHistoryLayer'
 import {
   ALL_MARK_COLORS,
   buildQuickColorList,
@@ -38,6 +42,8 @@ export type PdfMarkToolbarLinkSource = {
   sourceUrl?: string
 }
 
+export type PdfMarkToolbarPanelMode = 'toolbar' | 'colors' | 'translate' | 'explain' | 'lookup' | 'settings'
+
 export type PdfMarkToolbarState = {
   visible: boolean
   left: number
@@ -52,6 +58,7 @@ export type PdfMarkToolbarState = {
   showColorPalette: boolean
   /** Hover menu under the copy chevron */
   showCopyMenu: boolean
+  panelMode: PdfMarkToolbarPanelMode
 }
 
 export const usePdfMarkToolbar = (options: {
@@ -73,6 +80,7 @@ export const usePdfMarkToolbar = (options: {
     colors: [...PREDEFINE_MARK_COLORS].slice(0, QUICK_MARK_COLOR_COUNT),
     showColorPalette: false,
     showCopyMenu: false,
+    panelMode: 'toolbar',
   })
 
   const toolbarEl = ref<HTMLElement | null>(null)
@@ -190,6 +198,7 @@ export const usePdfMarkToolbar = (options: {
 
   const hide = (clearSelection = false) => {
     state.visible = false
+    state.panelMode = 'toolbar'
     state.markId = ''
     state.showColorPalette = false
     state.showCopyMenu = false
@@ -201,6 +210,29 @@ export const usePdfMarkToolbar = (options: {
       getOwnerDocument()?.getSelection()?.removeAllRanges()
     }
   }
+
+  const reposition = () => {
+    const range = activeRange
+    if (!range || !state.visible) {
+      return
+    }
+    const rect = range.getBoundingClientRect()
+    if (rect.width || rect.height) {
+      positionNearRect(rect)
+    }
+  }
+
+  useHistoryLayer(
+    () => state.visible,
+    () => hide(),
+  )
+  useHistoryLayer(
+    () => state.visible && state.panelMode !== 'toolbar',
+    () => {
+      state.panelMode = 'toolbar'
+      void nextTick(() => reposition())
+    },
+  )
 
   const positionNearRect = (rect: DOMRect) => {
     const toolbarWidth = toolbarEl.value?.offsetWidth || 280
@@ -223,6 +255,7 @@ export const usePdfMarkToolbar = (options: {
       activeRange = range
     }
     state.markId = ''
+    state.panelMode = 'toolbar'
     state.activeStyle = lastStyle
     state.showColorPalette = false
     state.showCopyMenu = false
@@ -563,6 +596,61 @@ export const usePdfMarkToolbar = (options: {
     return { text: (text || '').trim(), range }
   }
 
+  const resolvePassage = async (): Promise<{
+    markId: string
+    text: string
+    pageNumber?: number
+    simpleId: string
+    navUrl?: string
+    navTitle?: string
+    contentRange?: ReturnType<typeof getFixedContentRange>
+  } | null> => {
+    const { text, range } = await getSelectionText()
+    if (!text) {
+      return null
+    }
+    const marker = getMarker()
+    const simpleId = options.reader.context?.id ?? ''
+    if (state.markId) {
+      const mark = await marker?.getMark(state.markId)
+      const pageNumber = mark?.pageNumber
+      let navUrl = mark?.navUrl
+      let navTitle = mark?.navTitle
+      if (!navTitle && !navUrl && pageNumber) {
+        const nav = await resolvePdfNavMeta(getPdfRenderer(options.reader), pageNumber)
+        navUrl = nav?.navUrl
+        navTitle = nav?.navTitle
+      }
+      return {
+        markId: state.markId,
+        text: (mark?.text || text).trim(),
+        pageNumber,
+        simpleId: mark?.simpleId || simpleId,
+        navUrl,
+        navTitle,
+        contentRange: mark ? getFixedContentRange(mark) : range ? marker?.captureFixedRange(range) : undefined,
+      }
+    }
+    if (!range || !marker) {
+      return null
+    }
+    const markId = await marker.resolveSelectionMarkId(range, text)
+    if (!markId) {
+      return null
+    }
+    const pageNumber = getRangePageNumber(range)
+    const nav = await resolvePdfNavMeta(getPdfRenderer(options.reader), pageNumber)
+    return {
+      markId,
+      text,
+      pageNumber,
+      simpleId,
+      navUrl: nav?.navUrl,
+      navTitle: nav?.navTitle,
+      contentRange: marker.captureFixedRange(range),
+    }
+  }
+
   const writeClipboard = async (text: string): Promise<boolean> => {
     if (!text) {
       return false
@@ -789,6 +877,7 @@ export const usePdfMarkToolbar = (options: {
     state,
     toolbarEl,
     hide,
+    reposition,
     drawline,
     removeMark,
     setColor,
@@ -810,7 +899,11 @@ export const usePdfMarkToolbar = (options: {
       moreColors: () => options.t('share_more_colors', 'More colors'),
       more: () => options.t('share_more', 'More'),
       ai: () => options.t('toolbar_ai', 'AI'),
+      translate: () => options.t('toolbar_translate', 'Translate'),
+      explain: () => options.t('toolbar_explain', 'Explain'),
+      lookup: () => options.t('toolbar_lookup', 'Look up'),
     },
+    resolvePassage,
     copyText,
     copyTextReference,
     openCopyMenu,

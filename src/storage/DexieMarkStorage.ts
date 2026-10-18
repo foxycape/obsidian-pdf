@@ -2,6 +2,7 @@ import Dexie, { type Table } from 'dexie'
 import type { Mark } from '@/mark/Mark'
 import type { IMarkStorage } from './IMarkStorage'
 import { formatOwnerId } from './ownerId'
+import { toStorageValue } from './toStorageValue'
 
 export type MarkRow = Mark & { ownerId: string; url: string }
 
@@ -36,13 +37,15 @@ export class DexieMarkStorage implements IMarkStorage {
     if (!table || !id || !simpleId) {
       return
     }
-    await table.put({
-      ...mark,
-      ownerId: formatOwnerId(ownerId),
-      markId: id,
-      simpleId,
-      url: this.formatUrl(mark.url),
-    })
+    await table.put(
+      toStorageValue({
+        ...mark,
+        ownerId: formatOwnerId(ownerId),
+        markId: id,
+        simpleId,
+        url: this.formatUrl(mark.url),
+      }),
+    )
   }
 
   delete = async (ownerId: string, markId: string): Promise<void> => {

@@ -115,6 +115,18 @@ const toggleHighlightNotes = async () => {
   })
 }
 
+const toggleExplainNotes = async () => {
+  await applyPatch({
+    writeExplainToMarkdown: !prefs.value.writeExplainToMarkdown,
+  })
+}
+
+const toggleLookupNotes = async () => {
+  await applyPatch({
+    writeLookupToMarkdown: !prefs.value.writeLookupToMarkdown,
+  })
+}
+
 const toggleThemeRemap = async () => {
   await applyPatch({
     enablePdfThemeColorRemap: !prefs.value.enablePdfThemeColorRemap,
@@ -379,6 +391,56 @@ watch(
                   @click="toggleHighlightNotes"
                   @keydown.enter.prevent="toggleHighlightNotes"
                   @keydown.space.prevent="toggleHighlightNotes"
+                />
+              </div>
+              <div class="foxycape-pdf-settings__row">
+                <div class="foxycape-pdf-settings__text">
+                  <div class="foxycape-pdf-settings__name">
+                    {{ t('pdf_chrome_settings_explain_notes_name', 'Write explanations into the note') }}
+                  </div>
+                  <div class="foxycape-pdf-settings__desc">
+                    {{
+                      t(
+                        'pdf_chrome_settings_explain_notes_desc',
+                        'When enabled, “explain this passage” results are appended to the same Markdown note as this PDF. Off by default.',
+                      )
+                    }}
+                  </div>
+                </div>
+                <div
+                  class="checkbox-container"
+                  :class="{ 'is-enabled': prefs.writeExplainToMarkdown }"
+                  role="switch"
+                  :aria-checked="prefs.writeExplainToMarkdown"
+                  tabindex="0"
+                  @click="toggleExplainNotes"
+                  @keydown.enter.prevent="toggleExplainNotes"
+                  @keydown.space.prevent="toggleExplainNotes"
+                />
+              </div>
+              <div class="foxycape-pdf-settings__row">
+                <div class="foxycape-pdf-settings__text">
+                  <div class="foxycape-pdf-settings__name">
+                    {{ t('pdf_chrome_settings_lookup_notes_name', 'Write lookups into the note') }}
+                  </div>
+                  <div class="foxycape-pdf-settings__desc">
+                    {{
+                      t(
+                        'pdf_chrome_settings_lookup_notes_desc',
+                        'When enabled, word-lookup results are appended to the same Markdown note as this PDF. Off by default.',
+                      )
+                    }}
+                  </div>
+                </div>
+                <div
+                  class="checkbox-container"
+                  :class="{ 'is-enabled': prefs.writeLookupToMarkdown }"
+                  role="switch"
+                  :aria-checked="prefs.writeLookupToMarkdown"
+                  tabindex="0"
+                  @click="toggleLookupNotes"
+                  @keydown.enter.prevent="toggleLookupNotes"
+                  @keydown.space.prevent="toggleLookupNotes"
                 />
               </div>
             </div>

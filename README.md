@@ -118,13 +118,13 @@ For the smoothest experience—deep links, highlights, and theme-aware pages—t
 ```bash
 npm install
 npm run build      # → dist/main.js, styles.css, manifest.json + foxycape-pdf-assets.zip
-npm run dev        # watch build (copies pdfjs/static sidecars into dist/)
+npm run dev        # watch build; copies into OBSIDIAN_PLUGIN_DIR after each success
 npm test
 npm run typecheck
 npm run link       # junction dist/ into your vault's .obsidian/plugins/foxycape-pdf
 ```
 
-Set `OBSIDIAN_PLUGIN_DIR` to override the vault plugin path used by `npm run link`.
+Set `OBSIDIAN_PLUGIN_DIR` in `.env` (see `.env.example`). `npm run dev` copies the build there after each successful watch rebuild; `npm run link` reads the same variable and still falls back to the default vault path when it is unset. A process environment variable wins over the file.
 
 Community installs only receive the three Obsidian files. Worker and signer are unpacked from `main.js` on first load (no download). Cmaps and standard fonts (~1.5 MB) download silently from `foxycape-pdf-assets.zip` when missing — keyed by **PDF.js version**, so routine plugin upgrades skip the fetch. Local `npm run link` already has those sidecars under `dist/`, so no download is needed.
 

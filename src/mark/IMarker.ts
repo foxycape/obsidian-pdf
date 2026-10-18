@@ -1,3 +1,4 @@
+import type { FixedContentRange } from "@foxycape/core/kernal/ContentRange";
 import type { IDisposable } from "@foxycape/core/kernal/IDisposable";
 import type { Mark } from "./Mark";
 import type {
@@ -34,7 +35,25 @@ export interface IMarker extends IDisposable {
 
     goto(mark: Mark): Promise<void>;
 
+    /** Geometry for a live selection, without creating a mark. */
+    captureFixedRange(range: Range): FixedContentRange | undefined;
+
+    /**
+     * Jump to a stored selection and flash a temporary highlight.
+     * Returns false when the geometry cannot be painted.
+     */
+    flashFixedRange(contentRange: FixedContentRange): Promise<boolean>;
+
+    /** Fill missing chapter titles from the PDF outline and persist them. */
+    ensureNavMeta(marks: Mark[]): Promise<Mark[]>;
+
     findMark(target: FindMarkTarget): Promise<{ id: string; type: MarkType } | undefined>;
 
     getDefaultColor(markType: MarkType, styleName?: string): string | undefined;
+
+    /**
+     * markId for this selection. Same range and text always return the same id,
+     * whether the caller is highlighting, translating, explaining, or looking up.
+     */
+    resolveSelectionMarkId(range: Range | null, text: string): Promise<string | undefined>;
 }
