@@ -37,7 +37,7 @@
   "plugin_settings_license_name": "Kunci lisensi",
   "plugin_settings_license_placeholder": "Masukkan kunci lisensi Anda",
   "plugin_settings_license_hint": "Hanya menautkan pemakaian AI Anda. Masukkan di perangkat lain — tanpa login.",
-  "plugin_settings_license_purchase": "Beli lisensi",
+  "plugin_settings_license_purchase": "Dapatkan lisensi",
   "plugin_settings_license_unbind": "Lepas tautan",
   "plugin_settings_license_unbind_confirm_title": "Lepas tautan lisensi",
   "plugin_settings_license_unbind_confirm_message": "Lepas tautan lisensi ini dari perangkat ini? Kunci dapat dimasukkan lagi nanti.",
@@ -277,5 +277,8 @@
   "pdf_chrome_settings_translate_notes_name": "Tulis terjemahan ke catatan",
   "pdf_chrome_settings_translate_notes_desc": "Jika diaktifkan, hasil terjemahan ditambahkan ke catatan Markdown yang sama dengan PDF ini.",
   "share_copy_success_tip": "Disalin ke papan klip",
-  "share_copy_reference_unavailable": "Tidak dapat membuat referensi teks"
+  "share_copy_reference_unavailable": "Tidak dapat membuat referensi teks",
+  "plugin_settings_ai_usage_heading": "Penggunaan AI",
+  "plugin_settings_ai_usage_day": "{date} · {tokens}",
+  "plugin_settings_ai_usage_official_hint": "Hanya pemakaian model resmi yang dihitung. Kunci API milikmu tidak termasuk."
 }

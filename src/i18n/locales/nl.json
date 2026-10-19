@@ -37,7 +37,7 @@
   "plugin_settings_license_name": "Licentiesleutel",
   "plugin_settings_license_placeholder": "Voer je licentiesleutel in",
   "plugin_settings_license_hint": "Koppelt alleen je AI-gebruik. Voer hem in op een ander apparaat — geen login.",
-  "plugin_settings_license_purchase": "Licentie kopen",
+  "plugin_settings_license_purchase": "Licentie ophalen",
   "plugin_settings_license_unbind": "Ontkoppelen",
   "plugin_settings_license_unbind_confirm_title": "Licentie ontkoppelen",
   "plugin_settings_license_unbind_confirm_message": "Deze licentie van dit apparaat ontkoppelen? Je kunt de sleutel later opnieuw invoeren.",
@@ -277,5 +277,8 @@
   "pdf_chrome_settings_translate_notes_name": "Vertalingen in de notitie schrijven",
   "pdf_chrome_settings_translate_notes_desc": "Als dit aanstaat, worden vertalingen toegevoegd aan dezelfde Markdown-notitie als deze PDF.",
   "share_copy_success_tip": "Gekopieerd naar klembord",
-  "share_copy_reference_unavailable": "Kan geen tekstverwijzing maken"
+  "share_copy_reference_unavailable": "Kan geen tekstverwijzing maken",
+  "plugin_settings_ai_usage_heading": "AI-gebruik",
+  "plugin_settings_ai_usage_day": "{date} · {tokens}",
+  "plugin_settings_ai_usage_official_hint": "Alleen gebruik van het officiële model telt. Je eigen API-sleutel hoort er niet bij."
 }

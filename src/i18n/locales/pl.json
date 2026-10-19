@@ -37,7 +37,7 @@
   "plugin_settings_license_name": "Klucz licencyjny",
   "plugin_settings_license_placeholder": "Wprowadź klucz licencyjny",
   "plugin_settings_license_hint": "Łączy tylko zużycie AI. Wpisz na innym urządzeniu — bez logowania.",
-  "plugin_settings_license_purchase": "Kup licencję",
+  "plugin_settings_license_purchase": "Pobierz licencję",
   "plugin_settings_license_unbind": "Odłącz",
   "plugin_settings_license_unbind_confirm_title": "Odłącz licencję",
   "plugin_settings_license_unbind_confirm_message": "Odłączyć tę licencję od tego urządzenia? Klucz będzie można wpisać ponownie później.",
@@ -277,5 +277,8 @@
   "pdf_chrome_settings_translate_notes_name": "Zapisuj tłumaczenia w notatce",
   "pdf_chrome_settings_translate_notes_desc": "Po włączeniu tłumaczenia są dopisywane do tej samej notatki Markdown co ten PDF.",
   "share_copy_success_tip": "Skopiowano do schowka",
-  "share_copy_reference_unavailable": "Nie można utworzyć odwołania do tekstu"
+  "share_copy_reference_unavailable": "Nie można utworzyć odwołania do tekstu",
+  "plugin_settings_ai_usage_heading": "Użycie AI",
+  "plugin_settings_ai_usage_day": "{date} · {tokens}",
+  "plugin_settings_ai_usage_official_hint": "Liczone jest tylko użycie oficjalnego modelu. Twój klucz API nie wchodzi."
 }

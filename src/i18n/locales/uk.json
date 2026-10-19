@@ -37,7 +37,7 @@
   "plugin_settings_license_name": "Ліцензійний ключ",
   "plugin_settings_license_placeholder": "Введіть ліцензійний ключ",
   "plugin_settings_license_hint": "Лише пов’язує ваш ШІ-трафік. Введіть на іншому пристрої — без входу.",
-  "plugin_settings_license_purchase": "Купити ліцензію",
+  "plugin_settings_license_purchase": "Отримати ліцензію",
   "plugin_settings_license_unbind": "Відв’язати",
   "plugin_settings_license_unbind_confirm_title": "Відв’язати ліцензію",
   "plugin_settings_license_unbind_confirm_message": "Відв’язати цю ліцензію від цього пристрою? Ключ можна буде ввести знову пізніше.",
@@ -277,5 +277,8 @@
   "pdf_chrome_settings_translate_notes_name": "Записувати переклади в нотатку",
   "pdf_chrome_settings_translate_notes_desc": "Якщо ввімкнено, переклади додаються до тієї самої нотатки Markdown, що й цей PDF.",
   "share_copy_success_tip": "Скопійовано в буфер обміну",
-  "share_copy_reference_unavailable": "Не вдалося створити посилання на текст"
+  "share_copy_reference_unavailable": "Не вдалося створити посилання на текст",
+  "plugin_settings_ai_usage_heading": "Використання ШІ",
+  "plugin_settings_ai_usage_day": "{date} · {tokens}",
+  "plugin_settings_ai_usage_official_hint": "Рахується лише офіційна модель. Ваш ключ API не входить."
 }

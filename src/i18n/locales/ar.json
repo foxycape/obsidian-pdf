@@ -37,7 +37,7 @@
   "plugin_settings_license_name": "مفتاح الترخيص",
   "plugin_settings_license_placeholder": "أدخل مفتاح الترخيص",
   "plugin_settings_license_hint": "يربط فقط باقة استخدام الذكاء الاصطناعي. أدخله على جهاز آخر دون تسجيل الدخول.",
-  "plugin_settings_license_purchase": "شراء ترخيص",
+  "plugin_settings_license_purchase": "الحصول على ترخيص",
   "plugin_settings_license_unbind": "إلغاء الربط",
   "plugin_settings_license_unbind_confirm_title": "إلغاء ربط الترخيص",
   "plugin_settings_license_unbind_confirm_message": "إلغاء ربط هذا الترخيص بهذا الجهاز؟ يمكنك إدخال المفتاح مرة أخرى لاحقًا.",
@@ -277,5 +277,8 @@
   "pdf_chrome_settings_translate_notes_name": "كتابة الترجمات في الملاحظة",
   "pdf_chrome_settings_translate_notes_desc": "عند التفعيل، تُضاف الترجمات إلى ملاحظة Markdown نفسها الخاصة بملف PDF هذا.",
   "share_copy_success_tip": "تم النسخ إلى الحافظة",
-  "share_copy_reference_unavailable": "تعذر إنشاء مرجع النص"
+  "share_copy_reference_unavailable": "تعذر إنشاء مرجع النص",
+  "plugin_settings_ai_usage_heading": "استخدام الذكاء الاصطناعي",
+  "plugin_settings_ai_usage_day": "{date} · {tokens}",
+  "plugin_settings_ai_usage_official_hint": "يُحتسب استخدام النموذج الرسمي فقط. مفتاح API الخاص بك غير مضمَّن."
 }

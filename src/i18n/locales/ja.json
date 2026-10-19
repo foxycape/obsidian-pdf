@@ -37,7 +37,7 @@
   "plugin_settings_license_name": "ライセンスキー",
   "plugin_settings_license_placeholder": "ライセンスキーを入力",
   "plugin_settings_license_hint": "AI利用量の紐付け専用です。他の端末では入力するだけで使えます。ログイン不要。",
-  "plugin_settings_license_purchase": "ライセンスを購入",
+  "plugin_settings_license_purchase": "ライセンスを取得",
   "plugin_settings_license_unbind": "紐付け解除",
   "plugin_settings_license_unbind_confirm_title": "ライセンスの紐付け解除",
   "plugin_settings_license_unbind_confirm_message": "このライセンスをこの端末から解除しますか？あとからキーを再入力できます。",
@@ -277,5 +277,8 @@
   "pdf_chrome_settings_translate_notes_name": "翻訳をノートに書き込む",
   "pdf_chrome_settings_translate_notes_desc": "有効にすると、翻訳結果がこの PDF と同じ Markdown ノートに追加されます。",
   "share_copy_success_tip": "クリップボードにコピーしました",
-  "share_copy_reference_unavailable": "テキスト参照を作成できません"
+  "share_copy_reference_unavailable": "テキスト参照を作成できません",
+  "plugin_settings_ai_usage_heading": "AI 利用量",
+  "plugin_settings_ai_usage_day": "{date} · {tokens}",
+  "plugin_settings_ai_usage_official_hint": "公式モデルの利用だけを集計します。自分のAPI Keyは含まれません。"
 }

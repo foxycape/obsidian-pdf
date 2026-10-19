@@ -37,7 +37,7 @@
   "plugin_settings_license_name": "Lisans anahtarı",
   "plugin_settings_license_placeholder": "Lisans anahtarınızı girin",
   "plugin_settings_license_hint": "Yalnızca AI kullanımınızı bağlar. Başka bir cihazda girin — oturum gerekmez.",
-  "plugin_settings_license_purchase": "Lisans satın al",
+  "plugin_settings_license_purchase": "Lisans al",
   "plugin_settings_license_unbind": "Bağlantıyı kaldır",
   "plugin_settings_license_unbind_confirm_title": "Lisans bağlantısını kaldır",
   "plugin_settings_license_unbind_confirm_message": "Bu lisans bu cihazdan ayrılsın mı? Anahtarı daha sonra yeniden girebilirsiniz.",
@@ -277,5 +277,8 @@
   "pdf_chrome_settings_translate_notes_name": "Çevirileri nota yaz",
   "pdf_chrome_settings_translate_notes_desc": "Açıkken, çeviriler bu PDF ile aynı Markdown notuna eklenir.",
   "share_copy_success_tip": "Panoya kopyalandı",
-  "share_copy_reference_unavailable": "Metin referansı oluşturulamadı"
+  "share_copy_reference_unavailable": "Metin referansı oluşturulamadı",
+  "plugin_settings_ai_usage_heading": "Yapay zeka kullanımı",
+  "plugin_settings_ai_usage_day": "{date} · {tokens}",
+  "plugin_settings_ai_usage_official_hint": "Yalnızca resmi model kullanımı sayılır. Kendi API anahtarın dahil değildir."
 }

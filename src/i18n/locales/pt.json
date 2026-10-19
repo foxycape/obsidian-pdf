@@ -37,7 +37,7 @@
   "plugin_settings_license_name": "Chave de licença",
   "plugin_settings_license_placeholder": "Introduza a sua chave de licença",
   "plugin_settings_license_hint": "Liga apenas o seu uso de IA. Introduza noutro dispositivo — sem iniciar sessão.",
-  "plugin_settings_license_purchase": "Comprar licença",
+  "plugin_settings_license_purchase": "Obter licença",
   "plugin_settings_license_unbind": "Desassociar",
   "plugin_settings_license_unbind_confirm_title": "Desassociar licença",
   "plugin_settings_license_unbind_confirm_message": "Desassociar esta licença deste dispositivo? Pode introduzir a chave novamente mais tarde.",
@@ -277,5 +277,8 @@
   "pdf_chrome_settings_translate_notes_name": "Escrever traduções na nota",
   "pdf_chrome_settings_translate_notes_desc": "Quando ativado, as traduções são acrescentadas à mesma nota Markdown deste PDF.",
   "share_copy_success_tip": "Copiado para a área de transferência",
-  "share_copy_reference_unavailable": "Não foi possível criar a referência de texto"
+  "share_copy_reference_unavailable": "Não foi possível criar a referência de texto",
+  "plugin_settings_ai_usage_heading": "Utilização de IA",
+  "plugin_settings_ai_usage_day": "{date} · {tokens}",
+  "plugin_settings_ai_usage_official_hint": "Só conta a utilização do modelo oficial. A tua própria chave de API não é incluída."
 }

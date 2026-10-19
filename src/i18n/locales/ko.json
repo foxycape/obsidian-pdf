@@ -37,7 +37,7 @@
   "plugin_settings_license_name": "라이선스 키",
   "plugin_settings_license_placeholder": "라이선스 키를 입력하세요",
   "plugin_settings_license_hint": "AI 사용량만 연결합니다. 다른 기기에서는 입력만 하면 됩니다. 로그인 불필요.",
-  "plugin_settings_license_purchase": "라이선스 구매",
+  "plugin_settings_license_purchase": "라이선스 받기",
   "plugin_settings_license_unbind": "연결 해제",
   "plugin_settings_license_unbind_confirm_title": "라이선스 연결 해제",
   "plugin_settings_license_unbind_confirm_message": "이 라이선스를 이 기기에서 해제할까요? 키는 나중에 다시 입력할 수 있습니다.",
@@ -277,5 +277,8 @@
   "pdf_chrome_settings_translate_notes_name": "번역을 노트에 기록",
   "pdf_chrome_settings_translate_notes_desc": "켜면 번역 결과가 이 PDF와 같은 Markdown 노트에 추가됩니다.",
   "share_copy_success_tip": "클립보드에 복사됨",
-  "share_copy_reference_unavailable": "텍스트 참조를 만들 수 없음"
+  "share_copy_reference_unavailable": "텍스트 참조를 만들 수 없음",
+  "plugin_settings_ai_usage_heading": "AI 사용량",
+  "plugin_settings_ai_usage_day": "{date} · {tokens}",
+  "plugin_settings_ai_usage_official_hint": "공식 모델 사용만 집계합니다. 직접 쓰는 API Key는 포함되지 않습니다."
 }

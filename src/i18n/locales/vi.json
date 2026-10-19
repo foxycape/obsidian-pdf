@@ -37,7 +37,7 @@
   "plugin_settings_license_name": "Khóa giấy phép",
   "plugin_settings_license_placeholder": "Nhập khóa giấy phép của bạn",
   "plugin_settings_license_hint": "Chỉ liên kết gói lưu lượng AI. Nhập trên thiết bị khác để dùng, không cần đăng nhập.",
-  "plugin_settings_license_purchase": "Mua giấy phép",
+  "plugin_settings_license_purchase": "Nhận giấy phép",
   "plugin_settings_license_unbind": "Hủy liên kết",
   "plugin_settings_license_unbind_confirm_title": "Hủy liên kết giấy phép",
   "plugin_settings_license_unbind_confirm_message": "Hủy liên kết giấy phép này khỏi thiết bị này? Bạn có thể nhập lại khóa sau.",
@@ -277,5 +277,8 @@
   "pdf_chrome_settings_translate_notes_name": "Ghi bản dịch vào ghi chú",
   "pdf_chrome_settings_translate_notes_desc": "Khi bật, bản dịch được thêm vào cùng tệp Markdown với PDF này.",
   "share_copy_success_tip": "Đã sao chép vào bộ nhớ tạm",
-  "share_copy_reference_unavailable": "Không thể tạo tham chiếu văn bản"
+  "share_copy_reference_unavailable": "Không thể tạo tham chiếu văn bản",
+  "plugin_settings_ai_usage_heading": "Mức dùng AI",
+  "plugin_settings_ai_usage_day": "{date} · {tokens}",
+  "plugin_settings_ai_usage_official_hint": "Chỉ tính mức dùng mô hình chính thức. Khóa API của bạn không được tính."
 }

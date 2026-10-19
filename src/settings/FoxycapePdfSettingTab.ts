@@ -18,8 +18,60 @@ import {
 import type { FoxycapePdfPlugin } from '@/plugin/FoxycapePdfPlugin'
 import { showConfirmModal } from '@/ui/ConfirmModal'
 
+const formatUsageDuration = (date: Date): string => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}${month}${day}`
+}
+
+type UsageBar = {
+  duration: string
+  total: number
+}
+
+const usageTotal = (point: AiUsagePoint) =>
+  point.inputTokenCount + point.outputTokenCount + point.cacheTokenCount
+
+/** One bar per day. Rows that share a date are added together. */
+const toUsageBars = (points: AiUsagePoint[]): UsageBar[] => {
+  const order: string[] = []
+  const totals = new Map<string, number>()
+  for (const point of points) {
+    const current = totals.get(point.duration)
+    if (current === undefined) {
+      order.push(point.duration)
+      totals.set(point.duration, usageTotal(point))
+    } else {
+      totals.set(point.duration, current + usageTotal(point))
+    }
+  }
+  return order.map((duration) => ({
+    duration,
+    total: totals.get(duration) ?? 0,
+  }))
+}
+
+/** Last 7 local days, including today. All counts stay at 0. */
+const zeroUsagePoints = (): AiUsagePoint[] => {
+  const today = new Date()
+  const points: AiUsagePoint[] = []
+  for (let offset = 6; offset >= 0; offset -= 1) {
+    const date = new Date(today)
+    date.setDate(today.getDate() - offset)
+    points.push({
+      duration: formatUsageDuration(date),
+      inputTokenCount: 0,
+      outputTokenCount: 0,
+      cacheTokenCount: 0,
+    })
+  }
+  return points
+}
+
 export class FoxycapePdfSettingTab extends PluginSettingTab {
   private licenseStatusEl: HTMLElement | null = null
+  private usageHostEl: HTMLElement | null = null
   private licenseInput: TextComponent | null = null
   private licenseActionButton: ButtonComponent | null = null
   private isLicenseChecking = false
@@ -70,6 +122,18 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
         },
       ],
     },
+    {
+      type: 'group',
+      heading: this.plugin.t('plugin_settings_ai_usage_heading', 'AI usage'),
+      items: [
+        {
+          name: this.plugin.t('plugin_settings_ai_usage_heading', 'AI usage'),
+          render: (setting) => {
+            this.bindAiUsageSetting(setting)
+          },
+        },
+      ],
+    },
   ]
 
   /** Pre-1.13 fallback; skipped when getSettingDefinitions() returns a non-empty array. */
@@ -78,6 +142,7 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
       const { containerEl } = this
       containerEl.empty()
       this.clearLicenseUiRefs()
+      this.usageHostEl = null
 
       new Setting(containerEl)
         .setName(this.plugin.t('plugin_settings_title', 'Foxycape PDF'))
@@ -108,6 +173,12 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
         )
         .setDesc('')
       this.bindLicenseSetting(licenseSetting)
+
+      new Setting(containerEl)
+        .setName(this.plugin.t('plugin_settings_ai_usage_heading', 'AI usage'))
+        .setHeading()
+
+      this.bindAiUsageSetting(new Setting(containerEl))
     })
   }
 
@@ -155,6 +226,7 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
       })
       .addButton((button) => {
         this.licenseActionButton = button
+        button.buttonEl.addClass('clickable-icon')
         button.onClick(() => {
           if (this.plugin.settings.licenseValid) {
             this.promptUnbindLicense()
@@ -177,6 +249,14 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
     this.refreshLicenseInputReadonly()
     this.refreshLicenseActionButton()
     this.refreshLicenseStatus()
+  }
+
+  private bindAiUsageSetting = (setting: Setting) => {
+    setting.settingEl.addClass('foxycape-pdf-ai-usage-setting')
+    setting.nameEl.hide()
+    setting.controlEl.hide()
+    this.usageHostEl = setting.descEl
+    this.renderUsageSection()
   }
 
   private applyLicenseInput = async (value: string) => {
@@ -300,7 +380,7 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
     }
 
     button.setButtonText(
-      this.plugin.t('plugin_settings_license_purchase', 'Buy license'),
+      this.plugin.t('plugin_settings_license_purchase', 'Get a license'),
     )
     button.setCta()
   }
@@ -308,72 +388,93 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
   private refreshLicenseStatus = () => {
     const el = this.licenseStatusEl
     if (!el) {
+      this.renderUsageSection()
       return
     }
     el.empty()
 
     if (this.isLicenseUnbinding) {
-      el.setText(
-        this.plugin.t(
+      el.createDiv({
+        text: this.plugin.t(
           'plugin_settings_license_unbinding',
           'Unbinding license…',
         ),
-      )
-      return
-    }
-
-    if (this.isLicenseChecking) {
-      el.setText(
-        this.plugin.t(
+      })
+    } else if (this.isLicenseChecking) {
+      el.createDiv({
+        text: this.plugin.t(
           'plugin_settings_license_checking',
           'Validating license…',
         ),
+      })
+    } else {
+      const { settings } = this.plugin
+
+      if (this.lastUnbindError) {
+        el.createDiv({ text: this.lastUnbindError })
+      }
+
+      if (settings.licenseValid) {
+        el.createDiv({
+          cls: 'foxycape-pdf-license-applied',
+          text: settings.licenseLifetime
+            ? this.plugin.t(
+                'plugin_settings_license_applied_lifetime',
+                'License applied (lifetime).',
+              )
+            : this.plugin.t(
+                'plugin_settings_license_applied',
+                'License applied.',
+              ),
+        })
+      } else if (this.lastOutcome?.kind === 'invalid' && settings.license.trim()) {
+        el.createDiv({
+          text: this.plugin.t(
+            'plugin_settings_license_invalid',
+            'Invalid license: {message}',
+            { message: this.lastOutcome.message },
+          ),
+        })
+      } else if (this.lastOutcome?.kind === 'network_error') {
+        el.createDiv({
+          text: this.plugin.t(
+            'plugin_settings_license_network_error',
+            'Could not reach the license server. Your previous status is kept.',
+          ),
+        })
+      }
+    }
+
+    this.renderUsageSection()
+  }
+
+  private renderUsageSection = () => {
+    const el = this.usageHostEl
+    if (!el) {
+      return
+    }
+    el.empty()
+    const balanceEl = el.createDiv({ cls: 'foxycape-pdf-ai-balance' })
+    el.createDiv({
+      cls: 'foxycape-pdf-ai-usage-hint',
+      text: this.plugin.t(
+        'plugin_settings_ai_usage_official_hint',
+        'Only official model usage is counted. Your own API key is not included.',
+      ),
+    })
+    const chartEl = el.createDiv({ cls: 'foxycape-pdf-ai-usage' })
+    if (!this.plugin.settings.licenseValid) {
+      this.usageRequestId += 1
+      balanceEl.setText(
+        this.plugin.t('plugin_settings_ai_balance', 'AI usage balance: {balance}', {
+          balance: formatTokenAmount(0),
+        }),
       )
+      this.drawUsageChart(chartEl, zeroUsagePoints())
       return
     }
-
-    const { settings } = this.plugin
-
-    if (this.lastUnbindError) {
-      el.createDiv({ text: this.lastUnbindError })
-    }
-
-    if (settings.licenseValid) {
-      el.createDiv({
-        cls: 'foxycape-pdf-license-applied',
-        text: settings.licenseLifetime
-          ? this.plugin.t(
-              'plugin_settings_license_applied_lifetime',
-              'License applied (lifetime).',
-            )
-          : this.plugin.t(
-              'plugin_settings_license_applied',
-              'License applied.',
-            ),
-      })
-      const balanceEl = el.createDiv({ cls: 'foxycape-pdf-ai-balance' })
-      const chartEl = el.createDiv({ cls: 'foxycape-pdf-ai-usage' })
-      const requestId = ++this.usageRequestId
-      void this.renderAiUsage(balanceEl, chartEl, requestId)
-      return
-    }
-
-    if (this.lastOutcome?.kind === 'invalid' && settings.license.trim()) {
-      el.createDiv({
-        text: this.plugin.t(
-          'plugin_settings_license_invalid',
-          'Invalid license: {message}',
-          { message: this.lastOutcome.message },
-        ),
-      })
-    } else if (this.lastOutcome?.kind === 'network_error') {
-      el.createDiv({
-        text: this.plugin.t(
-          'plugin_settings_license_network_error',
-          'Could not reach the license server. Your previous status is kept.',
-        ),
-      })
-    }
+    const requestId = ++this.usageRequestId
+    void this.renderAiUsage(balanceEl, chartEl, requestId)
   }
 
   private renderAiUsage = async (
@@ -414,52 +515,67 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
   }
 
   private drawUsageChart = (chartEl: HTMLElement, points: AiUsagePoint[]) => {
+    const usageBars = toUsageBars(points)
     chartEl.createDiv({
       cls: 'foxycape-pdf-ai-usage__title',
       text: this.plugin.t('plugin_settings_ai_usage_title', 'Last 7 days'),
     })
-    const max = Math.max(
-      1,
-      ...points.map((point) => point.inputTokenCount + point.outputTokenCount + point.cacheTokenCount),
-    )
+    const max = Math.max(1, ...usageBars.map((bar) => bar.total))
     const bars = chartEl.createDiv({ cls: 'foxycape-pdf-ai-usage__bars' })
-    for (const point of points) {
-      const total = point.inputTokenCount + point.outputTokenCount + point.cacheTokenCount
-      const column = bars.createDiv({ cls: 'foxycape-pdf-ai-usage__col' })
-      const stack = column.createDiv({ cls: 'foxycape-pdf-ai-usage__stack' })
-      stack.style.height = `${Math.max(2, Math.round((total / max) * 56))}px`
-      const addSegment = (count: number, cls: string) => {
-        if (count <= 0 || total <= 0) {
-          return
-        }
-        const segment = stack.createDiv({ cls: `foxycape-pdf-ai-usage__seg ${cls}` })
-        segment.style.flexGrow = String(count)
+    const detailEl = chartEl.createDiv({ cls: 'foxycape-pdf-ai-usage__detail' })
+    const formatDay = (duration: string) =>
+      duration.length === 8 ? `${duration.slice(4, 6)}/${duration.slice(6)}` : duration
+    const latestUsed = [...usageBars].reverse().find((bar) => bar.total > 0)
+    let selectedDuration = latestUsed?.duration ?? usageBars.at(-1)?.duration ?? ''
+    let hoveredDuration = ''
+    const columns: { duration: string; button: HTMLElement; bar: HTMLElement }[] = []
+
+    const paint = () => {
+      const activeDuration = hoveredDuration || selectedDuration
+      for (const column of columns) {
+        column.button.toggleClass('is-active', column.duration === activeDuration)
       }
-      addSegment(point.outputTokenCount, 'foxycape-pdf-ai-usage__seg--output')
-      addSegment(point.inputTokenCount, 'foxycape-pdf-ai-usage__seg--input')
-      addSegment(point.cacheTokenCount, 'foxycape-pdf-ai-usage__seg--cache')
-      column.createDiv({
+      const day = usageBars.find((bar) => bar.duration === activeDuration)
+      detailEl.setText(
+        day
+          ? this.plugin.t('plugin_settings_ai_usage_day', '{date} · {tokens}', {
+              date: formatDay(day.duration),
+              tokens: formatTokenAmount(day.total),
+            })
+          : '',
+      )
+    }
+
+    for (const usageBar of usageBars) {
+      const button = bars.createEl('button', { cls: 'foxycape-pdf-ai-usage__col' })
+      button.type = 'button'
+      button.setAttr('title', formatTokenAmount(usageBar.total))
+      const track = button.createDiv({ cls: 'foxycape-pdf-ai-usage__track' })
+      const bar = track.createDiv({ cls: 'foxycape-pdf-ai-usage__bar' })
+      if (usageBar.total > 0) {
+        bar.addClass('foxycape-pdf-ai-usage__bar--used')
+      }
+      const heightRem =
+        usageBar.total <= 0 ? 0.125 : Math.max(0.5, (usageBar.total / max) * 6)
+      bar.style.height = `${Math.round(heightRem * 1000) / 1000}rem`
+      button.createDiv({
         cls: 'foxycape-pdf-ai-usage__label',
-        text: point.duration.length === 8 ? `${point.duration.slice(4, 6)}/${point.duration.slice(6)}` : point.duration,
+        text: formatDay(usageBar.duration),
       })
+      button.addEventListener('click', () => {
+        selectedDuration = usageBar.duration
+        paint()
+      })
+      button.addEventListener('mouseenter', () => {
+        hoveredDuration = usageBar.duration
+        paint()
+      })
+      button.addEventListener('mouseleave', () => {
+        hoveredDuration = ''
+        paint()
+      })
+      columns.push({ duration: usageBar.duration, button, bar })
     }
-    const legend = chartEl.createDiv({ cls: 'foxycape-pdf-ai-usage__legend' })
-    const addLegend = (cls: string, label: string) => {
-      const item = legend.createDiv({ cls: 'foxycape-pdf-ai-usage__legend-item' })
-      item.createDiv({ cls: `foxycape-pdf-ai-usage__swatch ${cls}` })
-      item.createSpan({ text: label })
-    }
-    addLegend(
-      'foxycape-pdf-ai-usage__seg--output',
-      this.plugin.t('plugin_settings_ai_usage_output', 'Output'),
-    )
-    addLegend(
-      'foxycape-pdf-ai-usage__seg--input',
-      this.plugin.t('plugin_settings_ai_usage_input', 'Input'),
-    )
-    addLegend(
-      'foxycape-pdf-ai-usage__seg--cache',
-      this.plugin.t('plugin_settings_ai_usage_cache', 'Cache'),
-    )
+    paint()
   }
 }

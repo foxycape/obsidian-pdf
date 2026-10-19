@@ -37,7 +37,7 @@
   "plugin_settings_license_name": "คีย์ใบอนุญาต",
   "plugin_settings_license_placeholder": "ป้อนคีย์ใบอนุญาตของคุณ",
   "plugin_settings_license_hint": "ใช้เชื่อมแพ็กเกจ AI เท่านั้น กรอกบนอุปกรณ์อื่นได้เลย ไม่ต้องเข้าสู่ระบบ",
-  "plugin_settings_license_purchase": "ซื้อใบอนุญาต",
+  "plugin_settings_license_purchase": "รับใบอนุญาต",
   "plugin_settings_license_unbind": "ยกเลิกการผูก",
   "plugin_settings_license_unbind_confirm_title": "ยกเลิกการผูกใบอนุญาต",
   "plugin_settings_license_unbind_confirm_message": "ยกเลิกการผูกใบอนุญาตนี้จากอุปกรณ์นี้หรือไม่ คุณสามารถใส่คีย์อีกครั้งได้ภายหลัง",
@@ -277,5 +277,8 @@
   "pdf_chrome_settings_translate_notes_name": "เขียนคำแปลลงในโน้ต",
   "pdf_chrome_settings_translate_notes_desc": "เมื่อเปิดใช้ คำแปลจะถูกเพิ่มลงในโน้ต Markdown ไฟล์เดียวกับ PDF นี้",
   "share_copy_success_tip": "คัดลอกไปยังคลิปบอร์ดแล้ว",
-  "share_copy_reference_unavailable": "ไม่สามารถสร้างการอ้างอิงข้อความได้"
+  "share_copy_reference_unavailable": "ไม่สามารถสร้างการอ้างอิงข้อความได้",
+  "plugin_settings_ai_usage_heading": "การใช้ AI",
+  "plugin_settings_ai_usage_day": "{date} · {tokens}",
+  "plugin_settings_ai_usage_official_hint": "นับเฉพาะการใช้โมเดลทางการ คีย์ API ของคุณไม่ถูกนับ"
 }

@@ -37,7 +37,7 @@
   "plugin_settings_license_name": "Lizenzschlüssel",
   "plugin_settings_license_placeholder": "Lizenzschlüssel eingeben",
   "plugin_settings_license_hint": "Verknüpft nur dein KI-Kontingent. Auf einem anderen Gerät eingeben — ohne Anmeldung.",
-  "plugin_settings_license_purchase": "Lizenz kaufen",
+  "plugin_settings_license_purchase": "Lizenz erhalten",
   "plugin_settings_license_unbind": "Trennen",
   "plugin_settings_license_unbind_confirm_title": "Lizenz trennen",
   "plugin_settings_license_unbind_confirm_message": "Diese Lizenz von diesem Gerät trennen? Den Schlüssel können Sie später erneut eingeben.",
@@ -277,5 +277,8 @@
   "pdf_chrome_settings_translate_notes_name": "Übersetzungen in die Notiz schreiben",
   "pdf_chrome_settings_translate_notes_desc": "Wenn aktiviert, werden Übersetzungen an dieselbe Markdown-Notiz wie dieses PDF angehängt.",
   "share_copy_success_tip": "In die Zwischenablage kopiert",
-  "share_copy_reference_unavailable": "Textverweis kann nicht erstellt werden"
+  "share_copy_reference_unavailable": "Textverweis kann nicht erstellt werden",
+  "plugin_settings_ai_usage_heading": "KI-Nutzung",
+  "plugin_settings_ai_usage_day": "{date} · {tokens}",
+  "plugin_settings_ai_usage_official_hint": "Es zählt nur die Nutzung des offiziellen Modells. Dein eigener API-Schlüssel ist nicht enthalten."
 }

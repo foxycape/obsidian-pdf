@@ -37,7 +37,7 @@
   "plugin_settings_license_name": "Лицензионный ключ",
   "plugin_settings_license_placeholder": "Введите лицензионный ключ",
   "plugin_settings_license_hint": "Только привязывает ваш ИИ-трафик. Введите на другом устройстве — без входа.",
-  "plugin_settings_license_purchase": "Купить лицензию",
+  "plugin_settings_license_purchase": "Получить лицензию",
   "plugin_settings_license_unbind": "Отвязать",
   "plugin_settings_license_unbind_confirm_title": "Отвязать лицензию",
   "plugin_settings_license_unbind_confirm_message": "Отвязать эту лицензию от этого устройства? Ключ можно будет ввести снова позже.",
@@ -277,5 +277,8 @@
   "pdf_chrome_settings_translate_notes_name": "Записывать переводы в заметку",
   "pdf_chrome_settings_translate_notes_desc": "Если включено, переводы добавляются в ту же заметку Markdown, что и этот PDF.",
   "share_copy_success_tip": "Скопировано в буфер обмена",
-  "share_copy_reference_unavailable": "Не удалось создать ссылку на текст"
+  "share_copy_reference_unavailable": "Не удалось создать ссылку на текст",
+  "plugin_settings_ai_usage_heading": "Использование ИИ",
+  "plugin_settings_ai_usage_day": "{date} · {tokens}",
+  "plugin_settings_ai_usage_official_hint": "Учитывается только официальная модель. Ваш ключ API не входит."
 }
