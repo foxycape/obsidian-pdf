@@ -66,7 +66,7 @@ const deleteMark = async () => {
   <div class="foxycape-pdf-mark-item" :class="{ 'is-last': hideDivider }">
     <button
       type="button"
-      class="foxycape-pdf-mark-item__text"
+      class="foxycape-pdf-mark-item__text clickable-icon"
       @click="gotoMark"
     >
       <span

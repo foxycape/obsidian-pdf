@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { Search, X } from '@lucide/vue'
 import { loadReplyLanguage, saveReplyLanguage } from '../prefs'
 import { loadEdgeLanguages, type ListedLanguage } from '../translate/edgeLanguages'
@@ -15,6 +15,7 @@ const emit = defineEmits<{
 const search = ref('')
 const current = ref('')
 const languages = ref<ListedLanguage[]>([])
+const listEl = ref<HTMLElement | null>(null)
 
 const filtered = computed(() => {
   const keyword = search.value.trim().toLowerCase()
@@ -35,10 +36,42 @@ const choose = async (code: string) => {
   emit('close')
 }
 
+const supportsScrollIntoViewCenter = () => {
+  return typeof Element !== 'undefined' && typeof Element.prototype.scrollIntoView === 'function'
+}
+
+const centerSelectedInList = (list: HTMLElement, selected: HTMLElement) => {
+  const listRect = list.getBoundingClientRect()
+  const itemRect = selected.getBoundingClientRect()
+  list.scrollTop += itemRect.top - listRect.top - list.clientHeight / 2 + itemRect.height / 2
+}
+
+const scrollSelectedIntoView = async () => {
+  await nextTick()
+  await new Promise<void>((resolve) => {
+    requestAnimationFrame(() => resolve())
+  })
+  const list = listEl.value
+  const selected = list?.querySelector<HTMLElement>('[aria-selected="true"]')
+  if (!list || !selected) {
+    return
+  }
+  if (supportsScrollIntoViewCenter()) {
+    try {
+      selected.scrollIntoView({ block: 'center', inline: 'nearest' })
+      return
+    } catch {
+      // fall through to manual centering
+    }
+  }
+  centerSelectedInList(list, selected)
+}
+
 onMounted(async () => {
   const [items, selected] = await Promise.all([loadEdgeLanguages(), loadReplyLanguage()])
   languages.value = items
   current.value = selected.code
+  await scrollSelectedIntoView()
 })
 </script>
 
@@ -54,13 +87,14 @@ onMounted(async () => {
       <Search class="fpdf-icon fpdf-icon--sm" />
       <input v-model="search" type="search" :placeholder="t('ai_language_search', 'Search languages')" />
     </label>
-    <div class="fpdf-lang-list">
+    <div ref="listEl" class="fpdf-lang-list">
       <button
         v-for="lang in filtered"
         :key="lang.code"
         type="button"
         class="clickable-icon fpdf-lang-row"
         :class="{ 'is-active': lang.code === current }"
+        :aria-selected="lang.code === current"
         @click="choose(lang.code)"
       >
         <span class="fpdf-lang-row__title">{{ lang.title || lang.code }}</span>

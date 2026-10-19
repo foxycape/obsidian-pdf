@@ -158,7 +158,7 @@ export const TRANSLATIONS_UI = {
     ai_explain_brief: "Brief",
     ai_explain_detailed: "Detailed",
     ai_chat_title: "Ask AI",
-    ai_chat_placeholder: "Ask about this passage",
+    ai_chat_placeholder: "Ask AI …",
     ai_chat_send: "Send",
     ai_model_settings: "Model",
     ai_official_model: "Official model",
@@ -266,6 +266,7 @@ export const TRANSLATIONS_UI = {
   },
   ar: {
     ai_example_placeholder: "مثال: {value}",
+    ai_chat_placeholder: "اسأل الذكاء الاصطناعي …",
     plugin_command_pdf_search: "البحث في PDF",
     plugin_command_pdf_screenshot: "لقطة لمنطقة في PDF",
     plugin_menu_open_image_in_foxycape: "فتح في Foxycape",
@@ -408,6 +409,7 @@ export const TRANSLATIONS_UI = {
   },
   de: {
     ai_example_placeholder: "z. B. {value}",
+    ai_chat_placeholder: "KI fragen …",
     plugin_command_pdf_search: "In PDF suchen",
     plugin_command_pdf_screenshot: "Bereich im PDF aufnehmen",
     plugin_menu_open_image_in_foxycape: "In Foxycape öffnen",
@@ -550,6 +552,7 @@ export const TRANSLATIONS_UI = {
   },
   es: {
     ai_example_placeholder: "p. ej. {value}",
+    ai_chat_placeholder: "Pregunta a la IA …",
     plugin_command_pdf_search: "Buscar en el PDF",
     plugin_command_pdf_screenshot: "Capturar región en el PDF",
     plugin_menu_open_image_in_foxycape: "Abrir en Foxycape",
@@ -692,6 +695,7 @@ export const TRANSLATIONS_UI = {
   },
   fr: {
     ai_example_placeholder: "p. ex. {value}",
+    ai_chat_placeholder: "Demander à l’IA …",
     plugin_command_pdf_search: "Rechercher dans le PDF",
     plugin_command_pdf_screenshot: "Capturer une zone du PDF",
     plugin_menu_open_image_in_foxycape: "Ouvrir dans Foxycape",
@@ -834,6 +838,7 @@ export const TRANSLATIONS_UI = {
   },
   id: {
     ai_example_placeholder: "misalnya {value}",
+    ai_chat_placeholder: "Tanya AI …",
     plugin_command_pdf_search: "Cari di PDF",
     plugin_command_pdf_screenshot: "Cuplik wilayah di PDF",
     plugin_menu_open_image_in_foxycape: "Buka di Foxycape",
@@ -976,6 +981,7 @@ export const TRANSLATIONS_UI = {
   },
   it: {
     ai_example_placeholder: "es. {value}",
+    ai_chat_placeholder: "Chiedi all’IA …",
     plugin_command_pdf_search: "Cerca nel PDF",
     plugin_command_pdf_screenshot: "Cattura un'area nel PDF",
     plugin_menu_open_image_in_foxycape: "Apri in Foxycape",
@@ -1118,6 +1124,7 @@ export const TRANSLATIONS_UI = {
   },
   ja: {
     ai_example_placeholder: "例：{value}",
+    ai_chat_placeholder: "AI に質問…",
     plugin_command_pdf_search: "PDF 内を検索",
     plugin_command_pdf_screenshot: "PDF 内の範囲をスクリーンショット",
     plugin_menu_open_image_in_foxycape: "Foxycape で開く",
@@ -1260,6 +1267,7 @@ export const TRANSLATIONS_UI = {
   },
   ko: {
     ai_example_placeholder: "예: {value}",
+    ai_chat_placeholder: "AI에게 질문…",
     plugin_command_pdf_search: "PDF에서 검색",
     plugin_command_pdf_screenshot: "PDF에서 영역 스크린샷",
     plugin_menu_open_image_in_foxycape: "Foxycape에서 열기",
@@ -1402,6 +1410,7 @@ export const TRANSLATIONS_UI = {
   },
   nl: {
     ai_example_placeholder: "bijv. {value}",
+    ai_chat_placeholder: "Vraag AI …",
     plugin_command_pdf_search: "Zoeken in PDF",
     plugin_command_pdf_screenshot: "Gebied in PDF vastleggen",
     plugin_menu_open_image_in_foxycape: "Openen in Foxycape",
@@ -1544,6 +1553,7 @@ export const TRANSLATIONS_UI = {
   },
   pl: {
     ai_example_placeholder: "np. {value}",
+    ai_chat_placeholder: "Zapytaj AI …",
     plugin_command_pdf_search: "Szukaj w PDF",
     plugin_command_pdf_screenshot: "Zrzut obszaru w PDF",
     plugin_menu_open_image_in_foxycape: "Otwórz w Foxycape",
@@ -1686,6 +1696,7 @@ export const TRANSLATIONS_UI = {
   },
   pt: {
     ai_example_placeholder: "p. ex. {value}",
+    ai_chat_placeholder: "Perguntar à IA …",
     plugin_command_pdf_search: "Pesquisar no PDF",
     plugin_command_pdf_screenshot: "Capturar região no PDF",
     plugin_menu_open_image_in_foxycape: "Abrir no Foxycape",
@@ -1828,6 +1839,7 @@ export const TRANSLATIONS_UI = {
   },
   "pt-BR": {
     ai_example_placeholder: "ex.: {value}",
+    ai_chat_placeholder: "Pergunte à IA …",
     plugin_command_pdf_search: "Pesquisar no PDF",
     plugin_command_pdf_screenshot: "Capturar região no PDF",
     plugin_menu_open_image_in_foxycape: "Abrir no Foxycape",
@@ -1970,6 +1982,7 @@ export const TRANSLATIONS_UI = {
   },
   ru: {
     ai_example_placeholder: "например, {value}",
+    ai_chat_placeholder: "Спросить ИИ …",
     plugin_command_pdf_search: "Поиск в PDF",
     plugin_command_pdf_screenshot: "Снимок области в PDF",
     plugin_menu_open_image_in_foxycape: "Открыть в Foxycape",
@@ -2112,6 +2125,7 @@ export const TRANSLATIONS_UI = {
   },
   th: {
     ai_example_placeholder: "เช่น {value}",
+    ai_chat_placeholder: "ถาม AI …",
     plugin_command_pdf_search: "ค้นหาใน PDF",
     plugin_command_pdf_screenshot: "จับภาพพื้นที่ใน PDF",
     plugin_menu_open_image_in_foxycape: "เปิดใน Foxycape",
@@ -2254,6 +2268,7 @@ export const TRANSLATIONS_UI = {
   },
   tr: {
     ai_example_placeholder: "ör. {value}",
+    ai_chat_placeholder: "Yapay zekâya sor …",
     plugin_command_pdf_search: "PDF içinde ara",
     plugin_command_pdf_screenshot: "PDF’de bölge ekran görüntüsü",
     plugin_menu_open_image_in_foxycape: "Foxycape’de aç",
@@ -2396,6 +2411,7 @@ export const TRANSLATIONS_UI = {
   },
   uk: {
     ai_example_placeholder: "наприклад, {value}",
+    ai_chat_placeholder: "Запитати ШІ …",
     plugin_command_pdf_search: "Пошук у PDF",
     plugin_command_pdf_screenshot: "Знімок області в PDF",
     plugin_menu_open_image_in_foxycape: "Відкрити у Foxycape",
@@ -2538,6 +2554,7 @@ export const TRANSLATIONS_UI = {
   },
   vi: {
     ai_example_placeholder: "ví dụ: {value}",
+    ai_chat_placeholder: "Hỏi AI …",
     plugin_command_pdf_search: "Tìm trong PDF",
     plugin_command_pdf_screenshot: "Chụp vùng trong PDF",
     plugin_menu_open_image_in_foxycape: "Mở trong Foxycape",
@@ -2836,7 +2853,7 @@ export const TRANSLATIONS_UI = {
     ai_explain_brief: "简要",
     ai_explain_detailed: "详细",
     ai_chat_title: "问 AI",
-    ai_chat_placeholder: "针对这段内容提问",
+    ai_chat_placeholder: "问 AI …",
     ai_chat_send: "发送",
     ai_model_settings: "模型",
     ai_official_model: "官方模型",
@@ -2944,6 +2961,7 @@ export const TRANSLATIONS_UI = {
   },
   "zh-TW": {
     ai_example_placeholder: "例如：{value}",
+    ai_chat_placeholder: "問 AI …",
     plugin_command_pdf_search: "在 PDF 中搜尋",
     plugin_command_pdf_screenshot: "框選截圖",
     plugin_menu_open_image_in_foxycape: "在 Foxycape 中開啟",

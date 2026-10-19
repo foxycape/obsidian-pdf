@@ -1,12 +1,8 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import type { Swiper as SwiperInstance } from 'swiper'
-import { Swiper, SwiperSlide } from 'swiper/vue'
-import 'swiper/css'
 import type { Reader } from '@foxycape/core/kernal'
 import type { IMarker } from '@/mark'
 import type { DexieStorage } from '@/storage/DexieStorage'
-import { isObsidianMobile } from '@/ui/isObsidianMobile'
 import PdfMarkList from './mark-list/PdfMarkList.vue'
 import PdfPassageList from './mark-list/PdfPassageList.vue'
 
@@ -23,9 +19,7 @@ const props = defineProps<{
   onClose: () => void
 }>()
 
-const canSwipe = isObsidianMobile()
 const currentTab = ref<MarksTab>('highlights')
-const swiperInstance = ref<SwiperInstance | null>(null)
 const tabs = computed(() => [
   { id: 'highlights' as const, label: props.t('ai_marks_tab_highlights', 'Highlights') },
   { id: 'translates' as const, label: props.t('ai_marks_tab_translate', 'Translate') },
@@ -33,14 +27,8 @@ const tabs = computed(() => [
   { id: 'lookups' as const, label: props.t('ai_marks_tab_lookup', 'Look up') },
 ])
 
-const tabIndex = (tab: MarksTab) => tabs.value.findIndex((item) => item.id === tab)
 const selectTab = (tab: MarksTab) => {
   currentTab.value = tab
-  const index = tabIndex(tab)
-  const swiper = swiperInstance.value
-  if (index >= 0 && swiper && swiper.activeIndex !== index) {
-    swiper.slideTo(index)
-  }
 }
 watch(
   () => [props.requestedTab, props.tabNonce] as const,
@@ -50,16 +38,6 @@ watch(
     }
   },
 )
-
-const onSwiper = (swiper: SwiperInstance) => {
-  swiperInstance.value = swiper
-}
-const onSlideChange = (swiper: SwiperInstance) => {
-  const tab = tabs.value[swiper.activeIndex]
-  if (tab) {
-    currentTab.value = tab.id
-  }
-}
 
 const DEFAULT_WIDTH = 300
 const MIN_WIDTH = 180
@@ -147,31 +125,45 @@ onBeforeUnmount(() => {
           {{ tab.label }}
         </button>
       </div>
-      <Swiper
-        v-if="canSwipe"
-        class="foxycape-pdf-mark-tabs__swiper"
-        :allow-touch-move="true"
-        @swiper="onSwiper"
-        @slide-change="onSlideChange"
-      >
-        <SwiperSlide>
-          <PdfMarkList :reader="reader" :get-marker="getMarker" :active="open && currentTab === 'highlights'" :t="t" :on-close="onClose" />
-        </SwiperSlide>
-        <SwiperSlide>
-          <PdfPassageList kind="translate" :reader="reader" :storage="storage" :get-marker="getMarker" :active="open && currentTab === 'translates'" :t="t" @navigated="onClose" />
-        </SwiperSlide>
-        <SwiperSlide>
-          <PdfPassageList kind="explain" :reader="reader" :storage="storage" :get-marker="getMarker" :active="open && currentTab === 'explains'" :t="t" @navigated="onClose" />
-        </SwiperSlide>
-        <SwiperSlide>
-          <PdfPassageList kind="lookup" :reader="reader" :storage="storage" :get-marker="getMarker" :active="open && currentTab === 'lookups'" :t="t" @navigated="onClose" />
-        </SwiperSlide>
-      </Swiper>
-      <div v-else class="foxycape-pdf-mark-tabs__page">
-        <PdfMarkList v-if="currentTab === 'highlights'" :reader="reader" :get-marker="getMarker" :active="open" :t="t" :on-close="onClose" />
-        <PdfPassageList v-else-if="currentTab === 'translates'" kind="translate" :reader="reader" :storage="storage" :get-marker="getMarker" :active="open" :t="t" />
-        <PdfPassageList v-else-if="currentTab === 'explains'" kind="explain" :reader="reader" :storage="storage" :get-marker="getMarker" :active="open" :t="t" />
-        <PdfPassageList v-else kind="lookup" :reader="reader" :storage="storage" :get-marker="getMarker" :active="open" :t="t" />
+      <div class="foxycape-pdf-mark-tabs__page">
+        <PdfMarkList
+          v-if="currentTab === 'highlights'"
+          :reader="reader"
+          :get-marker="getMarker"
+          :active="open"
+          :t="t"
+          :on-close="onClose"
+        />
+        <PdfPassageList
+          v-else-if="currentTab === 'translates'"
+          kind="translate"
+          :reader="reader"
+          :storage="storage"
+          :get-marker="getMarker"
+          :active="open"
+          :t="t"
+          @navigated="onClose"
+        />
+        <PdfPassageList
+          v-else-if="currentTab === 'explains'"
+          kind="explain"
+          :reader="reader"
+          :storage="storage"
+          :get-marker="getMarker"
+          :active="open"
+          :t="t"
+          @navigated="onClose"
+        />
+        <PdfPassageList
+          v-else
+          kind="lookup"
+          :reader="reader"
+          :storage="storage"
+          :get-marker="getMarker"
+          :active="open"
+          :t="t"
+          @navigated="onClose"
+        />
       </div>
     </div>
   </aside>
@@ -228,14 +220,9 @@ onBeforeUnmount(() => {
   color: var(--text-normal);
 }
 
-.foxycape-pdf-mark-tabs__swiper,
 .foxycape-pdf-mark-tabs__page {
   flex: 1;
   min-height: 0;
-}
-
-.foxycape-pdf-mark-tabs__swiper :deep(.swiper-slide) {
-  height: 100%;
   overflow: auto;
 }
 

@@ -355,10 +355,17 @@ body.foxycape-pdf-resizing .workspace-leaf-content[data-type="foxycape-pdf"] .te
 
 body.is-mobile .foxycape-pdf-ai-host:has(.is-chat-open) {
   position: absolute;
-  inset: 0;
+  inset-block: 0;
+  inset-inline-end: 0;
   z-index: 45;
-  width: auto;
+  flex: none;
+  width: min(80vw, 320px);
   min-width: 0;
+  height: auto;
+  margin: 20px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-l);
+  overflow: hidden;
 }
 
 body.is-mobile .foxycape-pdf-ai-resizer {

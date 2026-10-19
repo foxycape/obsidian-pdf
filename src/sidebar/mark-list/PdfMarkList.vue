@@ -554,8 +554,15 @@ onBeforeUnmount(() => {
 }
 
 .foxycape-pdf-mark-list__color {
+  flex: none;
+  box-sizing: border-box;
   width: 16px;
   height: 16px;
+  min-width: 16px;
+  max-width: 16px;
+  min-height: 16px;
+  max-height: 16px;
+  aspect-ratio: 1;
   padding: 0;
   border-radius: 50%;
   border: 2px solid transparent;

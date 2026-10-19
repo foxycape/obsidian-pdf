@@ -24,6 +24,7 @@ import { calcToolbarPosition } from '@foxycape/core/kernal/html/geometry'
 import type { Reader } from '@foxycape/core/kernal'
 import type { IMarker } from '@/mark'
 import type { DexieStorage } from '@/storage/DexieStorage'
+import { isObsidianMobile } from '@/ui/isObsidianMobile'
 import { AiAccessError } from '../errors'
 import {
   createEmptyPdfChat,
@@ -768,6 +769,9 @@ const placeCitation = async () => {
 
 const gotoCitation = async (item: DocumentCitation) => {
   closeCitation()
+  if (isObsidianMobile()) {
+    emit('close')
+  }
   const result = await jumpToPdfCitation({
     citation: item,
     currentReader: props.reader,
@@ -1158,7 +1162,7 @@ watch(
         </button>
       </div>
       <div class="fpdf-composer__row">
-        <textarea v-model="draft" rows="1" :placeholder="t('ai_chat_placeholder', 'Ask about this passage')" @keydown.enter.exact.prevent="sendDraft" />
+        <textarea v-model="draft" rows="1" :placeholder="t('ai_chat_placeholder', 'Ask AI …')" @keydown.enter.exact.prevent="sendDraft" />
         <button v-if="loading" type="button" class="clickable-icon fpdf-send" :aria-label="t('ai_stop', 'Stop')" @click="stop">
           <Square class="fpdf-icon fpdf-icon--sm" />
         </button>

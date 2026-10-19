@@ -781,6 +781,9 @@ input.fpdf-history-search:focus-visible,
 .fpdf-chat__center .fpdf-dialog__title,
 .fpdf-chat__center .fpdf-muted {
   width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   text-align: center;
 }
 

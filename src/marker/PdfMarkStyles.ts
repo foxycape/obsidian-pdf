@@ -160,7 +160,6 @@ export const getMarkListTextStyle = (
     return {
       backgroundColor: withAlpha(color, 0.22),
       paddingBlock: '2px',
-      paddingInline: '6px',
     }
   }
   if (styleType === 'wavy_line' || styleType.startsWith('wavy_line')) {
@@ -170,7 +169,6 @@ export const getMarkListTextStyle = (
       backgroundPosition: '0 100%',
       backgroundRepeat: 'repeat-x',
       paddingBlock: '0 3px',
-      paddingInline: '4px',
     }
   }
   if (styleType === 'underline_straight' || styleType.startsWith('underline_straight')) {
@@ -180,7 +178,6 @@ export const getMarkListTextStyle = (
       backgroundPosition: '0 100%',
       backgroundRepeat: 'repeat-x',
       paddingBlock: '0 3px',
-      paddingInline: '4px',
     }
   }
   return {}
