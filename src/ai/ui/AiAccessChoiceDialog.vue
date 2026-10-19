@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { X } from '@lucide/vue'
 import type { AiAccessMode } from '../accessChoice'
+import { loadAiTrafficPacks, type AiTrafficPack } from '../trafficPacks'
+import { tryGetAiRuntime } from '../runtime'
+import { formatTokenAmount } from '../formatTokenAmount'
 
 const props = defineProps<{
   mode: AiAccessMode
-  t: (key: string, fallback: string) => string
+  t: (key: string, fallback: string, named?: object) => string
 }>()
 
 const emit = defineEmits<{
@@ -18,14 +21,35 @@ const emit = defineEmits<{
 const isQuota = computed(() => props.mode === 'quota')
 const title = computed(() =>
   isQuota.value
-    ? props.t('ai_quota_title', 'Official quota is used up')
-    : props.t('ai_access_title', 'Explain, translate, and ask'),
+    ? props.t('ai_quota_title', 'AI usage is used up')
+    : props.t('ai_access_title', 'Use the official model'),
 )
 const description = computed(() =>
   isQuota.value
-    ? props.t('ai_quota_choice', 'These features are unavailable for now. Configure your own key, or buy more quota.')
-    : props.t('ai_access_choice', 'These features need a model. Enter a license to use the official model, or configure your own key.'),
+    ? props.t(
+        'ai_quota_choice',
+        'The license is still valid, but the AI usage on it is used up. A traffic pack tops up this license. You can also switch to your own AI key.',
+      )
+    : props.t(
+        'ai_access_choice',
+        'The official model needs a license. AI usage is stored on that license. You can also configure your own AI key and skip official usage.',
+      ),
 )
+
+const packs = ref<AiTrafficPack[]>([])
+
+onMounted(() => {
+  if (!isQuota.value) {
+    return
+  }
+  const runtime = tryGetAiRuntime()
+  if (!runtime) {
+    return
+  }
+  void loadAiTrafficPacks(runtime.apiClient).then((next) => {
+    packs.value = next
+  })
+})
 </script>
 
 <template>
@@ -37,15 +61,21 @@ const description = computed(() =>
       </button>
     </header>
     <p class="fpdf-dialog__text">{{ description }}</p>
+    <ul v-if="isQuota && packs.length" class="fpdf-dialog__packs">
+      <li v-for="pack in packs" :key="pack.title + pack.tokenCount">
+        {{ pack.title }} · {{ t('ai_traffic_includes', 'Includes {tokens}', { tokens: formatTokenAmount(pack.tokenCount) }) }}
+      </li>
+    </ul>
     <div class="fpdf-dialog__actions">
+      <button type="button" class="clickable-icon fpdf-action" @click="emit('configureKey')">
+        {{ t('ai_configure_key', 'Configure AI key') }}
+      </button>
       <button v-if="isQuota" type="button" class="clickable-icon fpdf-action mod-cta" @click="emit('purchase')">
         {{ t('ai_buy_quota', 'Buy an AI traffic pack') }}
       </button>
-      <button type="button" class="clickable-icon fpdf-action" @click="emit('configureKey')">{{ t('ai_configure_key', 'Configure your own key') }}</button>
-      <button v-if="!isQuota" type="button" class="clickable-icon fpdf-action mod-cta" @click="emit('enterLicense')">
+      <button v-else type="button" class="clickable-icon fpdf-action mod-cta" @click="emit('enterLicense')">
         {{ t('ai_enter_license', 'Enter a license') }}
       </button>
-      <button v-if="!isQuota" type="button" class="clickable-icon fpdf-action" @click="emit('purchase')">{{ t('ai_purchase', 'Purchase') }}</button>
     </div>
   </div>
 </template>

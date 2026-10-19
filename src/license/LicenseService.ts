@@ -1,6 +1,5 @@
 import type { FoxycapePdfPlugin } from '@/plugin/FoxycapePdfPlugin'
 import { LICENSE_UNBIND_PATH, LICENSE_VERIFY_PATH, REVALIDATE_MS } from './constants'
-import { getTrialDaysRemaining, isEntitled, isTrialActive } from './trial'
 
 export type LicenseData = {
   valid: boolean
@@ -40,17 +39,9 @@ export class LicenseService {
     await this.plugin.saveSettings()
   }
 
-  getTrialDaysRemaining = (): number =>
-    getTrialDaysRemaining(this.plugin.settings.trialStartedAt)
-
-  isTrialActive = (): boolean => isTrialActive(this.plugin.settings.trialStartedAt)
-
-  isEntitled = (): boolean =>
-    isEntitled(this.plugin.settings.licenseValid, this.plugin.settings.trialStartedAt)
-
   /**
    * Persist license text and validate with the server when non-empty.
-   * Empty input clears the applied state (keeps trial).
+   * Empty input clears the applied state.
    */
   setLicense = async (license: string): Promise<LicenseValidationOutcome> => {
     const trimmed = license.trim()
@@ -125,7 +116,7 @@ export class LicenseService {
   /**
    * POST license only to unbind from the current device.
    * Device token comes from ApiClient system parameters.
-   * On success, clears local license state (keeps trial).
+   * On success, clears local license state.
    */
   unbindLicense = async (): Promise<LicenseUnbindOutcome> => {
     const trimmed = this.plugin.settings.license.trim()

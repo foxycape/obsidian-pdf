@@ -7,6 +7,9 @@ import {
   type TextComponent,
 } from 'obsidian'
 import { debounce } from '@foxycape/core/kernal/web/debounce'
+import { formatTokenAmount } from '@/ai/formatTokenAmount'
+import { getLicenseAiUser, loadLicenseAiUsage, type AiUsagePoint } from '@/ai/licenseSession'
+import { tryGetAiRuntime } from '@/ai/runtime'
 import {
   LICENSE_INPUT_DEBOUNCE_MS,
   LICENSE_PURCHASE_URL,
@@ -23,6 +26,7 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
   private isLicenseUnbinding = false
   private lastOutcome: LicenseValidationOutcome | null = null
   private lastUnbindError: string | null = null
+  private usageRequestId = 0
 
   private readonly debouncedValidateLicense = debounce((value: string) => {
     void this.applyLicenseInput(value)
@@ -123,6 +127,7 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
 
   private bindLicenseSetting = (setting: Setting) => {
     this.clearLicenseUiRefs()
+    setting.settingEl.addClass('foxycape-pdf-license-setting')
     setting
       .addText((text) => {
         this.licenseInput = text
@@ -144,6 +149,7 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
             this.refreshLicenseStatus()
             this.debouncedValidateLicense(value)
           })
+        text.inputEl.addClass('foxycape-pdf-license-input')
         text.inputEl.setAttr('spellcheck', 'false')
         text.inputEl.setAttr('autocomplete', 'off')
       })
@@ -158,7 +164,16 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
         })
       })
 
-    this.licenseStatusEl = setting.descEl
+    setting.descEl.createDiv({
+      cls: 'foxycape-pdf-license-hint',
+      text: this.plugin.t(
+        'plugin_settings_license_hint',
+        'Only links your AI usage. Enter it on another device — no sign-in.',
+      ),
+    })
+    this.licenseStatusEl = setting.descEl.createDiv({
+      cls: 'foxycape-pdf-license-status',
+    })
     this.refreshLicenseInputReadonly()
     this.refreshLicenseActionButton()
     this.refreshLicenseStatus()
@@ -317,7 +332,7 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
       return
     }
 
-    const { settings, licenseService } = this.plugin
+    const { settings } = this.plugin
 
     if (this.lastUnbindError) {
       el.createDiv({ text: this.lastUnbindError })
@@ -336,6 +351,10 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
               'License applied.',
             ),
       })
+      const balanceEl = el.createDiv({ cls: 'foxycape-pdf-ai-balance' })
+      const chartEl = el.createDiv({ cls: 'foxycape-pdf-ai-usage' })
+      const requestId = ++this.usageRequestId
+      void this.renderAiUsage(balanceEl, chartEl, requestId)
       return
     }
 
@@ -355,14 +374,92 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
         ),
       })
     }
+  }
 
-    const days = licenseService.getTrialDaysRemaining()
-    el.createDiv({
-      text: this.plugin.t(
-        'plugin_settings_trial_remaining',
-        'Trial days remaining: {days}',
-        { days },
-      ),
+  private renderAiUsage = async (
+    balanceEl: HTMLElement,
+    chartEl: HTMLElement,
+    requestId: number,
+  ) => {
+    const runtime = tryGetAiRuntime()
+    if (!runtime) {
+      return
+    }
+    const user = await getLicenseAiUser(runtime.apiClient, runtime.getLicense())
+    if (requestId !== this.usageRequestId) {
+      return
+    }
+    if (!user?.accessToken) {
+      balanceEl.setText(
+        this.plugin.t('plugin_settings_ai_usage_unavailable', 'Usage is unavailable right now'),
+      )
+      return
+    }
+    const balance = formatTokenAmount(user.availableAITokenCount ?? 0)
+    balanceEl.setText(
+      this.plugin.t('plugin_settings_ai_balance', 'AI usage balance: {balance}', { balance }),
+    )
+    const points = await loadLicenseAiUsage(runtime.apiClient, user.accessToken)
+    if (requestId !== this.usageRequestId) {
+      return
+    }
+    chartEl.empty()
+    if (!points) {
+      chartEl.setText(
+        this.plugin.t('plugin_settings_ai_usage_unavailable', 'Usage is unavailable right now'),
+      )
+      return
+    }
+    this.drawUsageChart(chartEl, points)
+  }
+
+  private drawUsageChart = (chartEl: HTMLElement, points: AiUsagePoint[]) => {
+    chartEl.createDiv({
+      cls: 'foxycape-pdf-ai-usage__title',
+      text: this.plugin.t('plugin_settings_ai_usage_title', 'Last 7 days'),
     })
+    const max = Math.max(
+      1,
+      ...points.map((point) => point.inputTokenCount + point.outputTokenCount + point.cacheTokenCount),
+    )
+    const bars = chartEl.createDiv({ cls: 'foxycape-pdf-ai-usage__bars' })
+    for (const point of points) {
+      const total = point.inputTokenCount + point.outputTokenCount + point.cacheTokenCount
+      const column = bars.createDiv({ cls: 'foxycape-pdf-ai-usage__col' })
+      const stack = column.createDiv({ cls: 'foxycape-pdf-ai-usage__stack' })
+      stack.style.height = `${Math.max(2, Math.round((total / max) * 56))}px`
+      const addSegment = (count: number, cls: string) => {
+        if (count <= 0 || total <= 0) {
+          return
+        }
+        const segment = stack.createDiv({ cls: `foxycape-pdf-ai-usage__seg ${cls}` })
+        segment.style.flexGrow = String(count)
+      }
+      addSegment(point.outputTokenCount, 'foxycape-pdf-ai-usage__seg--output')
+      addSegment(point.inputTokenCount, 'foxycape-pdf-ai-usage__seg--input')
+      addSegment(point.cacheTokenCount, 'foxycape-pdf-ai-usage__seg--cache')
+      column.createDiv({
+        cls: 'foxycape-pdf-ai-usage__label',
+        text: point.duration.length === 8 ? `${point.duration.slice(4, 6)}/${point.duration.slice(6)}` : point.duration,
+      })
+    }
+    const legend = chartEl.createDiv({ cls: 'foxycape-pdf-ai-usage__legend' })
+    const addLegend = (cls: string, label: string) => {
+      const item = legend.createDiv({ cls: 'foxycape-pdf-ai-usage__legend-item' })
+      item.createDiv({ cls: `foxycape-pdf-ai-usage__swatch ${cls}` })
+      item.createSpan({ text: label })
+    }
+    addLegend(
+      'foxycape-pdf-ai-usage__seg--output',
+      this.plugin.t('plugin_settings_ai_usage_output', 'Output'),
+    )
+    addLegend(
+      'foxycape-pdf-ai-usage__seg--input',
+      this.plugin.t('plugin_settings_ai_usage_input', 'Input'),
+    )
+    addLegend(
+      'foxycape-pdf-ai-usage__seg--cache',
+      this.plugin.t('plugin_settings_ai_usage_cache', 'Cache'),
+    )
   }
 }

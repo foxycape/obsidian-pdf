@@ -1044,6 +1044,39 @@ button.clickable-icon.foxycape-pdf-toolbar-more__item:hover {
   font-size: var(--font-ui-small);
 }
 
+.foxycape-pdf-license-setting {
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+
+.foxycape-pdf-license-setting .setting-item-info {
+  flex: 1 0 100%;
+  width: 100%;
+}
+
+.foxycape-pdf-license-setting .setting-item-control {
+  flex: 1 0 100%;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin-top: 0.35rem;
+  justify-content: flex-start;
+}
+
+.foxycape-pdf-license-setting .setting-item-control input.foxycape-pdf-license-input {
+  width: auto;
+  max-width: min(36rem, 100%);
+  min-width: 0;
+  flex: 1 1 16rem;
+  box-sizing: border-box;
+}
+
+.foxycape-pdf-license-hint {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  line-height: 1.4;
+}
+
 .foxycape-pdf-license-applied {
   color: var(--text-accent);
 }

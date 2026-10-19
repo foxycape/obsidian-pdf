@@ -388,6 +388,101 @@ button.fpdf-icon-btn {
   padding: 16px 20px 0;
 }
 
+.fpdf-dialog__packs {
+  margin: 8px 20px 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+
+.fpdf-dialog__packs li + li {
+  margin-top: 4px;
+}
+
+.foxycape-pdf-ai-balance {
+  margin-top: 6px;
+}
+
+.foxycape-pdf-ai-usage {
+  margin-top: 8px;
+}
+
+.foxycape-pdf-ai-usage__title {
+  margin-bottom: 6px;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+
+.foxycape-pdf-ai-usage__bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  max-width: 280px;
+}
+
+.foxycape-pdf-ai-usage__col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+
+.foxycape-pdf-ai-usage__stack {
+  display: flex;
+  flex-direction: column-reverse;
+  width: 100%;
+  max-width: 22px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--background-modifier-border);
+}
+
+.foxycape-pdf-ai-usage__seg {
+  width: 100%;
+  flex-basis: 0;
+  min-height: 2px;
+}
+
+.foxycape-pdf-ai-usage__seg--output {
+  background: #4383ff;
+}
+
+.foxycape-pdf-ai-usage__seg--input {
+  background: #719cf0;
+}
+
+.foxycape-pdf-ai-usage__seg--cache {
+  background: #b4caf6;
+}
+
+.foxycape-pdf-ai-usage__label {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.foxycape-pdf-ai-usage__legend {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.foxycape-pdf-ai-usage__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.foxycape-pdf-ai-usage__swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
 .fpdf-composer {
   display: flex;
   flex-direction: column;

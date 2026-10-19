@@ -18,7 +18,7 @@ export type FoxycapePdfSettings = {
   useAsDefaultPdfViewer: boolean
   /** User-entered license key (empty when not purchased). */
   license: string
-  /** Epoch ms when the 7-day trial started; 0 means not started yet. */
+  /** Epoch ms of first plugin start; 0 means not started yet. Sent as confirmedTryFeatureDate. */
   trialStartedAt: number
   /** Last known server-validated license status. */
   licenseValid: boolean

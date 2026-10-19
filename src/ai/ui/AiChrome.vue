@@ -5,7 +5,7 @@ import type { App, TFile } from 'obsidian'
 import type { PdfMarkdownLinkSource } from '@/obsidian/remotePdfLink'
 import type { IMarker } from '@/mark'
 import type { DexieStorage } from '@/storage/DexieStorage'
-import { LICENSE_PURCHASE_URL } from '@/license/constants'
+import { AI_TRAFFIC_PURCHASE_URL } from '@/license/constants'
 import { setAiChromeHooks } from '../runtime'
 import type { AiAccessMode } from '../accessChoice'
 import { useHistoryLayer } from '@/history/useHistoryLayer'
@@ -82,7 +82,7 @@ const openLanguage = () => {
 }
 
 const purchase = () => {
-  window.open(LICENSE_PURCHASE_URL, '_blank', 'noopener')
+  window.open(AI_TRAFFIC_PURCHASE_URL, '_blank', 'noopener')
 }
 
 const AI_WIDTH_KEY = 'foxycape-pdf.aiPanelWidth'

@@ -1,13 +1,21 @@
 import {
-  LICENSE_AI_SESSION_PATH,
   OFFICIAL_AI_TOKEN_INFO_PATH,
+  OFFICIAL_AI_TOKEN_STATISTICS_PATH,
+  PASSPORT_GET_USER_PATH,
 } from '@/license/constants'
-import type { IApiClient } from '@/network'
+import type { HttpClientOptions, IApiClient } from '@/network'
 
 export type LicenseAiUser = {
   accessToken: string
   accessTokenExpirationTime: number
   availableAITokenCount?: number
+}
+
+export type AiUsagePoint = {
+  duration: string
+  inputTokenCount: number
+  outputTokenCount: number
+  cacheTokenCount: number
 }
 
 type CacheEntry = {
@@ -33,8 +41,15 @@ const readExpiration = (value: unknown): number => {
   return Date.now() + 30 * 60 * 1000
 }
 
+const readBody = (raw: unknown): Record<string, unknown> | null => {
+  if (isRecord(raw) && isRecord(raw.data)) {
+    return raw.data
+  }
+  return isRecord(raw) ? raw : null
+}
+
 const readUser = (raw: unknown): LicenseAiUser | null => {
-  const body = isRecord(raw) && isRecord(raw.data) ? raw.data : isRecord(raw) ? raw : null
+  const body = readBody(raw)
   if (!body) {
     return null
   }
@@ -51,6 +66,16 @@ const readUser = (raw: unknown): LicenseAiUser | null => {
     availableAITokenCount: typeof count === 'number' ? count : undefined,
   }
 }
+
+const readCount = (raw: unknown): number | undefined => {
+  const body = readBody(raw)
+  const count = body?.availableAITokenCount
+  return typeof count === 'number' ? count : undefined
+}
+
+const bearerOptions = (accessToken: string): HttpClientOptions => ({
+  headers: { Authorization: `Bearer ${accessToken}` },
+})
 
 export const clearLicenseAiSession = () => {
   cache = null
@@ -71,7 +96,10 @@ export const getLicenseAiUser = async (
   ) {
     return cache.user
   }
-  const raw = await apiClient.post(LICENSE_AI_SESSION_PATH, { license: trimmed })
+  const raw = await apiClient.post(PASSPORT_GET_USER_PATH, {
+    identityToken: trimmed,
+    tokenType: 'license',
+  })
   const user = readUser(raw)
   if (!user) {
     cache = null
@@ -82,23 +110,73 @@ export const getLicenseAiUser = async (
 }
 
 export const refreshLicenseAiQuota = async (apiClient: IApiClient): Promise<void> => {
-  if (!cache) {
+  if (!cache?.user.accessToken) {
     return
   }
   try {
-    const raw = await apiClient.get(OFFICIAL_AI_TOKEN_INFO_PATH, {}, true)
-    const user = readUser(raw)
-    if (user && cache) {
+    const raw = await apiClient.get(
+      OFFICIAL_AI_TOKEN_INFO_PATH,
+      {},
+      true,
+      bearerOptions(cache.user.accessToken),
+    )
+    const count = readCount(raw)
+    if (typeof count === 'number' && cache) {
       cache = {
         license: cache.license,
         user: {
           ...cache.user,
-          availableAITokenCount: user.availableAITokenCount ?? cache.user.availableAITokenCount,
-          accessToken: user.accessToken || cache.user.accessToken,
+          availableAITokenCount: count,
         },
       }
     }
   } catch {
     // Quota refresh is best-effort; the generate call already succeeded.
+  }
+}
+
+const readUsagePoint = (value: unknown): AiUsagePoint | null => {
+  if (!isRecord(value)) {
+    return null
+  }
+  const duration = typeof value.duration === 'string' ? value.duration : ''
+  if (!duration) {
+    return null
+  }
+  const count = (key: string) => {
+    const raw = value[key]
+    return typeof raw === 'number' && Number.isFinite(raw) ? raw : 0
+  }
+  return {
+    duration,
+    inputTokenCount: count('inputTokenCount'),
+    outputTokenCount: count('outputTokenCount'),
+    cacheTokenCount: count('cacheTokenCount'),
+  }
+}
+
+/** Last 7 days, already summed by the server. Null when the request fails. */
+export const loadLicenseAiUsage = async (
+  apiClient: IApiClient,
+  accessToken: string,
+): Promise<AiUsagePoint[] | null> => {
+  try {
+    const raw = await apiClient.get(
+      OFFICIAL_AI_TOKEN_STATISTICS_PATH,
+      { mode: 'aggregation', type: 'day', days: 7 },
+      true,
+      bearerOptions(accessToken),
+    )
+    const body = readBody(raw)
+    const list = Array.isArray(raw)
+      ? raw
+      : Array.isArray(body)
+        ? body
+        : isRecord(raw) && Array.isArray(raw.data)
+          ? raw.data
+          : []
+    return list.map(readUsagePoint).filter((point): point is AiUsagePoint => point !== null)
+  } catch {
+    return null
   }
 }

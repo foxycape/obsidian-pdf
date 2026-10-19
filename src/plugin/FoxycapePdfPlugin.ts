@@ -38,7 +38,6 @@ import { DexieStorage } from '@/storage'
 import { LegacyMarkCatalog } from '@/storage/legacy/LegacyMarkCatalog'
 import { registerAstroidIcon } from '@/ui/astroidIcon'
 import { applyFoxycapeMenuIcon, registerFoxycapeIcon } from '@/ui/foxycapeIcon'
-import { showLicenseRequiredModal } from '@/ui/LicenseRequiredModal'
 import { createGlobalWorker, type IGlobalWorker } from '@/workers'
 import { PDF_READER_VIEW_TYPE, PdfReaderView } from '@/views/PdfReaderView'
 
@@ -72,8 +71,6 @@ export class FoxycapePdfPlugin extends Plugin {
     target: { pdfFile: TFile; subpath: string }
     imageFileName: string
   } | null = null
-  /** Prevent stacking multiple trial-ended dialogs. */
-  private isLicenseModalOpen = false
   private isDefaultPdfBindingActive = false
   private lastSyncedLanguage = ''
 
@@ -383,23 +380,6 @@ export class FoxycapePdfPlugin extends Plugin {
       normalizedSubpath ? { subpath: normalizedSubpath } : undefined,
     )
     void this.app.workspace.revealLeaf(leaf)
-  }
-
-  /**
-   * Returns false and shows a dialog when trial expired without a valid license.
-   * Reserved for future paid features; current reader actions are free.
-   */
-  ensureLicenseEntitlement = (): boolean => {
-    if (this.licenseService.isEntitled()) {
-      return true
-    }
-    if (!this.isLicenseModalOpen) {
-      this.isLicenseModalOpen = true
-      showLicenseRequiredModal(this.app, this.manifest.id, this.t, () => {
-        this.isLicenseModalOpen = false
-      })
-    }
-    return false
   }
 
   private getActivePdfFile = () => {

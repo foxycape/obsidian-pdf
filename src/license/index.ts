@@ -4,14 +4,15 @@ export {
   LICENSE_API_URL,
   LICENSE_INPUT_DEBOUNCE_MS,
   LICENSE_PURCHASE_URL,
-  LICENSE_AI_SESSION_PATH,
+  AI_TRAFFIC_PURCHASE_URL,
+  PASSPORT_GET_USER_PATH,
   LICENSE_UNBIND_PATH,
   LICENSE_VERIFY_PATH,
   OFFICIAL_AI_GENERATE_PATH,
   OFFICIAL_AI_TOKEN_INFO_PATH,
-  MS_PER_DAY,
+  OFFICIAL_AI_TOKEN_STATISTICS_PATH,
+  VIP_SEARCH_PATH,
   REVALIDATE_MS,
-  TRIAL_DAYS,
 } from './constants'
 export { LicenseService } from './LicenseService'
 export type {
@@ -20,9 +21,3 @@ export type {
   LicenseUnbindOutcome,
   LicenseValidationOutcome,
 } from './LicenseService'
-export {
-  getTrialDaysRemaining,
-  getTrialRemainingMs,
-  isEntitled,
-  isTrialActive,
-} from './trial'
