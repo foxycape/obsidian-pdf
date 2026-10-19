@@ -1,3 +1,4 @@
+import type { FixedContentRange } from '@foxycape/core/kernal/ContentRange'
 import type { IMarker } from '@/mark/IMarker'
 import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
 import {
@@ -14,6 +15,7 @@ import {
   removeAllSearchOverlays,
 } from '@/search/PdfSearchOverlay'
 import type { PdfSearchMatch } from '@/search/types'
+import { highlightPdfPageTextOffset } from './pageTextHighlight'
 import {
   parsePdfDeepLink,
   parseRectTuple,
@@ -243,8 +245,9 @@ export const applyPdfDeepLink = async (options: {
   subpath: string
   renderer: IPdfRenderer | null | undefined
   getMarker: () => IMarker | undefined
+  findPassageRange?: (markId: string) => Promise<FixedContentRange | undefined>
 }): Promise<void> => {
-  const { page, selection, markId, rect } = parsePdfDeepLink(options.subpath)
+  const { page, selection, markId, rect, textOffset } = parsePdfDeepLink(options.subpath)
   const marker = options.getMarker()
   const renderer = options.renderer
 
@@ -252,6 +255,10 @@ export const applyPdfDeepLink = async (options: {
     const mark = await marker.getMark(markId)
     if (mark) {
       await marker.goto(mark)
+      return
+    }
+    const range = await options.findPassageRange?.(markId)
+    if (range && (await marker.flashFixedRange(range))) {
       return
     }
   }
@@ -267,6 +274,14 @@ export const applyPdfDeepLink = async (options: {
 
   if (page != null && rect) {
     await paintRectHighlight(renderer, page, rect)
+    return
+  }
+
+  if (page != null && textOffset) {
+    const located = await highlightPdfPageTextOffset(renderer, page, textOffset)
+    if (!located) {
+      renderer.setCurrentPage(page, true)
+    }
     return
   }
 

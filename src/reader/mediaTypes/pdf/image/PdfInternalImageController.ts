@@ -28,7 +28,7 @@ import type { CustomPdfOptions } from '../CustomPdfOptions'
 import type { CustomPdfRenderer } from '../CustomPdfRenderer'
 import { PdfImageDetector } from './PdfImageDetector'
 import { PdfImageExtractor } from './PdfImageExtractor'
-import { getFlipOnlyMatrix, isFullPageInternalImage } from './pdfInternalImageUtils'
+import { canvasCssScale, getFlipOnlyMatrix, isFullPageInternalImage, isPdfDetailPageView, toCssImageBox } from './pdfInternalImageUtils'
 import { handleOnlyImages } from './pdfImageHandler'
 import { PdfImageViewer } from './viewer'
 import type { PdfImageViewerCallbacks } from './viewer'
@@ -49,6 +49,7 @@ type PdfPageViewLike = {
 type PdfPageRenderView = PdfPageViewLike & {
   id: number
   pdfPage: PdfPageWithView
+  renderingId?: string
 }
 
 const LENS_BUTTON_SIZE_PX = 32
@@ -136,6 +137,14 @@ export class PdfInternalImageController implements IDisposable {
 
   getImageExtractor() {
     return this.extractor
+  }
+
+  clearPageImageHits = (pageNumber: number) => {
+    this.detector.clearPage(pageNumber)
+  }
+
+  addPageImageHit = (pageNumber: number, descriptor: ImageDescriptor) => {
+    this.detector.add(pageNumber, descriptor)
   }
 
   /** Hide hover/mobile lenses when image preview is turned off at runtime. */
@@ -328,6 +337,9 @@ export class PdfInternalImageController implements IDisposable {
     if (!this.options.enableViewPdfImages || !pageView?.canvas) {
       return
     }
+    if (isPdfDetailPageView(pageView)) {
+      return
+    }
     // When theme remap is on, PdfThemeColorRemapper owns canvas draw hooks.
     if (this.options.enablePdfThemeColorRemap) {
       return
@@ -338,6 +350,7 @@ export class PdfInternalImageController implements IDisposable {
     }
     const canvasContext = asAugmentedCanvasContext(rawContext)
     canvasContext.imageDescriptors = null
+    this.detector.clearPage(pageView.id)
     if (canvasContext.originalDrawImage) {
       return
     }
@@ -349,6 +362,7 @@ export class PdfInternalImageController implements IDisposable {
       imageMinHeight: this.options.imageMinHeight,
       imageCallback: (imageDescriptor) => {
         this.extractor.setPageImageDescriptor(pageView.id, imageDescriptor)
+        this.detector.add(pageView.id, imageDescriptor)
       },
     })
   }
@@ -390,14 +404,23 @@ export class PdfInternalImageController implements IDisposable {
   private renderMobileLenses(
     doc: IPdfDocument,
     descriptors: ImageDescriptor[],
-    pageView: { width: number; height: number },
+    pageView: { width: number; height: number; canvas?: HTMLCanvasElement },
   ) {
     this.mobileLensHost
       .querySelectorAll(`[data-page="${doc.pageNumber}"]`)
       .forEach((el) => el.remove())
 
     for (const descriptor of descriptors) {
-      if (isFullPageInternalImage(descriptor, pageView.width, pageView.height)) {
+      const canvas = 'canvas' in pageView ? pageView.canvas : undefined
+      if (
+        canvas &&
+        isFullPageInternalImage(
+          descriptor,
+          pageView.width,
+          pageView.height,
+          canvasCssScale(canvas),
+        )
+      ) {
         continue
       }
       const position = this.computeLensPosition(doc, descriptor)
@@ -599,14 +622,18 @@ export class PdfInternalImageController implements IDisposable {
     if (!canvas) {
       return null
     }
-    const dpr = window.devicePixelRatio ?? 1
+    const { scaleX, scaleY } = canvasCssScale(canvas)
     const changeOrientation = ((pageView.rotation ?? 0) % 180) !== 0
-    const scaledWidth = (imageDescriptor.scaledWidth ?? 0) / dpr
-    const scaledHeight = (imageDescriptor.scaledHeight ?? 0) / dpr
-    const imgRight =
-      (imageDescriptor.x ?? 0) / dpr + (changeOrientation ? scaledHeight : scaledWidth)
-    const imgBottom =
-      (imageDescriptor.y ?? 0) / dpr + (changeOrientation ? scaledWidth : scaledHeight)
+    const box = toCssImageBox(
+      imageDescriptor.x ?? 0,
+      imageDescriptor.y ?? 0,
+      imageDescriptor.scaledWidth ?? 0,
+      imageDescriptor.scaledHeight ?? 0,
+      scaleX,
+      scaleY,
+    )
+    const imgRight = box.x + (changeOrientation ? box.height : box.width)
+    const imgBottom = box.y + (changeOrientation ? box.width : box.height)
     const canvasRect = canvas.getBoundingClientRect()
     const surfaceRect = this.surface.getBoundingClientRect()
     return {

@@ -50,6 +50,7 @@ describe('markdown note settings', () => {
   it('keeps explain and lookup out of markdown unless enabled', () => {
     expect(DEFAULT_PDF_VIEW_PREFERENCES.writeExplainToMarkdown).toBe(false)
     expect(DEFAULT_PDF_VIEW_PREFERENCES.writeLookupToMarkdown).toBe(false)
+    expect(DEFAULT_PDF_VIEW_PREFERENCES.writeTranslateToMarkdown).toBe(false)
   })
 
   it('appends explain and lookup into the same PDF markdown file', () => {
@@ -76,10 +77,19 @@ describe('markdown note settings', () => {
       body: 'means',
       pageNumber: 3,
     })
+    const translation = buildAiNoteAppendBlock(app, { pdfFile }, noteFile, {
+      kind: 'translate',
+      markId: 'same-id',
+      text: 'passage',
+      body: '译文',
+      pageNumber: 3,
+    })
     expect(explain).toContain('markId=same-id')
     expect(lookup).toContain('markId=same-id')
+    expect(translation).toContain('markId=same-id')
     expect(explain).toContain('**Explain**')
     expect(lookup).toContain('**Lookup**')
+    expect(translation).toContain('**Translate**')
   })
 })
 

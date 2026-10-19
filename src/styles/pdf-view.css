@@ -780,8 +780,8 @@ button.clickable-icon.foxycape-pdf-toolbar-more__item:hover {
 }
 
 .foxycape-pdf-search-bar__input-container:focus-within {
-  border-color: var(--interactive-accent, var(--text-accent));
-  box-shadow: 0 0 0 2px var(--background-modifier-border-focus, rgba(0, 0, 0, 0.12));
+  border-color: var(--background-modifier-border);
+  box-shadow: none;
 }
 
 .foxycape-pdf-search-bar__input-container.is-empty {

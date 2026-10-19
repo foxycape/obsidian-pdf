@@ -15,7 +15,7 @@ import {
 } from '@/ai/prefs'
 import { findListedLanguage, loadEdgeLanguages, type ListedLanguage } from '@/ai/translate/edgeLanguages'
 import { translateSelection } from '@/ai/translate/translateSelection'
-import { AiAccessError } from '@/ai/errors'
+import { getAiRuntime } from '@/ai/runtime'
 import { useHistoryLayer } from '@/history/useHistoryLayer'
 import { onInuseModelChange } from '@/ai/llm/inuseModelChange'
 import { resolveInuseModelLabel } from '@/ai/llm/inuseModelLabel'
@@ -161,6 +161,18 @@ const run = async () => {
         translatedText: text,
       })
       translateCount.value = await countTranslates(props.storage, props.simpleId)
+      try {
+        await getAiRuntime().writePassageNote?.({
+          kind: 'translate',
+          markId: props.markId,
+          simpleId: props.simpleId,
+          text: props.sourceText,
+          body: text,
+          pageNumber: props.pageNumber,
+        })
+      } catch (noteError) {
+        console.error('[Foxycape PDF] failed to write passage note', noteError)
+      }
     }
   } catch (error) {
     if (seq !== requestSeq) {

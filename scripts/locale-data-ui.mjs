@@ -1,6 +1,7 @@
 /** @type {Record<string, Record<string, string>>} */
 export const TRANSLATIONS_UI = {
   en: {
+    ai_example_placeholder: "e.g. {value}",
     plugin_command_pdf_search: "Search in PDF",
     plugin_command_pdf_screenshot: "Screenshot region in PDF",
     plugin_menu_open_image_in_foxycape: "Open in Foxycape",
@@ -232,8 +233,14 @@ export const TRANSLATIONS_UI = {
     ai_model_list_failed: "Could not list models",
     ai_new_chat: "New chat",
     ai_history: "History",
-    ai_history_search: "Search this PDF",
+    ai_history_all: "All",
+    ai_history_current: "This document",
+    ai_history_search: "Search",
     ai_history_empty: "No chats for this PDF",
+    ai_history_empty_all: "No chats yet",
+    ai_history_search_empty: "No chats match the search",
+    ai_delete_chat_confirm: "Delete chat “{name}”?",
+    ai_delete_chat_hint: "This cannot be undone.",
     ai_analyze_book: "Analyze this book",
     ai_regenerate: "Regenerate",
     ai_goto_page: "Go to page",
@@ -242,14 +249,18 @@ export const TRANSLATIONS_UI = {
     ai_continue: "Continue",
     ai_stop: "Stop",
     ai_chat_failed: "The request failed",
+    ai_open_document_to_jump: "Could not open “{title}” to jump to this location",
     pdf_chrome_settings_explain_notes_name: "Write explanations into the note",
-    pdf_chrome_settings_explain_notes_desc: "When enabled, explain-this-passage results are appended to the same Markdown note as this PDF. Off by default.",
+    pdf_chrome_settings_explain_notes_desc: "When enabled, explain-this-passage results are appended to the same Markdown note as this PDF.",
     pdf_chrome_settings_lookup_notes_name: "Write lookups into the note",
-    pdf_chrome_settings_lookup_notes_desc: "When enabled, word-lookup results are appended to the same Markdown note as this PDF. Off by default.",
+    pdf_chrome_settings_lookup_notes_desc: "When enabled, word-lookup results are appended to the same Markdown note as this PDF.",
+    pdf_chrome_settings_translate_notes_name: "Write translations into the note",
+    pdf_chrome_settings_translate_notes_desc: "When enabled, translation results are appended to the same Markdown note as this PDF.",
     share_copy_success_tip: "Copied to clipboard",
     share_copy_reference_unavailable: "Unable to create text reference",
   },
   ar: {
+    ai_example_placeholder: "مثال: {value}",
     plugin_command_pdf_search: "البحث في PDF",
     plugin_command_pdf_screenshot: "لقطة لمنطقة في PDF",
     plugin_menu_open_image_in_foxycape: "فتح في Foxycape",
@@ -393,6 +404,7 @@ export const TRANSLATIONS_UI = {
     share_copy_reference_unavailable: "تعذر إنشاء مرجع النص",
   },
   de: {
+    ai_example_placeholder: "z. B. {value}",
     plugin_command_pdf_search: "In PDF suchen",
     plugin_command_pdf_screenshot: "Bereich im PDF aufnehmen",
     plugin_menu_open_image_in_foxycape: "In Foxycape öffnen",
@@ -536,6 +548,7 @@ export const TRANSLATIONS_UI = {
     share_copy_reference_unavailable: "Textverweis kann nicht erstellt werden",
   },
   es: {
+    ai_example_placeholder: "p. ej. {value}",
     plugin_command_pdf_search: "Buscar en el PDF",
     plugin_command_pdf_screenshot: "Capturar región en el PDF",
     plugin_menu_open_image_in_foxycape: "Abrir en Foxycape",
@@ -679,6 +692,7 @@ export const TRANSLATIONS_UI = {
     share_copy_reference_unavailable: "No se puede crear la referencia de texto",
   },
   fr: {
+    ai_example_placeholder: "p. ex. {value}",
     plugin_command_pdf_search: "Rechercher dans le PDF",
     plugin_command_pdf_screenshot: "Capturer une zone du PDF",
     plugin_menu_open_image_in_foxycape: "Ouvrir dans Foxycape",
@@ -822,6 +836,7 @@ export const TRANSLATIONS_UI = {
     share_copy_reference_unavailable: "Impossible de créer la référence de texte",
   },
   id: {
+    ai_example_placeholder: "misalnya {value}",
     plugin_command_pdf_search: "Cari di PDF",
     plugin_command_pdf_screenshot: "Cuplik wilayah di PDF",
     plugin_menu_open_image_in_foxycape: "Buka di Foxycape",
@@ -965,6 +980,7 @@ export const TRANSLATIONS_UI = {
     share_copy_reference_unavailable: "Unable to create text reference",
   },
   it: {
+    ai_example_placeholder: "es. {value}",
     plugin_command_pdf_search: "Cerca nel PDF",
     plugin_command_pdf_screenshot: "Cattura un'area nel PDF",
     plugin_menu_open_image_in_foxycape: "Apri in Foxycape",
@@ -1108,6 +1124,7 @@ export const TRANSLATIONS_UI = {
     share_copy_reference_unavailable: "Impossibile creare il riferimento al testo",
   },
   ja: {
+    ai_example_placeholder: "例：{value}",
     plugin_command_pdf_search: "PDF 内を検索",
     plugin_command_pdf_screenshot: "PDF 内の範囲をスクリーンショット",
     plugin_menu_open_image_in_foxycape: "Foxycape で開く",
@@ -1251,6 +1268,7 @@ export const TRANSLATIONS_UI = {
     share_copy_reference_unavailable: "テキスト参照を作成できません",
   },
   ko: {
+    ai_example_placeholder: "예: {value}",
     plugin_command_pdf_search: "PDF에서 검색",
     plugin_command_pdf_screenshot: "PDF에서 영역 스크린샷",
     plugin_menu_open_image_in_foxycape: "Foxycape에서 열기",
@@ -1394,6 +1412,7 @@ export const TRANSLATIONS_UI = {
     share_copy_reference_unavailable: "텍스트 참조를 만들 수 없음",
   },
   nl: {
+    ai_example_placeholder: "bijv. {value}",
     plugin_command_pdf_search: "Zoeken in PDF",
     plugin_command_pdf_screenshot: "Gebied in PDF vastleggen",
     plugin_menu_open_image_in_foxycape: "Openen in Foxycape",
@@ -1537,6 +1556,7 @@ export const TRANSLATIONS_UI = {
     share_copy_reference_unavailable: "Kan geen tekstverwijzing maken",
   },
   pl: {
+    ai_example_placeholder: "np. {value}",
     plugin_command_pdf_search: "Szukaj w PDF",
     plugin_command_pdf_screenshot: "Zrzut obszaru w PDF",
     plugin_menu_open_image_in_foxycape: "Otwórz w Foxycape",
@@ -1680,6 +1700,7 @@ export const TRANSLATIONS_UI = {
     share_copy_reference_unavailable: "Nie można utworzyć odwołania do tekstu",
   },
   pt: {
+    ai_example_placeholder: "p. ex. {value}",
     plugin_command_pdf_search: "Pesquisar no PDF",
     plugin_command_pdf_screenshot: "Capturar região no PDF",
     plugin_menu_open_image_in_foxycape: "Abrir no Foxycape",
@@ -1823,6 +1844,7 @@ export const TRANSLATIONS_UI = {
     share_copy_reference_unavailable: "Não foi possível criar a referência de texto",
   },
   "pt-BR": {
+    ai_example_placeholder: "ex.: {value}",
     plugin_command_pdf_search: "Pesquisar no PDF",
     plugin_command_pdf_screenshot: "Capturar região no PDF",
     plugin_menu_open_image_in_foxycape: "Abrir no Foxycape",
@@ -1966,6 +1988,7 @@ export const TRANSLATIONS_UI = {
     share_copy_reference_unavailable: "Não foi possível criar a referência de texto",
   },
   ru: {
+    ai_example_placeholder: "например, {value}",
     plugin_command_pdf_search: "Поиск в PDF",
     plugin_command_pdf_screenshot: "Снимок области в PDF",
     plugin_menu_open_image_in_foxycape: "Открыть в Foxycape",
@@ -2109,6 +2132,7 @@ export const TRANSLATIONS_UI = {
     share_copy_reference_unavailable: "Не удалось создать ссылку на текст",
   },
   th: {
+    ai_example_placeholder: "เช่น {value}",
     plugin_command_pdf_search: "ค้นหาใน PDF",
     plugin_command_pdf_screenshot: "จับภาพพื้นที่ใน PDF",
     plugin_menu_open_image_in_foxycape: "เปิดใน Foxycape",
@@ -2252,6 +2276,7 @@ export const TRANSLATIONS_UI = {
     share_copy_reference_unavailable: "Unable to create text reference",
   },
   tr: {
+    ai_example_placeholder: "ör. {value}",
     plugin_command_pdf_search: "PDF içinde ara",
     plugin_command_pdf_screenshot: "PDF’de bölge ekran görüntüsü",
     plugin_menu_open_image_in_foxycape: "Foxycape’de aç",
@@ -2395,6 +2420,7 @@ export const TRANSLATIONS_UI = {
     share_copy_reference_unavailable: "Metin referansı oluşturulamadı",
   },
   uk: {
+    ai_example_placeholder: "наприклад, {value}",
     plugin_command_pdf_search: "Пошук у PDF",
     plugin_command_pdf_screenshot: "Знімок області в PDF",
     plugin_menu_open_image_in_foxycape: "Відкрити у Foxycape",
@@ -2538,6 +2564,7 @@ export const TRANSLATIONS_UI = {
     share_copy_reference_unavailable: "Не вдалося створити посилання на текст",
   },
   vi: {
+    ai_example_placeholder: "ví dụ: {value}",
     plugin_command_pdf_search: "Tìm trong PDF",
     plugin_command_pdf_screenshot: "Chụp vùng trong PDF",
     plugin_menu_open_image_in_foxycape: "Mở trong Foxycape",
@@ -2681,6 +2708,7 @@ export const TRANSLATIONS_UI = {
     share_copy_reference_unavailable: "Không thể tạo tham chiếu văn bản",
   },
   zh: {
+    ai_example_placeholder: "例如：{value}",
     plugin_command_pdf_search: "在 PDF 中搜索",
     plugin_command_pdf_screenshot: "框选截图",
     plugin_menu_open_image_in_foxycape: "在Foxycape中打开",
@@ -2912,8 +2940,14 @@ export const TRANSLATIONS_UI = {
     ai_model_list_failed: "无法拉取模型列表",
     ai_new_chat: "新对话",
     ai_history: "历史记录",
-    ai_history_search: "搜索当前 PDF",
+    ai_history_all: "全部",
+    ai_history_current: "当前文档",
+    ai_history_search: "搜索",
     ai_history_empty: "当前 PDF 还没有对话",
+    ai_history_empty_all: "还没有对话",
+    ai_history_search_empty: "没有匹配的对话",
+    ai_delete_chat_confirm: "删除对话「{name}」？",
+    ai_delete_chat_hint: "此操作无法撤销。",
     ai_analyze_book: "分析此书",
     ai_regenerate: "重新生成",
     ai_goto_page: "跳到页面",
@@ -2922,14 +2956,18 @@ export const TRANSLATIONS_UI = {
     ai_continue: "继续",
     ai_stop: "停止",
     ai_chat_failed: "请求失败",
+    ai_open_document_to_jump: "无法打开「{title}」并跳到对应位置",
     pdf_chrome_settings_explain_notes_name: "解释结果写入笔记",
-    pdf_chrome_settings_explain_notes_desc: "开启后，「解释这段」的结果会追加到该 PDF 的同一个 Markdown 文件。默认关闭。",
+    pdf_chrome_settings_explain_notes_desc: "开启后，「解释这段」的结果会追加到该 PDF 的同一个 Markdown 文件。",
     pdf_chrome_settings_lookup_notes_name: "查词结果写入笔记",
-    pdf_chrome_settings_lookup_notes_desc: "开启后，查词结果会追加到该 PDF 的同一个 Markdown 文件。默认关闭。",
+    pdf_chrome_settings_lookup_notes_desc: "开启后，查词结果会追加到该 PDF 的同一个 Markdown 文件。",
+    pdf_chrome_settings_translate_notes_name: "翻译结果写入笔记",
+    pdf_chrome_settings_translate_notes_desc: "开启后，翻译结果会追加到该 PDF 的同一个 Markdown 文件。",
     share_copy_success_tip: "已复制到剪切板",
     share_copy_reference_unavailable: "无法生成文本引用",
   },
   "zh-TW": {
+    ai_example_placeholder: "例如：{value}",
     plugin_command_pdf_search: "在 PDF 中搜尋",
     plugin_command_pdf_screenshot: "框選截圖",
     plugin_menu_open_image_in_foxycape: "在 Foxycape 中開啟",
@@ -3070,6 +3108,8 @@ export const TRANSLATIONS_UI = {
     share_more_colors: "更多顏色",
     share_more: "更多",
     toolbar_ai: "AI",
+    pdf_chrome_settings_translate_notes_name: "翻譯結果寫入筆記",
+    pdf_chrome_settings_translate_notes_desc: "開啟後，翻譯結果會追加到該 PDF 的同一個 Markdown 檔案。",
     share_copy_success_tip: "已複製到剪貼簿",
     share_copy_reference_unavailable: "無法產生文字引用",
   },

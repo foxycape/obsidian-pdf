@@ -13,12 +13,14 @@ import { asAugmentedCanvasContext } from './canvasContextHooks'
 import { CustomPdfOptions, type PdfViewPreferencePatch } from './CustomPdfOptions'
 import type { IPdfImageSource } from './image/IPdfImageSource'
 import { PdfInternalImageController } from './image/PdfInternalImageController'
+import { isPdfDetailPageView } from './image/pdfInternalImageUtils'
 import { PdfThemeColorRemapper } from './PdfThemeColorRemapper'
 
 type PdfPageRenderView = {
   canvas?: HTMLCanvasElement
   id: number
   pdfPage: { view: number[] }
+  renderingId?: string
 }
 
 type PdfLinkService = {
@@ -272,6 +274,10 @@ export class CustomPdfRenderer extends PdfRenderer implements IPdfImageSource {
     }
     const canvasContext = asAugmentedCanvasContext(rawContext)
     canvasContext.imageDescriptors = null
+    const isDetail = isPdfDetailPageView(pageView)
+    if (!isDetail) {
+      this.imageController?.clearPageImageHits(pageView.id)
+    }
     if (canvasContext.originalFillText || canvasContext.originalDrawImage) {
       return
     }
@@ -293,13 +299,15 @@ export class CustomPdfRenderer extends PdfRenderer implements IPdfImageSource {
         handleDrawImage: true,
         imageMinWidth: this.customOptions.imageMinWidth,
         imageMinHeight: this.customOptions.imageMinHeight,
-        imageCallback: enableImages
-          ? (imageDescriptor) => {
-              this.imageController
-                ?.getImageExtractor()
-                .setPageImageDescriptor(pageView.id, imageDescriptor)
-            }
-          : undefined,
+        imageCallback:
+          enableImages && !isDetail
+            ? (imageDescriptor) => {
+                this.imageController
+                  ?.getImageExtractor()
+                  .setPageImageDescriptor(pageView.id, imageDescriptor)
+                this.imageController?.addPageImageHit(pageView.id, imageDescriptor)
+              }
+            : undefined,
       },
     )
   }

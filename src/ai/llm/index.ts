@@ -26,12 +26,11 @@ export {
   DefaultOfficialModelName,
   DefaultOfficialPlatformId,
 } from './types'
+export type { LlmToolCall, ContentPart } from './contentParts'
 export type {
   LlmCompleteCallbacks,
   LlmCompleteRequest,
-  LlmMessage,
+  LlmCompleteResult,
   LlmModel,
   LlmSetting,
-  LlmToolCall,
-  LlmToolDefinition,
 } from './types'

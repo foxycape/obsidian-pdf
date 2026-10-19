@@ -145,6 +145,25 @@ describe('parsePdfDeepLink', () => {
       rect: undefined,
     })
   })
+
+  it('keeps page plaintext offsets out of selection', () => {
+    expect(
+      buildPdfDeepLinkFragment({
+        pageNumber: 12,
+        textOffset: '120,186',
+      }),
+    ).toBe('#page=12&textOffset=120,186')
+    expect(parsePdfDeepLink('#page=12&textOffset=120,186')).toMatchObject({
+      page: 12,
+      selection: undefined,
+      textOffset: '120,186',
+    })
+    expect(parsePdfDeepLink('#page=12&textOffset=4')).toMatchObject({
+      page: 12,
+      textOffset: undefined,
+    })
+    expect(parseSelectionTuple('120,186')).toBeUndefined()
+  })
 })
 
 describe('parseSelectionTuple', () => {

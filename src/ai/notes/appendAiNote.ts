@@ -29,7 +29,8 @@ export const buildAiNoteAppendBlock = (
     '↗',
     noteFile.path,
   )
-  const heading = input.kind === 'explain' ? 'Explain' : 'Lookup'
+  const heading =
+    input.kind === 'explain' ? 'Explain' : input.kind === 'lookup' ? 'Lookup' : 'Translate'
   const quote = escapeMarkdownText(input.text.trim())
   const body = input.body.trim()
   return `\n> ${quote} ${link}\n\n**${heading}**\n\n${body}\n`

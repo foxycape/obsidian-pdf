@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { markRaw, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import type { Reader } from '@foxycape/core/kernal'
+import type { App, TFile } from 'obsidian'
+import type { PdfMarkdownLinkSource } from '@/obsidian/remotePdfLink'
 import type { IMarker } from '@/mark'
 import type { DexieStorage } from '@/storage/DexieStorage'
 import { LICENSE_PURCHASE_URL } from '@/license/constants'
@@ -19,10 +21,16 @@ export type AiChatDraft = {
   autoSend?: boolean
   displayInput?: string
   pdfTitle?: string
+  filePath?: string
+  sourceUrl?: string
 }
 
 const props = defineProps<{
   storage: DexieStorage
+  app: App
+  openCitedFile: (file: TFile, subpath?: string) => Promise<void>
+  openCitedUrl: (url: string, subpath?: string) => Promise<void>
+  getLinkSource?: () => PdfMarkdownLinkSource | null
   t: (key: string, fallback: string, named?: object) => string
   openSettings: () => void
 }>()
@@ -222,6 +230,10 @@ defineExpose({
       v-if="chatOpen && reader && getMarker && draft"
       :reader="reader"
       :storage="storage"
+      :app="app"
+      :open-cited-file="openCitedFile"
+      :open-cited-url="openCitedUrl"
+      :get-link-source="getLinkSource"
       :get-marker="getMarker"
       :simple-id="draft.simpleId"
       :quote="draft.quote"
@@ -230,11 +242,14 @@ defineExpose({
       :display-input="draft.displayInput"
       :send-token="sendToken"
       :pdf-title="draft.pdfTitle || ''"
+      :file-path="draft.filePath || ''"
+      :source-url="draft.sourceUrl || ''"
       :t="t"
       @close="chatOpen = false"
       @open-model="openModel"
       @open-language="openLanguage"
     />
+    <Teleport to="body">
     <div v-if="accessOpen || modelOpen || languageOpen" class="fpdf-dialog-layer">
     <AiAccessChoiceDialog
       v-if="accessOpen"
@@ -248,5 +263,6 @@ defineExpose({
     <ModelSettingsDialog v-if="modelOpen" :t="t" @close="modelOpen = false" />
     <AiLanguageDialog v-if="languageOpen" :t="t" @close="languageOpen = false" />
     </div>
+    </Teleport>
   </div>
 </template>

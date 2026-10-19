@@ -86,7 +86,6 @@ export const translateWithAi = async (
     responseLanguage: targetLanguage,
     quality,
     signal,
-    stream: false,
     messages: [
       {
         role: 'system',

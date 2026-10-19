@@ -1,7 +1,7 @@
 /** GitHub repo that hosts release attachments (same tag as manifest.version). */
 export const RUNTIME_ASSETS_REPO = 'foxycape/obsidian-pdf'
 
-/** Release attachment name produced by `npm run build` (cmaps + standard_fonts). */
+/** Release attachment name produced by `npm run build` (cmaps, standard fonts, wasm, iccs, KaTeX woff2). */
 export const RUNTIME_ASSETS_ZIP_NAME = 'foxycape-pdf-assets.zip'
 
 /**
@@ -22,11 +22,13 @@ export const EMBEDDED_RUNTIME_MARKERS = [
   'static/signer.js',
 ] as const
 
-/** Paths that must exist after the remote cmaps/fonts/wasm install. */
+/** Paths that must exist after the remote cmaps/fonts/wasm/iccs/katex install. */
 export const REMOTE_RUNTIME_MARKERS = [
   'pdfjs/cmaps',
   'pdfjs/standard_fonts',
   'pdfjs/wasm',
+  'pdfjs/iccs',
+  'katex/fonts',
 ] as const
 
 /** Zip lives on the current plugin GitHub Release; only fetched when the cmaps id mismatches. */

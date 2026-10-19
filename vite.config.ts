@@ -16,6 +16,7 @@ import { buildPdfjsCmapsId } from './scripts/runtimeAssetsId.mjs'
 import { readObsidianPluginDir } from './scripts/readObsidianPluginDir.mjs'
 import { assertNoDynamicScriptElementsPlugin } from './vite.strip-localforage'
 import { copyToVaultPlugin } from './vite.copy-to-vault'
+import { katexFontsPlugin } from './vite.katex-fonts'
 
 const packageDir = fileURLToPath(new URL('.', import.meta.url))
 const { pdfjsDir: corePdfjsDir } = resolveFoxycapeCore(packageDir)
@@ -73,6 +74,7 @@ export default {
     renamePdfjsGlobalsPlugin(),
     patchPdfViewerImportPlugin(corePdfjsDir),
     ...(base.plugins ?? []),
+    katexFontsPlugin({ packageDir, outDir }),
     copyPdfjsAssetsPlugin({
       outDir,
       corePdfjsDir,

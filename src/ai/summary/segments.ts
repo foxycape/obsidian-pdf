@@ -7,6 +7,8 @@ import { getLlm } from '../llm'
 
 export const AUTO_SEGMENT_SUMMARY_MAX_CHARS = 2_000_000
 const SEGMENT_CHAR_BUDGET = 12_000
+/** Page text stored in the cache is `getPlaintext()`, not whitespace-collapsed. */
+const PAGE_PLAINTEXT_VERSION = 2
 
 export type PdfSegment = {
   id: string
@@ -26,6 +28,7 @@ export type SegmentCache = {
   charCount: number
   segments: PdfSegment[]
   updatedAt: number
+  textVersion?: number
 }
 
 const cacheKey = (simpleId: string): [string, string] => [ANONYMOUS_OWNER_ID, simpleId]
@@ -58,8 +61,8 @@ const collectPages = async (reader: Reader): Promise<{ pageNumber: number; text:
   const docs = await parser.getTextDocuments()
   const pages: { pageNumber: number; text: string }[] = []
   for (let index = 0; index < docs.length; index += 1) {
-    const text = (await docs[index].getPlaintext())?.replace(/\s+/g, ' ').trim() ?? ''
-    if (!text) {
+    const text = (await docs[index].getPlaintext()) ?? ''
+    if (!text.trim()) {
       continue
     }
     const fromUrl = Number.parseInt(docs[index].url ?? '', 10)
@@ -110,7 +113,6 @@ const summarizeSegment = async (segment: PdfSegment, signal?: AbortSignal): Prom
     model: inuse.model,
     purpose: 'summary',
     signal,
-    stream: false,
     messages: [
       {
         role: 'system',
@@ -142,7 +144,38 @@ export const ensurePdfSegmentSummaries = async (input: {
 }): Promise<SegmentCache> => {
   const existing = await readSegmentCache(input.storage, input.simpleId)
   if (existing?.status === 'ready' && existing.segments.some((item) => item.summary.trim())) {
-    return existing
+    if (existing.textVersion === PAGE_PLAINTEXT_VERSION) {
+      return existing
+    }
+    input.onPhase?.('extract')
+    const pages = await collectPages(input.reader)
+    if (pages.length === 0) {
+      return existing
+    }
+    const byPage = new Map(pages.map((page) => [page.pageNumber, page.text]))
+    const segments = existing.segments.map((segment) => {
+      if (!segment.pages?.length) {
+        return segment
+      }
+      const nextPages = segment.pages.map((page) => ({
+        pageNumber: page.pageNumber,
+        text: byPage.get(page.pageNumber) ?? page.text,
+      }))
+      return {
+        ...segment,
+        pages: nextPages,
+        text: nextPages.map((page) => page.text).join('\n'),
+      }
+    })
+    const refreshed: SegmentCache = {
+      ...existing,
+      segments,
+      textVersion: PAGE_PLAINTEXT_VERSION,
+      charCount: pages.reduce((sum, page) => sum + page.text.length, 0),
+      updatedAt: Date.now(),
+    }
+    await writeCache(input.storage, refreshed)
+    return refreshed
   }
   if (existing?.status === 'declined') {
     return existing
@@ -183,6 +216,7 @@ export const ensurePdfSegmentSummaries = async (input: {
     status: 'ready',
     charCount,
     segments,
+    textVersion: PAGE_PLAINTEXT_VERSION,
     updatedAt: Date.now(),
   }
   await writeCache(input.storage, ready)

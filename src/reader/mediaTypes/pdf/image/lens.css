@@ -22,13 +22,26 @@
   pointer-events: auto;
 }
 
-/* Positioning host for floating image actions; size/hover from clickable-icon. */
-.foxycape-pdf-image-lens {
+/* Square so border-radius stays a circle. clickable-icon padding is not equal. */
+button.clickable-icon.foxycape-pdf-image-lens {
   position: relative;
-  border-radius: 50%;
+  display: inline-flex;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 999px;
   background-color: var(--interactive-normal);
   box-shadow: var(--input-shadow);
   pointer-events: auto;
+}
+
+button.clickable-icon.foxycape-pdf-image-lens svg {
+  width: 18px;
+  height: 18px;
   flex: 0 0 auto;
 }
 

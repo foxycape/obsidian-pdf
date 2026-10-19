@@ -534,6 +534,16 @@ onBeforeUnmount(() => {
 .foxycape-pdf-mark-list__search-pop input {
   width: 100%;
   box-sizing: border-box;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-normal);
+}
+
+.foxycape-pdf-mark-list__search-pop input:focus,
+.foxycape-pdf-mark-list__search-pop input:focus-visible {
+  border-color: var(--background-modifier-border);
+  box-shadow: none;
+  outline: none;
 }
 
 .foxycape-pdf-mark-list__colors {

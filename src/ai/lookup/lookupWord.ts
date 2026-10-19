@@ -54,7 +54,6 @@ export const lookupWord = async (input: {
     purpose: 'lookup',
     responseLanguage: input.responseLanguage,
     signal: input.signal,
-    stream: false,
     messages: [
       {
         role: 'system',
@@ -91,13 +90,17 @@ export const lookupWord = async (input: {
     detail: input.detail,
     lookup,
   })
-  await getAiRuntime().writePassageNote?.({
-    kind: 'lookup',
-    markId: input.markId,
-    simpleId: input.simpleId,
-    text: passage,
-    body: lookup,
-    pageNumber: input.pageNumber,
-  })
+  try {
+    await getAiRuntime().writePassageNote?.({
+      kind: 'lookup',
+      markId: input.markId,
+      simpleId: input.simpleId,
+      text: passage,
+      body: lookup,
+      pageNumber: input.pageNumber,
+    })
+  } catch (error) {
+    console.error('[Foxycape PDF] failed to write passage note', error)
+  }
   return lookup
 }

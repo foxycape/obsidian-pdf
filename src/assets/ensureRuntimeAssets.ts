@@ -179,7 +179,7 @@ export const ensureEmbeddedRuntimeAssets = async (
 }
 
 /**
- * Download cmaps / standard_fonts from the current plugin GitHub Release.
+ * Download cmaps, standard fonts, wasm, iccs, and KaTeX woff2 from the current plugin GitHub Release.
  * Silent (no Notice / modal). Safe to call in the background on load.
  */
 export const ensureRemoteRuntimeAssets = async (

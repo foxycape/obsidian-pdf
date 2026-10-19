@@ -45,8 +45,9 @@ import { openVaultFileRange } from '@/storage/legacy/openVaultFileRange'
 import type { ByteRangeReader } from '@/storage/legacy/ByteRangeReader'
 import { MarkNoteCompanion, syncMarkToSidecarNote } from '@/obsidian/markNoteSync'
 import { appendAiNote } from '@/ai/notes/appendAiNote'
-import { tryGetAiRuntime } from '@/ai/runtime'
-import { mountAiChatPanel, type AiChatPanelMount } from '@/ai/ui/mountAiChatPanel'
+import { findPassageContentRange } from '@/ai/passage/stores'
+import { tryGetAiRuntime, type PassageNoteWrite } from '@/ai/runtime'
+import { mountAiChatPanel, type AiChatDraft, type AiChatPanelMount } from '@/ai/ui/mountAiChatPanel'
 import { applyPdfDeepLink } from '@/obsidian/pdfDeepLink'
 import {
   displayNameFromRemotePdfUrl,
@@ -93,6 +94,7 @@ export class PdfReaderView extends ItemView {
   private cssChangeRef: EventRef | null = null
   private headerResizeObserver: ResizeObserver | null = null
   private pendingSubpath: string | null = null
+  private noteWriter: ((input: PassageNoteWrite) => Promise<void>) | null = null
 
   constructor(leaf: WorkspaceLeaf, plugin: FoxycapePdfPlugin) {
     super(leaf)
@@ -117,6 +119,10 @@ export class PdfReaderView extends ItemView {
     if (this.reader) {
       this.reader.events.emit(EventNames.CtrlWithCKeyCopy, evt)
     }
+  }
+
+  getReader() {
+    return this.reader
   }
 
   /** Toggle the in-document PDF search bar (Ctrl/Cmd+F). */
@@ -219,6 +225,16 @@ export class PdfReaderView extends ItemView {
     this.toggleMarkPanel(true)
   }
 
+  private currentPdfSource(): Pick<AiChatDraft, 'pdfTitle' | 'filePath' | 'sourceUrl'> {
+    return {
+      pdfTitle:
+        this.file?.basename ||
+        (this.sourceUrl ? displayNameFromRemotePdfUrl(this.sourceUrl) : ''),
+      filePath: this.file?.path,
+      sourceUrl: this.sourceUrl || undefined,
+    }
+  }
+
   private toggleAskAi() {
     const chat = this.ensureAiChat()
     if (chat.isOpen()) {
@@ -234,7 +250,7 @@ export class PdfReaderView extends ItemView {
     chat.open(reader, getMarker, {
       simpleId,
       quote: '',
-      pdfTitle: this.file?.basename ?? '',
+      ...this.currentPdfSource(),
     })
   }
 
@@ -323,6 +339,7 @@ export class PdfReaderView extends ItemView {
   }
 
   async onClose() {
+    this.unbindAiNoteWriter()
     this.unbindChromePlacementObserver()
     this.unbindWorkspaceEvents()
     this.disposeSearchBar()
@@ -478,6 +495,7 @@ export class PdfReaderView extends ItemView {
           enableAutoCreateHighlightNotes: settings.enableAutoCreateHighlightNotes,
           writeExplainToMarkdown: settings.writeExplainToMarkdown,
           writeLookupToMarkdown: settings.writeLookupToMarkdown,
+          writeTranslateToMarkdown: settings.writeTranslateToMarkdown,
         },
         getLinkSource: this.resolveLinkSource,
         onRequirePassword: async (callback, reason) => {
@@ -723,6 +741,7 @@ export class PdfReaderView extends ItemView {
           this.plugin.settings.enableAutoCreateHighlightNotes,
         writeExplainToMarkdown: this.plugin.settings.writeExplainToMarkdown,
         writeLookupToMarkdown: this.plugin.settings.writeLookupToMarkdown,
+        writeTranslateToMarkdown: this.plugin.settings.writeTranslateToMarkdown,
       }),
       onUpdateViewPreferences: async (patch) => {
         await this.plugin.updatePdfViewPreferences(patch)
@@ -775,14 +794,13 @@ export class PdfReaderView extends ItemView {
       httpClient: this.plugin.apiClient.httpClient,
       getLinkSource: this.resolveLinkSource,
       onOpenAi: (draft) => {
-        const title = this.file?.basename ?? ''
         this.ensureAiChat().open(reader, getMarker, {
           simpleId: draft.simpleId,
           quote: draft.quote,
           prompt: draft.prompt,
           autoSend: draft.autoSend,
           displayInput: draft.displayInput,
-          pdfTitle: title,
+          ...this.currentPdfSource(),
         })
       },
       onNeedAccess: (mode) => {
@@ -831,6 +849,10 @@ export class PdfReaderView extends ItemView {
       this.aiChatMount = mountAiChatPanel({
         hostEl,
         storage: this.plugin.storage,
+        app: this.app,
+        openCitedFile: (file, subpath) => this.plugin.openFileWithFoxycape(file, subpath),
+        openCitedUrl: (url, subpath) => this.plugin.openUrlWithFoxycape(url, subpath),
+        getLinkSource: this.resolveLinkSource,
         t: this.plugin.t,
         openSettings: () => {
           const setting = (this.app as unknown as {
@@ -844,30 +866,73 @@ export class PdfReaderView extends ItemView {
     return this.aiChatMount
   }
 
-  private bindAiNoteWriter(reader: Reader) {
+  private resolvePassageNoteSource(simpleId: string): { pdfFile?: TFile; sourceUrl?: string } | null {
+    if (!simpleId) {
+      return null
+    }
+    let matched: PdfReaderView | null = null
+    this.app.workspace.iterateAllLeaves((leaf) => {
+      if (matched) {
+        return
+      }
+      const view = leaf.view
+      if (!(view instanceof PdfReaderView)) {
+        return
+      }
+      if (view.getReader()?.context?.id === simpleId) {
+        matched = view
+      }
+    })
+    if (!matched || (!matched.file && !matched.sourceUrl)) {
+      return null
+    }
+    return {
+      pdfFile: matched.file ?? undefined,
+      sourceUrl: matched.sourceUrl || undefined,
+    }
+  }
+
+  private unbindAiNoteWriter() {
+    const runtime = tryGetAiRuntime()
+    if (runtime && this.noteWriter && runtime.writePassageNote === this.noteWriter) {
+      runtime.writePassageNote = undefined
+    }
+    this.noteWriter = null
+  }
+
+  private bindAiNoteWriter(_reader: Reader) {
     const runtime = tryGetAiRuntime()
     if (!runtime) {
       return
     }
-    runtime.writePassageNote = async (input) => {
-      if (reader.context?.id && input.simpleId !== reader.context.id) {
-        return
-      }
+    const write = async (input: PassageNoteWrite) => {
       if (input.kind === 'explain' && !this.plugin.settings.writeExplainToMarkdown) {
         return
       }
       if (input.kind === 'lookup' && !this.plugin.settings.writeLookupToMarkdown) {
         return
       }
-      await appendAiNote(
-        this.app,
-        {
-          pdfFile: this.file ?? undefined,
-          sourceUrl: this.sourceUrl ?? undefined,
-        },
-        input,
-      )
+      if (input.kind === 'translate' && !this.plugin.settings.writeTranslateToMarkdown) {
+        return
+      }
+      const source = this.resolvePassageNoteSource(input.simpleId)
+      if (!source) {
+        return
+      }
+      try {
+        await appendAiNote(this.app, source, input)
+      } catch (error) {
+        console.error('[Foxycape PDF] failed to write passage note', error)
+        const message = error instanceof Error ? error.message : String(error)
+        new Notice(
+          this.plugin.t('plugin_notice_mark_note_sync_failed', 'Failed to write highlight note: {message}', {
+            message,
+          }),
+        )
+      }
     }
+    this.noteWriter = write
+    runtime.writePassageNote = write
   }
 
   private mountSearchBar(reader: Reader) {
@@ -1099,6 +1164,7 @@ export class PdfReaderView extends ItemView {
         subpath,
         renderer,
         getMarker: () => this.getMarker?.(),
+        findPassageRange: (markId) => findPassageContentRange(this.plugin.storage, markId),
       })
     } catch (error) {
       console.warn('[Foxycape PDF] failed to apply deep link', error)

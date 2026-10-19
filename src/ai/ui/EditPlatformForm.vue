@@ -80,20 +80,30 @@ const save = async () => {
   <form class="fpdf-form" @submit.prevent="save">
     <label>
       {{ t('ai_custom_platform', 'Platform name') }}
-      <input v-model="platformName" class="fpdf-input" :disabled="!!platform?.isOfficial" />
+      <input
+        v-model="platformName"
+        class="fpdf-input"
+        :placeholder="t('ai_example_placeholder', '例如：{value}', { value: 'Deepseek' })"
+        :disabled="!!platform?.isOfficial"
+      />
     </label>
     <label>
       {{ t('ai_custom_base_url', 'Base URL') }}
       <input
         v-model="baseUrl"
         class="fpdf-input"
-        placeholder="https://api.deepseek.com/v1"
+        :placeholder="t('ai_example_placeholder', '例如：{value}', { value: 'https://api.deepseek.com/v1' })"
         :disabled="!!platform?.isOfficial"
       />
     </label>
     <label>
       {{ t('ai_custom_api_key', 'API key') }}
-      <input v-model="apiKey" class="fpdf-input" type="password" placeholder="sk-…" />
+      <input
+        v-model="apiKey"
+        class="fpdf-input"
+        type="password"
+        :placeholder="t('ai_example_placeholder', '例如：{value}', { value: 'sk-…' })"
+      />
     </label>
     <p v-if="errorMessage" class="fpdf-error">{{ errorMessage }}</p>
     <div class="fpdf-form__actions">

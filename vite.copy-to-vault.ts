@@ -17,7 +17,7 @@ const ENTRY_FILES = [
   '.hotreload',
 ] as const
 
-const SIDECAR_DIRS = ['pdfjs', 'static'] as const
+const SIDECAR_DIRS = ['pdfjs', 'katex', 'static'] as const
 const CMAPS_VERSION_FILE = '.foxycape-cmaps-version'
 
 const samePath = (left: string, right: string): boolean => {

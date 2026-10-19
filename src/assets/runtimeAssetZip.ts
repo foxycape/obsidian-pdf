@@ -45,7 +45,9 @@ export const isRemoteZipEntryName = (name: string): boolean => {
     isSafeZipPath(normalized) &&
     (normalized.startsWith('pdfjs/cmaps/') ||
       normalized.startsWith('pdfjs/standard_fonts/') ||
-      normalized.startsWith('pdfjs/wasm/'))
+      normalized.startsWith('pdfjs/wasm/') ||
+      normalized.startsWith('pdfjs/iccs/') ||
+      normalized.startsWith('katex/fonts/'))
   )
 }
 

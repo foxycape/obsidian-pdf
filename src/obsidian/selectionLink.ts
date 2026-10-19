@@ -13,6 +13,11 @@ export type PdfDeepLink = {
    * (`name=p103-934R.png`). Ignored when navigating the PDF.
    */
   name?: string
+  /**
+   * Character start,end on this page's `getPageText` string (`textOffset=120,186`).
+   * Not a text-item selection. `selection` stays four integers.
+   */
+  textOffset?: string
 }
 
 /** Deep-link query key for Foxycape image / screenshot location rects. */
@@ -241,6 +246,8 @@ export const buildPdfDeepLinkFragment = (options: {
   rect?: string
   /** Image basename; written as `name=` for right-click matching. */
   name?: string
+  /** `start,end` into this page's plaintext. Not written into `selection`. */
+  textOffset?: string
 }): string => {
   const parts: string[] = []
   if (options.pageNumber != null && options.pageNumber > 0) {
@@ -258,6 +265,9 @@ export const buildPdfDeepLinkFragment = (options: {
   if (options.name) {
     parts.push(`${FOXYCAPE_IMAGE_NAME_PARAM}=${encodeURIComponent(options.name)}`)
   }
+  if (options.textOffset && parseTextOffsetTuple(options.textOffset)) {
+    parts.push(`textOffset=${options.textOffset}`)
+  }
   return `#${parts.join('&')}`
 }
 
@@ -266,7 +276,7 @@ export const toNavigablePdfSubpath = (
   subpath: string | null | undefined,
 ): string | undefined => {
   const deep = parsePdfDeepLink(subpath)
-  if (deep.page == null && !deep.selection && !deep.markId && !deep.rect) {
+  if (deep.page == null && !deep.selection && !deep.markId && !deep.rect && !deep.textOffset) {
     return undefined
   }
   return buildPdfDeepLinkFragment({
@@ -274,6 +284,7 @@ export const toNavigablePdfSubpath = (
     selection: deep.selection,
     markId: deep.markId,
     rect: deep.rect,
+    textOffset: deep.textOffset,
   })
 }
 
@@ -316,7 +327,34 @@ export const parsePdfDeepLink = (subpath: string | null | undefined): PdfDeepLin
     markId: markId || undefined,
     rect,
     name: name || undefined,
+    textOffset: parseTextOffsetParam(params.get('textOffset')),
   }
+}
+
+/** `start,end` character offsets on one page's plaintext. Rejects selection tuples. */
+export const parseTextOffsetTuple = (
+  textOffset: string | undefined,
+): [number, number] | undefined => {
+  if (!textOffset) {
+    return undefined
+  }
+  const parts = textOffset.split(',').map((part) => Number.parseInt(part.trim(), 10))
+  if (parts.length !== 2 || parts.some((value) => !Number.isFinite(value) || value < 0)) {
+    return undefined
+  }
+  const [start, end] = parts
+  if (end <= start) {
+    return undefined
+  }
+  return [start, end]
+}
+
+const parseTextOffsetParam = (raw: string | null): string | undefined => {
+  const tuple = parseTextOffsetTuple(raw ?? undefined)
+  if (!tuple) {
+    return undefined
+  }
+  return `${tuple[0]},${tuple[1]}`
 }
 
 export const parseSelectionTuple = (

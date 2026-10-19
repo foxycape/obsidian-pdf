@@ -64,7 +64,6 @@ export const explainPassage = async (input: {
     purpose: 'explain',
     responseLanguage: input.responseLanguage,
     signal: input.signal,
-    stream: false,
     messages: [
       { role: 'system', content: systemPrompt(input.detail) },
       {
@@ -97,13 +96,17 @@ export const explainPassage = async (input: {
     detail: input.detail,
     explanation,
   })
-  await getAiRuntime().writePassageNote?.({
-    kind: 'explain',
-    markId: input.markId,
-    simpleId: input.simpleId,
-    text: passage,
-    body: explanation,
-    pageNumber: input.pageNumber,
-  })
+  try {
+    await getAiRuntime().writePassageNote?.({
+      kind: 'explain',
+      markId: input.markId,
+      simpleId: input.simpleId,
+      text: passage,
+      body: explanation,
+      pageNumber: input.pageNumber,
+    })
+  } catch (error) {
+    console.error('[Foxycape PDF] failed to write passage note', error)
+  }
   return explanation
 }

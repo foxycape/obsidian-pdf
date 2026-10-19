@@ -14,6 +14,7 @@ export type PdfViewPreferenceKey =
   | 'enableAutoCreateHighlightNotes'
   | 'writeExplainToMarkdown'
   | 'writeLookupToMarkdown'
+  | 'writeTranslateToMarkdown'
 
 export type PdfViewPreferences = Pick<CustomPdfOptions, PdfViewPreferenceKey>
 export type PdfViewPreferencePatch = Partial<PdfViewPreferences>
@@ -51,6 +52,9 @@ export class CustomPdfOptions extends PdfOptions {
   /** When true, word-lookup results are appended to the PDF's Markdown note. */
   writeLookupToMarkdown = false
 
+  /** When true, translation results are appended to the PDF's Markdown note. */
+  writeTranslateToMarkdown = false
+
   /** Minimum original image width (px) to treat as previewable. */
   imageMinWidth = 100
 
@@ -82,5 +86,6 @@ export const DEFAULT_PDF_VIEW_PREFERENCES: PdfViewPreferences = (() => {
     enableAutoCreateHighlightNotes: defaults.enableAutoCreateHighlightNotes,
     writeExplainToMarkdown: defaults.writeExplainToMarkdown,
     writeLookupToMarkdown: defaults.writeLookupToMarkdown,
+    writeTranslateToMarkdown: defaults.writeTranslateToMarkdown,
   }
 })()

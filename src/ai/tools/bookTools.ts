@@ -1,11 +1,13 @@
-import type { LlmToolCall, LlmToolDefinition } from '../llm'
+import type { ChatCompletionTool } from 'openai/resources'
+import type { LlmToolCall } from '../llm'
+import type { DocumentCitation } from '../chat/types'
 import { getLlm } from '../llm'
 import type { PdfSegment } from '../summary/segments'
 
 export const RELATED_SEGMENT_TOOL = 'get_related_segment_summaries'
 export const FULL_BOOK_SEGMENT_TOOL = 'get_full_book_segment_summaries'
 
-export const bookChatTools: LlmToolDefinition[] = [
+export const bookChatTools: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
@@ -35,14 +37,7 @@ export const bookChatTools: LlmToolDefinition[] = [
   },
 ]
 
-export type BookCitation = {
-  n: number
-  pageNumber: number
-  title: string
-  excerpt: string
-  startOffset?: number
-  endOffset?: number
-}
+export type BookCitation = DocumentCitation
 
 const pagesOf = (segment: PdfSegment) => {
   if (segment.pages?.length) {
@@ -112,8 +107,6 @@ const selectRelated = async (
       platformId: inuse.platformId,
       model: inuse.model,
       purpose: 'summary',
-      stream: true,
-      publishContent: false,
       messages: [
         {
           role: 'system',
@@ -143,6 +136,7 @@ const selectRelated = async (
 
 export const createBookToolExecutor = (
   segments: PdfSegment[],
+  simpleId: string,
   onReasoning?: (text: string) => void,
 ) => {
   const citations: BookCitation[] = []
@@ -177,12 +171,14 @@ export const createBookToolExecutor = (
             }
             const n = citations.length + 1
             citations.push({
-              n,
+              id: String(n),
+              simpleId,
+              resourceTitle: '',
               pageNumber: page.pageNumber,
-              title: segment.title,
-              excerpt,
-              startOffset: sentence.start,
-              endOffset: sentence.end,
+              navPointTitle: segment.title,
+              snippet: excerpt,
+              startTextOffset: sentence.start,
+              endTextOffset: sentence.end,
             })
             lines.push(`${excerpt}[${n}]`)
           }

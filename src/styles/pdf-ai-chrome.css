@@ -47,7 +47,7 @@
 .fpdf-dialog-layer {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: 1100;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -475,13 +475,20 @@ button.fpdf-icon-btn {
   padding: 20px;
 }
 
-.fpdf-chat__list,
-.fpdf-chat__history {
+.fpdf-chat__list {
   overflow: auto;
   flex: 1;
   min-height: 0;
   max-height: none;
   padding: var(--size-4-2) 12px;
+}
+
+.fpdf-chat__stage {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .fpdf-result,
@@ -519,9 +526,22 @@ button.fpdf-icon-btn {
   font-size: 12px;
 }
 
-.fpdf-msg.is-user .fpdf-quote {
+.fpdf-msg.is-user .fpdf-msg__bubble {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   width: fit-content;
   max-width: min(100%, 520px);
+  padding: 8px 12px;
+  border-radius: var(--radius-m, 8px);
+  background: var(--background-secondary);
+}
+
+.fpdf-msg.is-user .fpdf-quote {
+  width: auto;
+  max-width: none;
+  padding: 0 0 0 8px;
+  background: transparent;
 }
 
 .fpdf-input,
@@ -534,6 +554,21 @@ button.fpdf-icon-btn {
   border: 1px solid var(--background-modifier-border);
   background: var(--background-primary);
   color: var(--text-normal);
+}
+
+input.fpdf-input:focus,
+input.fpdf-input:focus-visible,
+.fpdf-form input:focus,
+.fpdf-form input:focus-visible,
+.fpdf-search input:focus,
+.fpdf-search input:focus-visible,
+input.fpdf-history-search:focus,
+input.fpdf-history-search:focus-visible,
+.fpdf-composer textarea:focus,
+.fpdf-composer textarea:focus-visible {
+  border-color: var(--background-modifier-border);
+  box-shadow: none;
+  outline: none;
 }
 
 .fpdf-composer textarea {
@@ -654,6 +689,8 @@ button.fpdf-icon-btn {
 .fpdf-msg__tools {
   position: relative;
   display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
 .fpdf-msg.is-assistant .fpdf-msg__tools {
@@ -747,11 +784,10 @@ button.fpdf-icon-btn {
 }
 
 .fpdf-msg.is-user .fpdf-msg__body {
-  width: fit-content;
-  max-width: min(100%, 520px);
-  padding: 8px 12px;
-  border-radius: var(--radius-m, 8px);
-  background: var(--background-secondary);
+  width: auto;
+  max-width: none;
+  padding: 0;
+  background: transparent;
 }
 
 .fpdf-msg.is-assistant .fpdf-msg__body {
@@ -836,7 +872,7 @@ button.fpdf-icon-btn {
 
 .fpdf-cite-pop {
   position: fixed;
-  z-index: 50;
+  z-index: 1000;
   width: auto;
   max-width: min(350px, calc(100vw - 16px));
   min-width: 0;
@@ -962,6 +998,12 @@ button.fpdf-icon-btn {
   white-space: normal;
   text-align: start;
   overflow-wrap: anywhere;
+  border-radius: 8px;
+  background: var(--background-secondary);
+}
+
+.fpdf-related button.clickable-icon.fpdf-text-btn:hover {
+  background: var(--background-modifier-hover);
 }
 
 .mod-cta {
@@ -1387,16 +1429,85 @@ button.clickable-icon.fpdf-send {
   color: var(--text-on-accent);
 }
 
+.fpdf-history-layer {
+  position: absolute;
+  z-index: 6;
+  inset: 8px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
 .fpdf-chat__history {
+  display: flex;
+  width: min(300px, 100%);
+  max-height: 100%;
+  flex-direction: column;
+  overflow: hidden;
   padding: 0;
+  pointer-events: auto;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 12px;
+  background: var(--background-primary);
+  box-shadow: var(--shadow-s);
+}
+
+.fpdf-history-head,
+.fpdf-history-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-1);
+  padding: 8px;
+}
+
+.fpdf-history-head {
+  justify-content: space-between;
+  font-weight: 600;
+}
+
+.fpdf-history-tools {
+  padding-top: 0;
+}
+
+button.clickable-icon.fpdf-history-filter {
+  height: auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-muted);
+}
+
+button.clickable-icon.fpdf-history-filter.is-active {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.fpdf-history-search {
+  width: calc(100% - 16px);
+  margin: 0 8px 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+}
+
+.fpdf-history-scroll {
+  overflow: auto;
+  min-height: 0;
 }
 
 .fpdf-history-row {
   display: flex;
-  align-items: center;
-  gap: var(--size-4-2);
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--background-modifier-border);
+  align-items: flex-start;
+  gap: var(--size-4-1);
+  padding: 8px;
+}
+
+.fpdf-history-row.is-current {
+  background: var(--background-modifier-hover);
 }
 
 button.clickable-icon.fpdf-history-row__main {
@@ -1414,14 +1525,62 @@ button.clickable-icon.fpdf-history-row__main {
   text-align: start;
 }
 
-.fpdf-history-row__title {
+.fpdf-history-row__title,
+.fpdf-history-row__doc {
   max-width: 100%;
   overflow: hidden;
-  font-size: 14px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.fpdf-chat__history > .fpdf-muted {
-  padding: 12px;
+.fpdf-history-row__title {
+  font-size: 14px;
+  color: var(--text-normal);
+}
+
+button.clickable-icon.fpdf-history-hit {
+  display: block;
+  width: calc(100% - 16px);
+  height: auto;
+  margin: 0 8px 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--background-secondary);
+  box-shadow: none;
+  color: var(--text-muted);
+  text-align: start;
+  white-space: normal;
+}
+
+button.clickable-icon.fpdf-history-hit mark.fpdf-history-hit__mark {
+  background-color: rgba(255, 212, 0, 0.45);
+  color: var(--text-normal);
+}
+
+::highlight(ai-search-hit) {
+  background-color: rgba(255, 212, 0, 0.45);
+  color: inherit;
+}
+
+.fpdf-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.fpdf-history-confirm,
+.fpdf-history-empty {
+  padding: 8px 12px 12px;
+}
+
+.fpdf-history-confirm__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }

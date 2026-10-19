@@ -55,6 +55,10 @@ describe('runtime asset zip helpers', () => {
     expect(isRemoteZipEntryName('pdfjs/cmaps/Adobe-GB1-0.bcmap')).toBe(true)
     expect(isRemoteZipEntryName('pdfjs/standard_fonts/FoxitSerif.pfb')).toBe(true)
     expect(isRemoteZipEntryName('pdfjs/wasm/jbig2.wasm')).toBe(true)
+    expect(isRemoteZipEntryName('pdfjs/iccs/CGATS001Compat-v2-micro.icc')).toBe(true)
+    expect(isEmbeddedZipEntryName('pdfjs/iccs/CGATS001Compat-v2-micro.icc')).toBe(false)
+    expect(isRemoteZipEntryName('katex/fonts/KaTeX_Main-Regular.woff2')).toBe(true)
+    expect(isEmbeddedZipEntryName('katex/fonts/KaTeX_Main-Regular.woff2')).toBe(false)
     expect(isRemoteZipEntryName('pdfjs/pdf.worker.min.mjs')).toBe(false)
     expect(isRemoteZipEntryName('../secret.txt')).toBe(false)
     expect(isEmbeddedZipEntryName('pdfjs/cmaps/')).toBe(false)
@@ -104,6 +108,8 @@ describe('runtime asset install detection', () => {
     dirs.add('plugins/foxycape-pdf/pdfjs/cmaps')
     dirs.add('plugins/foxycape-pdf/pdfjs/standard_fonts')
     dirs.add('plugins/foxycape-pdf/pdfjs/wasm')
+    dirs.add('plugins/foxycape-pdf/pdfjs/iccs')
+    dirs.add('plugins/foxycape-pdf/katex/fonts')
     files.set(
       `plugins/foxycape-pdf/${RUNTIME_CMAPS_VERSION_MARKER}`,
       `${RUNTIME_CMAPS_ID}\n`,

@@ -6,13 +6,29 @@ import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRe
 import { asAugmentedCanvasContext } from '../canvasContextHooks'
 import type { CustomPdfOptions } from '../CustomPdfOptions'
 import type { IPdfImageDetector, PdfImageDetectResult } from './IPdfImageDetector'
-import { isFullPageInternalImage } from './pdfInternalImageUtils'
+import { canvasCssScale, isFullPageInternalImage, toCssImageBox } from './pdfInternalImageUtils'
 
 export class PdfImageDetector implements IPdfImageDetector {
+  /** Hit boxes from the painting canvas. Survives pdf.js swapping the visible canvas. */
+  private readonly hitsByPage = new Map<number, ImageDescriptor[]>()
+
   constructor(
     private readonly renderer: IPdfRenderer,
     private readonly options: CustomPdfOptions,
   ) {}
+
+  clearPage = (pageNumber: number) => {
+    this.hitsByPage.delete(pageNumber)
+  }
+
+  add = (pageNumber: number, descriptor: ImageDescriptor) => {
+    const hits = this.hitsByPage.get(pageNumber)
+    if (hits) {
+      hits.push(descriptor)
+      return
+    }
+    this.hitsByPage.set(pageNumber, [descriptor])
+  }
 
   async detect(e: MouseEvent | TouchEvent, doc?: IPdfDocument): Promise<PdfImageDetectResult> {
     const resolvedDoc = doc ?? (await this.findPageDocument(e.target as HTMLElement))
@@ -70,18 +86,21 @@ export class PdfImageDetector implements IPdfImageDetector {
       return null
     }
 
-    const canvasContext = pageView.canvas.getContext('2d')
-    if (!canvasContext) {
-      return null
+    const stored = this.hitsByPage.get(doc.pageNumber)
+    let imageDescriptors = stored?.length ? stored : undefined
+    if (!imageDescriptors?.length) {
+      const canvasContext = pageView.canvas.getContext('2d')
+      imageDescriptors = canvasContext
+        ? (asAugmentedCanvasContext(canvasContext).imageDescriptors ?? undefined)
+        : undefined
     }
-    const imageDescriptors = asAugmentedCanvasContext(canvasContext).imageDescriptors
     if (!imageDescriptors?.length) {
       return null
     }
 
     let imageDescriptor: ImageDescriptor | null = null
     const changeOrientation = (pageView.rotation ?? 0) % 180 !== 0
-    const devicePixelRatio = window.devicePixelRatio ?? 1
+    const { scaleX, scaleY } = canvasCssScale(pageView.canvas)
 
     for (let i = imageDescriptors.length - 1; i >= 0; i--) {
       const image = imageDescriptors[i]
@@ -97,10 +116,11 @@ export class PdfImageDetector implements IPdfImageDetector {
       ) {
         continue
       }
-      const x = rawX / devicePixelRatio
-      const y = rawY / devicePixelRatio
-      const scaledWidth = rawScaledWidth / devicePixelRatio
-      const scaledHeight = rawScaledHeight / devicePixelRatio
+      const box = toCssImageBox(rawX, rawY, rawScaledWidth, rawScaledHeight, scaleX, scaleY)
+      const x = box.x
+      const y = box.y
+      const scaledWidth = box.width
+      const scaledHeight = box.height
 
       if (
         offsetX > x &&
@@ -115,7 +135,12 @@ export class PdfImageDetector implements IPdfImageDetector {
 
     if (
       imageDescriptor &&
-      isFullPageInternalImage(imageDescriptor, pageView.width, pageView.height)
+      isFullPageInternalImage(
+        imageDescriptor,
+        pageView.width,
+        pageView.height,
+        { scaleX, scaleY },
+      )
     ) {
       return null
     }
@@ -155,6 +180,6 @@ export class PdfImageDetector implements IPdfImageDetector {
   }
 
   async dispose(): Promise<void> {
-    //
+    this.hitsByPage.clear()
   }
 }

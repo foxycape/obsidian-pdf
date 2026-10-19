@@ -127,6 +127,12 @@ const toggleLookupNotes = async () => {
   })
 }
 
+const toggleTranslateNotes = async () => {
+  await applyPatch({
+    writeTranslateToMarkdown: !prefs.value.writeTranslateToMarkdown,
+  })
+}
+
 const toggleThemeRemap = async () => {
   await applyPatch({
     enablePdfThemeColorRemap: !prefs.value.enablePdfThemeColorRemap,
@@ -360,7 +366,7 @@ watch(
 
           <section class="foxycape-pdf-settings__group">
             <h3 class="foxycape-pdf-settings__heading">
-              {{ t('pdf_chrome_settings_group_highlights', 'Highlights') }}
+              {{ t('pdf_marks', 'Marks') }}
             </h3>
             <div class="foxycape-pdf-settings__card">
               <div class="foxycape-pdf-settings__row">
@@ -402,7 +408,7 @@ watch(
                     {{
                       t(
                         'pdf_chrome_settings_explain_notes_desc',
-                        'When enabled, “explain this passage” results are appended to the same Markdown note as this PDF. Off by default.',
+                        'When enabled, “explain this passage” results are appended to the same Markdown note as this PDF.',
                       )
                     }}
                   </div>
@@ -427,7 +433,7 @@ watch(
                     {{
                       t(
                         'pdf_chrome_settings_lookup_notes_desc',
-                        'When enabled, word-lookup results are appended to the same Markdown note as this PDF. Off by default.',
+                        'When enabled, word-lookup results are appended to the same Markdown note as this PDF.',
                       )
                     }}
                   </div>
@@ -441,6 +447,31 @@ watch(
                   @click="toggleLookupNotes"
                   @keydown.enter.prevent="toggleLookupNotes"
                   @keydown.space.prevent="toggleLookupNotes"
+                />
+              </div>
+              <div class="foxycape-pdf-settings__row">
+                <div class="foxycape-pdf-settings__text">
+                  <div class="foxycape-pdf-settings__name">
+                    {{ t('pdf_chrome_settings_translate_notes_name', 'Write translations into the note') }}
+                  </div>
+                  <div class="foxycape-pdf-settings__desc">
+                    {{
+                      t(
+                        'pdf_chrome_settings_translate_notes_desc',
+                        'When enabled, translation results are appended to the same Markdown note as this PDF.',
+                      )
+                    }}
+                  </div>
+                </div>
+                <div
+                  class="checkbox-container"
+                  :class="{ 'is-enabled': prefs.writeTranslateToMarkdown }"
+                  role="switch"
+                  :aria-checked="prefs.writeTranslateToMarkdown"
+                  tabindex="0"
+                  @click="toggleTranslateNotes"
+                  @keydown.enter.prevent="toggleTranslateNotes"
+                  @keydown.space.prevent="toggleTranslateNotes"
                 />
               </div>
             </div>

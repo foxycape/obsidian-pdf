@@ -1,22 +1,25 @@
 import { combineUrlSegments } from '@foxycape/core/kernal/common/url'
 import OpenAI from 'openai'
-import type { ChatCompletionMessageParam } from 'openai/resources'
+import type { ChatCompletionMessageParam, ChatCompletionTool } from 'openai/resources'
 import { OFFICIAL_AI_GENERATE_PATH } from '@/license/constants'
 import { AiAccessError } from '../errors'
 import { createObsidianAiFetch } from '../fetch'
 import { getLicenseAiUser, refreshLicenseAiQuota } from '../licenseSession'
 import { getAiRuntime } from '../runtime'
 import { LlmModelProvider } from './LlmModelProvider'
+import type { ContentPart, LlmToolCall } from './contentParts'
 import {
   DefaultOfficialPlatformId,
   type LlmCompleteCallbacks,
   type LlmCompleteRequest,
   type LlmCompleteResult,
-  type LlmMessage,
-  type LlmToolCall,
+  type LlmChunkEvent,
 } from './types'
 
 const MAX_TOOL_ROUNDS = 4
+
+const ANSWER_AFTER_SEARCH =
+  'The book search for this turn is finished. Reply to the user in prose now. Do not emit tool calls, XML tags, or function syntax.'
 
 const TOOL_CALL_OPEN = '<tool_call>'
 
@@ -37,8 +40,9 @@ const displayAnswerText = (content: string) => {
   return cutTrailingToolOpen(withoutTail)
 }
 
-const toSdkMessages = (messages: LlmMessage[]): ChatCompletionMessageParam[] =>
-  messages as ChatCompletionMessageParam[]
+const visibleAnswerText = (content: string) => displayAnswerText(content).trim()
+
+const toSdkMessages = (messages: ChatCompletionMessageParam[]): ChatCompletionMessageParam[] => messages
 
 const readToolCalls = (raw: unknown): LlmToolCall[] | undefined => {
   if (!Array.isArray(raw) || raw.length === 0) {
@@ -75,77 +79,119 @@ export class LlmClient {
     request: LlmCompleteRequest,
     callbacks?: LlmCompleteCallbacks,
   ): Promise<LlmCompleteResult> => {
-    const messages = [...request.messages]
-    let round = 0
-    let answering = false
-    while (round <= MAX_TOOL_ROUNDS) {
-      const allowTools =
-        !!request.tools?.length && !!callbacks?.executeToolCall && round < MAX_TOOL_ROUNDS && !answering
-      const publishContent = request.publishContent !== false
-      const wantStream = request.stream !== false && !!callbacks?.onChunk
+    const messages: ChatCompletionMessageParam[] = [...request.messages]
+    const assistantTrace: ContentPart[] = []
+    let tools = request.body?.tools
+    let toolTripCount = 0
+    let retriedEmptyAnswer = false
+    let addedAnswerInstruction = false
+    const maxTrips = request.maxToolRoundTrips ?? MAX_TOOL_ROUNDS
+
+    while (true) {
+      const answering = toolTripCount > 0
+      if (answering) {
+        tools = undefined
+        if (!addedAnswerInstruction) {
+          messages.push({ role: 'system', content: ANSWER_AFTER_SEARCH })
+          addedAnswerInstruction = true
+        }
+      }
+      const wantStream = !!callbacks?.onChunk
+      const streamReasoningPrefix = callbacks?.getExternalReasoningPrefix?.() ?? ''
+      const onChunk = callbacks?.onChunk
+        ? async (event: LlmChunkEvent) => {
+            const rawContent = event.content
+            const content =
+              answering && rawContent != null
+                ? visibleAnswerText(rawContent).length === 0
+                  ? ''
+                  : displayAnswerText(rawContent)
+                : rawContent
+            await callbacks.onChunk?.({
+              ...event,
+              content,
+              reasoningContent: streamReasoningPrefix + (event.reasoningContent ?? ''),
+            })
+          }
+        : undefined
       let result: LlmCompleteResult
       try {
-        result = await this.makeRequest(
-          request,
-          messages,
-          allowTools ? request.tools : undefined,
-          wantStream,
-          publishContent,
-          callbacks,
-        )
+        result = await this.makeRequest(request, messages, tools, wantStream, onChunk)
       } catch (error) {
         if (!wantStream) {
           throw error
         }
-        result = await this.makeRequest(
-          request,
-          messages,
-          allowTools ? request.tools : undefined,
-          false,
-          publishContent,
-          callbacks,
-        )
+        result = await this.makeRequest(request, messages, tools, false, undefined)
       }
+      const tailReasoning = result.reasoningContent ?? ''
+      const mergedRoundReasoning = streamReasoningPrefix + tailReasoning
       const toolCalls = result.tool_calls
-      if (!allowTools || !toolCalls?.length || !callbacks?.executeToolCall) {
-        if (!wantStream && publishContent && callbacks?.onChunk && result.content) {
+      const hasToolCalls = (toolCalls?.length ?? 0) > 0
+      if (answering || !hasToolCalls || !callbacks?.executeToolCall) {
+        const prose = answering ? visibleAnswerText(result.content ?? '') : (result.content ?? '')
+        if (answering && !prose && !retriedEmptyAnswer) {
+          retriedEmptyAnswer = true
+          continue
+        }
+        const content = answering ? prose : (result.content ?? '')
+        if (!wantStream && callbacks?.onChunk && content) {
           await callbacks.onChunk({
-            content: displayAnswerText(result.content),
-            reasoningContent: result.reasoningContent,
+            content: answering ? displayAnswerText(content) : content,
+            reasoningContent: mergedRoundReasoning || undefined,
             done: true,
           })
         }
+        assistantTrace.push({
+          type: 'assistant',
+          content,
+          ...(mergedRoundReasoning ? { reasoningContent: mergedRoundReasoning } : {}),
+        })
         return {
           ...result,
-          content: publishContent ? displayAnswerText(result.content) : result.content,
+          content,
+          reasoningContent: mergedRoundReasoning || undefined,
+          tool_calls: answering ? undefined : toolCalls,
+          contents: assistantTrace,
         }
       }
+      assistantTrace.push({
+        type: 'assistant',
+        content: result.content ?? '',
+        ...(mergedRoundReasoning ? { reasoningContent: mergedRoundReasoning } : {}),
+        ...(toolCalls?.length ? { tool_calls: toolCalls } : {}),
+      })
       messages.push({
         role: 'assistant',
         content: result.content || null,
         tool_calls: toolCalls,
       })
-      for (const call of toolCalls) {
+      for (const call of toolCalls ?? []) {
         const output = await callbacks.executeToolCall(call)
         messages.push({
           role: 'tool',
           tool_call_id: call.id,
           content: output,
         })
+        assistantTrace.push({
+          type: 'tool',
+          tool_call_id: call.id,
+          content: output,
+          name: call.function?.name,
+        })
       }
-      answering = true
-      round += 1
+      toolTripCount += 1
+      if (toolTripCount > maxTrips) {
+        throw new Error('Tool round limit reached')
+      }
     }
-    throw new Error('Tool round limit reached')
   }
 
   private makeRequest = async (
     request: LlmCompleteRequest,
-    messages: LlmMessage[],
-    tools: LlmCompleteRequest['tools'],
+    messages: ChatCompletionMessageParam[],
+    tools: ChatCompletionTool[] | undefined,
     stream: boolean,
-    publishContent: boolean,
-    callbacks?: LlmCompleteCallbacks,
+    onChunk?: (event: LlmChunkEvent) => void | Promise<void>,
   ): Promise<LlmCompleteResult> => {
     const runtime = getAiRuntime()
     const settings = await this.modelProvider.getSettings()
@@ -219,16 +265,14 @@ export class LlmClient {
     )
     let content = ''
     let reasoning = ''
-    const prefix = callbacks?.getExternalReasoningPrefix?.() ?? ''
     const toolBuckets = new Map<number, LlmToolCall>()
     const emit = async () => {
-      if (!callbacks?.onChunk) {
+      if (!onChunk) {
         return
       }
-      const visibleReasoning = `${prefix}${reasoning}`.trim()
-      await callbacks.onChunk({
-        ...(publishContent ? { content: displayAnswerText(content) } : {}),
-        ...(visibleReasoning ? { reasoningContent: `${prefix}${reasoning}` } : {}),
+      await onChunk({
+        content,
+        ...(reasoning ? { reasoningContent: reasoning } : {}),
         done: false,
       })
     }
@@ -256,7 +300,7 @@ export class LlmClient {
         reasoning += reasoningDelta
         changed = true
       }
-      if (changed && (publishContent || reasoning)) {
+      if (changed) {
         await emit()
       }
       const deltas = delta?.tool_calls
@@ -281,7 +325,7 @@ export class LlmClient {
         }
       }
     }
-    await callbacks?.onChunk?.({ done: true })
+    await onChunk?.({ done: true })
     if (isOfficial) {
       await refreshLicenseAiQuota(runtime.apiClient)
     }
@@ -289,7 +333,7 @@ export class LlmClient {
     return {
       success: true,
       content,
-      reasoningContent: reasoning ? `${prefix}${reasoning}` : prefix || undefined,
+      reasoningContent: reasoning || undefined,
       tool_calls: toolCalls.length > 0 ? toolCalls : undefined,
     }
   }

@@ -202,6 +202,39 @@ export const upsertLookup = (
     (base) => base,
   )
 
+const isFixedContentRange = (value: unknown): value is FixedContentRange => {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+  const range = value as FixedContentRange
+  return range.kind === 'fixed' && Array.isArray(range.geometries) && range.geometries.length > 0
+}
+
+/** Selection geometry saved with an explain, lookup, or translation of this passage. */
+export const findPassageContentRange = async (
+  storage: DexieStorage,
+  markId: string,
+): Promise<FixedContentRange | undefined> => {
+  if (!markId) {
+    return undefined
+  }
+  const names: TableName[] = ['explains', 'lookups', 'translates']
+  for (const name of names) {
+    const table = tableOf(storage, name)
+    if (!table) {
+      continue
+    }
+    const row = (await table.get([ANONYMOUS_OWNER_ID, markId])) as
+      | { contentRange?: unknown }
+      | undefined
+    const range = row?.contentRange
+    if (isFixedContentRange(range)) {
+      return range
+    }
+  }
+  return undefined
+}
+
 export const findTranslateText = async (
   storage: DexieStorage,
   markId: string,

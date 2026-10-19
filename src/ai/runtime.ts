@@ -2,7 +2,7 @@ import type { IApiClient } from '@/network'
 import type { IStorage } from '@/storage'
 import { clearLicenseAiSession } from './licenseSession'
 
-export type PassageNoteKind = 'explain' | 'lookup'
+export type PassageNoteKind = 'explain' | 'lookup' | 'translate'
 
 export type PassageNoteWrite = {
   kind: PassageNoteKind

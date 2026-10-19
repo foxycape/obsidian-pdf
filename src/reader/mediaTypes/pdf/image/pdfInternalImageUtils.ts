@@ -24,11 +24,45 @@ export const getFlipOnlyMatrix = (
 const withinTolerance = (a: number, b: number, tolerance: number) =>
   Math.abs(a - b) <= tolerance
 
+/** pdf.js detail canvas (`PDFPageDetailView`) uses a local viewport, not page coordinates. */
+export const isPdfDetailPageView = (pageView: { renderingId?: string }) =>
+  pageView.renderingId?.startsWith('detail') === true
+
+/** Canvas backing-store pixels per CSS pixel. Capped canvases are not `devicePixelRatio`. */
+export const canvasCssScale = (canvas: {
+  width: number
+  height: number
+  getBoundingClientRect: () => { width: number; height: number }
+}) => {
+  const bounds = canvas.getBoundingClientRect()
+  const scaleX = bounds.width > 0 ? canvas.width / bounds.width : 1
+  const scaleY = bounds.height > 0 ? canvas.height / bounds.height : 1
+  return {
+    scaleX: scaleX > 0 ? scaleX : 1,
+    scaleY: scaleY > 0 ? scaleY : 1,
+  }
+}
+
+export const toCssImageBox = (
+  rawX: number,
+  rawY: number,
+  rawWidth: number,
+  rawHeight: number,
+  scaleX: number,
+  scaleY: number,
+) => ({
+  x: rawX / scaleX,
+  y: rawY / scaleY,
+  width: rawWidth / scaleX,
+  height: rawHeight / scaleY,
+})
+
 /** Whether an embedded image spans the full page viewport (within tolerance). */
 export const isFullPageInternalImage = (
   imageDescriptor: ImageDescriptor,
   pageWidth: number,
   pageHeight: number,
+  scale: { scaleX: number; scaleY: number },
   tolerance = FULL_PAGE_IMAGE_SIZE_TOLERANCE_PX,
 ): boolean => {
   if (
@@ -40,9 +74,8 @@ export const isFullPageInternalImage = (
     return false
   }
 
-  const dpr = window.devicePixelRatio ?? 1
-  const imageWidth = imageDescriptor.scaledWidth / dpr
-  const imageHeight = imageDescriptor.scaledHeight / dpr
+  const imageWidth = imageDescriptor.scaledWidth / scale.scaleX
+  const imageHeight = imageDescriptor.scaledHeight / scale.scaleY
 
   return (
     (withinTolerance(imageWidth, pageWidth, tolerance) &&

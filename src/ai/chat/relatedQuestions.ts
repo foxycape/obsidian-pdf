@@ -51,7 +51,6 @@ export const fetchRelatedQuestions = async (input: {
     purpose: 'chat',
     responseLanguage: input.language,
     signal: input.signal,
-    stream: false,
     messages: [
       {
         role: 'system',
