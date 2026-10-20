@@ -11,13 +11,24 @@ import type { Plugin } from 'vite'
 
 const ENTRY_FILES = [
   'main.js',
+  'pdf.js',
   'styles.css',
   'manifest.json',
   'versions.json',
   '.hotreload',
+  '.foxycape-pdf-bundle-version',
+] as const
+
+/** Recopy even when the sidecar directory itself is unchanged. */
+const ALWAYS_FILES = [
+  'static/signer.js',
+  'static/.foxycape-signer-version',
+  'pdfjs/pdf.worker.min.mjs',
+  'pdfjs/.foxycape-worker-version',
 ] as const
 
 const SIDECAR_DIRS = ['pdfjs', 'katex', 'static'] as const
+const ALWAYS_DIRS = ['locales'] as const
 const CMAPS_VERSION_FILE = '.foxycape-cmaps-version'
 
 const samePath = (left: string, right: string): boolean => {
@@ -96,6 +107,25 @@ export const copyToVaultPlugin = (outDir: string, vaultPluginDir: string): Plugi
           continue
         }
         cpSync(from, resolve(dest, name))
+      }
+
+      for (const name of ALWAYS_FILES) {
+        const from = resolve(outDir, name)
+        if (!existsSync(from)) {
+          continue
+        }
+        const target = resolve(dest, name)
+        mkdirSync(dirname(target), { recursive: true })
+        cpSync(from, target)
+      }
+
+      for (const name of ALWAYS_DIRS) {
+        const from = resolve(outDir, name)
+        const target = resolve(dest, name)
+        if (!existsSync(from)) {
+          continue
+        }
+        cpSync(from, target, { recursive: true })
       }
 
       const srcVersion = readTextIfExists(resolve(outDir, 'pdfjs', CMAPS_VERSION_FILE))

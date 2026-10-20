@@ -31,11 +31,15 @@ const isSafeZipPath = (name: string): boolean => {
   return !normalized.startsWith('/') && !normalized.includes('..')
 }
 
-export const isEmbeddedZipEntryName = (name: string): boolean => {
+/** pdfjs.zip contains the reader bundle, the PDF.js worker, signer.js, and language files. */
+export const isPdfjsZipEntryName = (name: string): boolean => {
   const normalized = normalizeZipEntryName(name)
   return (
     isSafeZipPath(normalized) &&
-    (normalized === 'pdfjs/pdf.worker.min.mjs' || normalized === 'static/signer.js')
+    (normalized === 'pdf.js' ||
+      normalized === 'pdfjs/pdf.worker.min.mjs' ||
+      normalized === 'static/signer.js' ||
+      /^locales\/[A-Za-z0-9_-]+\.json$/.test(normalized))
   )
 }
 

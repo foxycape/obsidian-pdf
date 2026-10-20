@@ -1,5 +1,6 @@
 /* Match Obsidian built-in PDF: zero view-content padding for this view type. */
 .workspace-leaf-content[data-type="foxycape-pdf"] .view-content {
+  position: relative;
   padding: 0;
   overflow: hidden;
   /* Obsidian UI chrome often uses user-select:none; opt this view back into text selection. */
@@ -1237,4 +1238,28 @@ button.clickable-icon.foxycape-pdf-toolbar-more__item:hover {
   height: 32px;
   min-width: 32px;
   min-height: 32px;
+}
+
+.foxycape-pdf-init-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  background: var(--background-primary);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.foxycape-pdf-init-status {
+  max-width: 24rem;
+  line-height: 1.5;
+}
+
+.foxycape-pdf-init-retry {
+  margin-top: 0.25rem;
 }

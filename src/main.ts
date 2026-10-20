@@ -1,11 +1,7 @@
 import '@/styles/pdf-view.css'
 import '@/styles/pdf-ai-chrome.css'
 
-// Foxycape pdf_viewer + pdf.mjs use private globals (__foxycapePdfjs*).
-// Worker: pluginDir/pdfjs/pdf.worker.min.mjs → Blob URL at open time
-// (unpacked from main.js; cmaps/fonts download in the background).
-import '@/reader/foxycapePdfViewer'
-
+// Reader and AI live in pdf.js, loaded the first time a PDF opens.
 import { FoxycapePdfPlugin } from '@/plugin/FoxycapePdfPlugin'
 
 export default FoxycapePdfPlugin

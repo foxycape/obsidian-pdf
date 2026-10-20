@@ -47,16 +47,30 @@ export const katexFontsPlugin = (options: KatexFontsOptions): Plugin => {
     },
     writeBundle() {
       copyFonts()
-      const cssPath = join(options.outDir, 'styles.css')
-      const css = readFileSync(cssPath, 'utf8')
-      const next = css.replace(PLACEHOLDER, 'url(katex/fonts/$1)')
-      if (next === css || next.includes('data:application/x-foxycape-katex')) {
-        throw new Error('KaTeX font urls were not rewritten in styles.css')
+      const cssNames = ['pdf-bundle.css', 'styles.css']
+      let rewritten = false
+      for (const name of cssNames) {
+        const cssPath = join(options.outDir, name)
+        if (!existsSync(cssPath)) {
+          continue
+        }
+        const css = readFileSync(cssPath, 'utf8')
+        if (!css.includes('data:application/x-foxycape-katex')) {
+          continue
+        }
+        const next = css.replace(PLACEHOLDER, 'url(katex/fonts/$1)')
+        if (next.includes('data:application/x-foxycape-katex')) {
+          throw new Error(`KaTeX font urls were not rewritten in ${name}`)
+        }
+        if (next.includes('data:font')) {
+          throw new Error(`${name} still inlines font data`)
+        }
+        writeFileSync(cssPath, next)
+        rewritten = true
       }
-      if (next.includes('data:font')) {
-        throw new Error('styles.css still inlines font data')
+      if (!rewritten) {
+        throw new Error('KaTeX font urls were not rewritten')
       }
-      writeFileSync(cssPath, next)
     },
   }
 }

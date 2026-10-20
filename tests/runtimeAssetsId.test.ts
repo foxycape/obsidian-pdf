@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { buildRuntimeAssetsDownloadUrl, RUNTIME_CMAPS_ID } from '@/assets/constants'
+import { buildRuntimeAssetsCdnUrl, buildRuntimeAssetsDownloadUrl, RUNTIME_CMAPS_ID } from '@/assets/constants'
 import { resolveFoxycapeCore } from '../scripts/resolveFoxycapeCore'
 import { buildPdfjsCmapsId, buildRuntimeAssetsId } from '../scripts/runtimeAssetsId.mjs'
 
@@ -34,7 +34,10 @@ describe('runtime assets identity', () => {
 
   it('still downloads the zip from the current plugin GitHub Release tag', () => {
     expect(buildRuntimeAssetsDownloadUrl('3.4.1')).toBe(
-      'https://github.com/foxycape/obsidian-pdf/releases/download/3.4.1/foxycape-pdf-assets.zip',
+      'https://github.com/foxycape/obsidian-pdf/releases/download/3.4.1/pdfjs-assets.zip',
+    )
+    expect(buildRuntimeAssetsCdnUrl('3.4.1')).toBe(
+      'https://cdn.tiefeiying.com/obsidian-pdf/3.4.1/pdfjs-assets.zip',
     )
   })
 })

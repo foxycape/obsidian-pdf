@@ -6,12 +6,17 @@ import {
   TFile,
   type EventRef,
   type ViewStateResult,
-  type WorkspaceLeaf,
 } from 'obsidian'
 import { EventNames, FileLocation, formatFileSize, OpenOptions, type Reader } from '@foxycape/core/kernal'
 import type { IMarker } from '@/mark'
 import type { FoxycapePdfPlugin } from '@/plugin/FoxycapePdfPlugin'
 import { createPdfReader } from '@/reader/createPdfReader'
+import {
+  ensurePdfRuntime,
+  getLegacyMarkCatalog,
+  getPdfStorage,
+  getPdfWorker,
+} from '@/reader/pdfRuntime'
 import { resolvePdfAssetUrls } from '@/reader/pdfAssets'
 import { readVaultBinaryWithProgress } from '@/reader/readVaultBinaryWithProgress'
 import { promptPdfPassword } from '@/ui/PdfPasswordModal'
@@ -58,6 +63,7 @@ import type { PdfImageLinkSource } from '@/obsidian/pdfImageRef'
 import { PDF_READER_VIEW_TYPE } from '@/settings/types'
 import { isObsidianMobile } from '@/ui/isObsidianMobile'
 import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
+import type { PdfReaderSurface } from '@/views/PdfReaderSurface'
 
 export { PDF_READER_VIEW_TYPE }
 
@@ -68,10 +74,8 @@ export type PdfReaderViewState = {
 
 const FILE_LOADING_DELAY_MS = 2000
 
-export class PdfReaderView extends ItemView {
-  file: TFile | null = null
-  sourceUrl: string | null = null
-  navigation = true
+export class PdfReaderView {
+  private readonly surface: PdfReaderSurface
 
   private reader: Reader | null = null
   private getMarker: (() => IMarker | undefined) | null = null
@@ -96,22 +100,55 @@ export class PdfReaderView extends ItemView {
   private pendingSubpath: string | null = null
   private noteWriter: ((input: PassageNoteWrite) => Promise<void>) | null = null
 
-  constructor(leaf: WorkspaceLeaf, plugin: FoxycapePdfPlugin) {
-    super(leaf)
-    this.plugin = plugin
+  constructor(surface: PdfReaderSurface) {
+    this.surface = surface
+    this.plugin = surface.plugin
     // Obsidian's global Mod+F / Mod+C can eat DOM keydown before the PDF
     // container sees it. View.scope overrides those while this leaf is active.
-    this.scope = new Scope(this.app.scope)
-    this.scope.register(['Mod'], 'f', (evt) => {
+    surface.navigation = true
+    surface.scope = new Scope(surface.app.scope)
+    surface.scope.register(['Mod'], 'f', (evt) => {
       evt.preventDefault()
       this.requestOpenFind()
       return false
     })
-    this.scope.register(['Mod'], 'c', (evt) => {
+    surface.scope.register(['Mod'], 'c', (evt) => {
       evt.preventDefault()
       this.requestFormattedCopy(evt)
       return false
     })
+  }
+
+  private get app() {
+    return this.surface.app
+  }
+
+  private get contentEl() {
+    return this.surface.contentEl
+  }
+
+  private get containerEl() {
+    return this.surface.containerEl
+  }
+
+  get file() {
+    return this.surface.file
+  }
+
+  set file(value: TFile | null) {
+    this.surface.file = value
+  }
+
+  get sourceUrl() {
+    return this.surface.sourceUrl
+  }
+
+  set sourceUrl(value: string | null) {
+    this.surface.sourceUrl = value
+  }
+
+  isMounted() {
+    return this.mountEl != null
   }
 
   /** Ctrl/Cmd+C formatted PDF text copy (paragraph-aware). */
@@ -173,7 +210,7 @@ export class PdfReaderView extends ItemView {
           })
       })
     }
-    super.onPaneMenu(menu, source)
+    ItemView.prototype.onPaneMenu.call(this.surface, menu, source)
   }
 
   /**
@@ -324,6 +361,9 @@ export class PdfReaderView extends ItemView {
   }
 
   async onOpen() {
+    if (this.mountEl) {
+      return
+    }
     this.contentEl.empty()
     this.contentEl.addClass('foxycape-pdf-view')
     this.bodyEl = this.contentEl.createDiv({ cls: 'foxycape-pdf-body' })
@@ -373,7 +413,7 @@ export class PdfReaderView extends ItemView {
   }
 
   async setState(state: unknown, result: ViewStateResult): Promise<void> {
-    await super.setState(state, result)
+    await ItemView.prototype.setState.call(this.surface, state, result)
     const record = state && typeof state === 'object' ? (state as PdfReaderViewState) : {}
     const filePath = typeof record.file === 'string' && record.file ? record.file : undefined
     const url = typeof record.url === 'string' ? normalizeRemoteDocumentUrl(record.url) : undefined
@@ -432,13 +472,13 @@ export class PdfReaderView extends ItemView {
 
   getEphemeralState(): Record<string, unknown> {
     return {
-      ...super.getEphemeralState(),
+      ...ItemView.prototype.getEphemeralState.call(this.surface),
       subpath: this.pendingSubpath ?? undefined,
     }
   }
 
   setEphemeralState(state: unknown): void {
-    super.setEphemeralState(state)
+    ItemView.prototype.setEphemeralState.call(this.surface, state)
     const subpath = this.extractSubpath(state)
     if (!subpath) {
       return
@@ -478,6 +518,7 @@ export class PdfReaderView extends ItemView {
     try {
       await this.plugin.ensureRuntimeAssets()
       await this.plugin.syncLocaleIfNeeded()
+      await ensurePdfRuntime()
       const assets = await resolvePdfAssetUrls(this.plugin)
       const { settings } = this.plugin
       const session = await createPdfReader({
@@ -486,8 +527,8 @@ export class PdfReaderView extends ItemView {
         assets,
         device: this.plugin.device,
         locale: this.plugin.locale,
-        storage: this.plugin.storage,
-        computeMd5: (bytes) => this.plugin.globalWorker.computeMd5(bytes),
+        storage: getPdfStorage(),
+        computeMd5: (bytes) => getPdfWorker().computeMd5(bytes),
         viewPreferences: {
           enableViewPdfImages: settings.enableViewPdfImages,
           enablePdfThemeColorRemap: settings.enablePdfThemeColorRemap,
@@ -590,7 +631,7 @@ export class PdfReaderView extends ItemView {
     reader: Reader,
   ) {
     const simpleId = reader.context?.id
-    const catalog = this.plugin.legacyMarkCatalog
+    const catalog = getLegacyMarkCatalog()
     if (!simpleId || !catalog.hasPending) {
       return
     }
@@ -607,14 +648,14 @@ export class PdfReaderView extends ItemView {
         }
       }
       const changed = await migrateOpenedDocument({
-        kv: this.plugin.storage,
-        marks: this.plugin.storage.marks,
-        readingProgress: this.plugin.storage.readingProgress,
+        kv: getPdfStorage(),
+        marks: getPdfStorage().marks,
+        readingProgress: getPdfStorage().readingProgress,
         catalog,
         simpleId,
         prefix,
         localFile,
-        hasher: this.plugin.globalWorker,
+        hasher: getPdfWorker(),
       })
       if (!changed || reader.disposed) {
         return
@@ -789,8 +830,8 @@ export class PdfReaderView extends ItemView {
       reader,
       getMarker,
       t: this.plugin.t,
-      storage: this.plugin.storage,
-      passageStorage: this.plugin.storage,
+      storage: getPdfStorage(),
+      passageStorage: getPdfStorage(),
       httpClient: this.plugin.apiClient.httpClient,
       getLinkSource: this.resolveLinkSource,
       onOpenAi: (draft) => {
@@ -848,7 +889,7 @@ export class PdfReaderView extends ItemView {
       }
       this.aiChatMount = mountAiChatPanel({
         hostEl,
-        storage: this.plugin.storage,
+        storage: getPdfStorage(),
         app: this.app,
         openCitedFile: (file, subpath) => this.plugin.openFileWithFoxycape(file, subpath),
         openCitedUrl: (url, subpath) => this.plugin.openUrlWithFoxycape(url, subpath),
@@ -875,12 +916,16 @@ export class PdfReaderView extends ItemView {
       if (matched) {
         return
       }
-      const view = leaf.view
-      if (!(view instanceof PdfReaderView)) {
+      const view = leaf.view as {
+        getViewType?: () => string
+        getPdfSession?: () => PdfReaderView | null
+      }
+      if (view?.getViewType?.() !== PDF_READER_VIEW_TYPE) {
         return
       }
-      if (view.getReader()?.context?.id === simpleId) {
-        matched = view
+      const session = view.getPdfSession?.()
+      if (session?.getReader()?.context?.id === simpleId) {
+        matched = session
       }
     })
     if (!matched || (!matched.file && !matched.sourceUrl)) {
@@ -993,7 +1038,7 @@ export class PdfReaderView extends ItemView {
       this.markListMount = mountPdfMarkListPanel({
         hostEl: this.markPanelHost,
         reader,
-        storage: this.plugin.storage,
+        storage: getPdfStorage(),
         getMarker,
         open: this.markPanelOpen,
         t: this.plugin.t,
@@ -1164,7 +1209,7 @@ export class PdfReaderView extends ItemView {
         subpath,
         renderer,
         getMarker: () => this.getMarker?.(),
-        findPassageRange: (markId) => findPassageContentRange(this.plugin.storage, markId),
+        findPassageRange: (markId) => findPassageContentRange(getPdfStorage(), markId),
       })
     } catch (error) {
       console.warn('[Foxycape PDF] failed to apply deep link', error)
@@ -1180,3 +1225,5 @@ export class PdfReaderView extends ItemView {
     errorEl.setText(message)
   }
 }
+
+export const attachPdfReader = (surface: PdfReaderSurface) => new PdfReaderView(surface)

@@ -7,8 +7,8 @@
   "type": "module",
   "main": "dist/main.js",
   "scripts": {
-    "dev": "vite build --watch",
-    "build": "vite build && node scripts/package-runtime-assets.mjs",
+    "dev": "node scripts/watch-builds.mjs",
+    "build": "vite build && vite build --config vite.pdf.config.ts && node scripts/package-runtime-assets.mjs",
     "test": "vitest run",
     "lint": "eslint .",
     "typecheck": "vue-tsc --noEmit -p tsconfig.json",

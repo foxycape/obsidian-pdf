@@ -117,7 +117,7 @@ PDF 排版常把句子拦腰截断，复制后满是多余换行。照常选中�
 
 ```bash
 npm install
-npm run build      # → dist/main.js、styles.css、manifest.json + foxycape-pdf-assets.zip
+npm run build      # → dist/main.js、pdf.js、styles.css、manifest.json、pdfjs.zip、字体包
 npm run dev        # 监听构建；若设置了 OBSIDIAN_PLUGIN_DIR，成功后拷到该插件目录
 npm test
 npm run typecheck
@@ -126,13 +126,13 @@ npm run link       # 将 dist/ junction 到 vault 的 .obsidian/plugins/foxycape
 
 在 `.env` 中设置 `OBSIDIAN_PLUGIN_DIR`（见 `.env.example`）后，`npm run dev` 会在每次构建成功时把产物拷到该目录；`npm run link` 也读取同一变量，未设置时仍使用默认 vault 路径。进程环境变量优先于文件。
 
-社区安装只会拿到 Obsidian 标准三文件。Worker 与 signer 在首次加载时从 `main.js` 解压（无需下载）。字符映射与标准字体（约 1.5 MB）在缺失时从 `foxycape-pdf-assets.zip` 静默下载，按 **PDF.js 版本** 识别，因此日常插件升级不会再次拉取。本地 `npm run link` 已带 sidecar，无需下载。
+社区安装只会拿到 `main.js`、`manifest.json` 和 `styles.css`。启用插件时，如果 `pdf.js`、worker、signer 或英文语言包缺了任意一个，或版本标记不一致，就下载一个 `pdfjs.zip`（阅读器、PDF worker、signer 和语言包在同一个包里）。设备注册等这个包落地，命令名也等语言文件读完再注册。第一次打开 PDF 时如果包还在下载，才显示「正在初始化…」，进度是这一个包的字节数。本地已有且标记一致（包括 `npm run link`）会直接执行，不显示这一层。字符映射与标准字体（约 1.5 MB）仍按 **PDF.js 版本** 在后台从 `pdfjs-assets.zip` 下载，文件名变化不会让已经装好的字体包重下。
 
 ## 发布（Obsidian 社区插件）
 
 1. 在 `package.json` 中提升 `version`（semver `x.y.z`）。构建会同步到 `manifest.json` / `versions.json`。
 2. 提交后创建 GitHub Release，**tag 必须与该 version 完全一致**（如 `3.3.6`，不要加 `v` 前缀）。
-3. 上传 `dist/main.js`、`dist/manifest.json`、`dist/styles.css`，以及 `dist/foxycape-pdf-assets.zip`。
+3. 上传 `dist/main.js`、`dist/manifest.json`、`dist/styles.css`、`dist/pdfjs.zip`，以及 `dist/pdfjs-assets.zip`。
 
 推送版本 tag 会触发 [`.github/workflows/release.yml`](.github/workflows/release.yml) 自动构建并上传上述资产。
 

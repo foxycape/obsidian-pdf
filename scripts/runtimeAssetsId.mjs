@@ -19,9 +19,9 @@ const readPdfjsVersion = (pdfjsDir) => {
 export const buildPdfjsCmapsId = (pdfjsDir) => `pdfjs-${readPdfjsVersion(pdfjsDir)}`
 
 /**
- * Compatibility id for embedded worker + signer (zipped into main.js).
+ * Compatibility id for the signer zip and the worker file.
  * Tied to pdf.js + signer contents, not the plugin semver — plugin-only
- * upgrades should not force a re-extract.
+ * upgrades should not force those files to download again.
  *
  * @param {string} pdfjsDir Absolute path to the pdfjs package root (has package.json)
  * @param {string} signerPath Absolute path to static/signer.js

@@ -11,6 +11,12 @@ type CreateObsidianPluginConfigOptions = {
   aliases?: Record<string, string>
   /** Build output folder relative to packageDir. Default: dist */
   outDirName?: string
+  /** CJS bundle file name. Default: main.js */
+  fileName?: string
+  /** Extracted CSS file name. Default: styles.css */
+  cssFileName?: string
+  /** Include Tailwind. The pdf.js build leaves this off so styles are not duplicated. */
+  tailwind?: boolean
 }
 
 type ObsidianManifest = {
@@ -77,10 +83,16 @@ export const createObsidianPluginConfig = (
   const packageDir = options.packageDir
   const entry = options.entry ?? resolve(packageDir, 'src/main.ts')
   const outDir = resolve(packageDir, options.outDirName ?? 'dist')
+  const fileName = options.fileName ?? 'main.js'
+  const cssFileName = options.cssFileName ?? 'styles.css'
   const { root: coreRoot } = resolveFoxycapeCore(packageDir)
 
   return defineConfig({
-    plugins: [vue(), tailwindcss(), copyPluginManifestPlugin(packageDir, outDir)],
+    plugins: [
+      vue(),
+      ...(options.tailwind === false ? [] : [tailwindcss()]),
+      copyPluginManifestPlugin(packageDir, outDir),
+    ],
     // Mobile WebView has no Node `process`. Vue's esm-bundler build still
     // references process.env.NODE_ENV; replace it at build time so enable works.
     define: {
@@ -100,7 +112,7 @@ export const createObsidianPluginConfig = (
       lib: {
         entry,
         formats: ['cjs'],
-        fileName: () => 'main.js',
+        fileName: () => fileName,
       },
       rollupOptions: {
         // path2d/canvas are optional Node deps of vendored pdfjs; browser builds must not resolve them.
@@ -113,7 +125,13 @@ export const createObsidianPluginConfig = (
           'canvas',
         ],
         output: {
-          assetFileNames: 'styles.css',
+          assetFileNames: (assetInfo: { name?: string; names?: string[] }) => {
+            const assetName = assetInfo.names?.[0] ?? assetInfo.name ?? ''
+            if (assetName.endsWith('.css')) {
+              return cssFileName
+            }
+            return 'assets/[name][extname]'
+          },
           exports: 'default',
           inlineDynamicImports: true,
         },

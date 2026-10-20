@@ -74,11 +74,15 @@ describe('downloadBinaryWithProgress', () => {
   })
 
   it('returns the HTTP status when the download fails', async () => {
-    const request: BinaryRequestFn = async () => ({
-      status: 404,
-      headers: {},
-      arrayBuffer: new ArrayBuffer(0),
-    })
+    let calls = 0
+    const request: BinaryRequestFn = async () => {
+      calls += 1
+      return {
+        status: 404,
+        headers: {},
+        arrayBuffer: new ArrayBuffer(0),
+      }
+    }
     const result = await downloadBinaryWithProgress(
       'https://example.com/missing.zip',
       () => undefined,
@@ -86,5 +90,83 @@ describe('downloadBinaryWithProgress', () => {
     )
     expect(result.status).toBe(404)
     expect(result.bytes.byteLength).toBe(0)
+    expect(calls).toBe(1)
+  })
+
+  it('retries when a 200 body is shorter than Content-Length', async () => {
+    let calls = 0
+    const payload = bytesOf('complete-body')
+    const request: BinaryRequestFn = async () => {
+      calls += 1
+      if (calls === 1) {
+        const short = bytesOf('short')
+        return {
+          status: 200,
+          headers: { 'Content-Length': '100' },
+          arrayBuffer: short.buffer.slice(short.byteOffset, short.byteOffset + short.byteLength),
+        }
+      }
+      return {
+        status: 200,
+        headers: { 'Content-Length': String(payload.byteLength) },
+        arrayBuffer: payload.buffer.slice(payload.byteOffset, payload.byteOffset + payload.byteLength),
+      }
+    }
+
+    const result = await downloadBinaryWithProgress(
+      'https://example.com/assets.zip',
+      () => undefined,
+      request,
+    )
+    expect(calls).toBe(2)
+    expect(new TextDecoder().decode(result.bytes)).toBe('complete-body')
+  })
+
+  it('resumes from the CDN after GitHub sends no new bytes', async () => {
+    const payload = new Uint8Array(300 * 1024)
+    payload.fill(9)
+    const github =
+      'https://github.com/foxycape/obsidian-pdf/releases/download/3.4.4/pdfjs.zip'
+    const cdn = 'https://cdn.tiefeiying.com/obsidian-pdf/3.4.4/pdfjs.zip'
+    const calls: Array<{ url: string; range: string }> = []
+    const request: BinaryRequestFn = (url, headers) => {
+      const range = headers?.Range ?? ''
+      calls.push({ url, range })
+      const match = /^bytes=(\d+)-(\d+)$/.exec(range)
+      if (!match) {
+        return Promise.resolve({ status: 400, headers: {}, arrayBuffer: new ArrayBuffer(0) })
+      }
+      const start = Number(match[1])
+      const end = Math.min(Number(match[2]), payload.byteLength - 1)
+      if (url === github && start > 0) {
+        return new Promise(() => undefined)
+      }
+      const slice = payload.slice(start, end + 1)
+      return Promise.resolve({
+        status: 206,
+        headers: {
+          'Content-Range': `bytes ${start}-${end}/${payload.byteLength}`,
+        },
+        arrayBuffer: slice.buffer.slice(slice.byteOffset, slice.byteOffset + slice.byteLength),
+      })
+    }
+
+    const result = await downloadBinaryWithProgress(
+      github,
+      () => undefined,
+      request,
+      {
+        fallbackUrls: [cdn],
+        idleTimeoutMs: 30,
+      },
+    )
+
+    expect(result.status).toBe(200)
+    expect(result.bytes.byteLength).toBe(payload.byteLength)
+    expect(result.bytes.every((value) => value === 9)).toBe(true)
+    expect(calls[0]).toEqual({ url: github, range: 'bytes=0-262143' })
+    expect(calls.some((call) => call.url === cdn && call.range.startsWith('bytes=262144-'))).toBe(
+      true,
+    )
   })
 })

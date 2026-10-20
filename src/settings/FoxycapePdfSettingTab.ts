@@ -7,9 +7,8 @@ import {
   type TextComponent,
 } from 'obsidian'
 import { debounce } from '@foxycape/core/kernal/web/debounce'
-import { formatTokenAmount } from '@/ai/formatTokenAmount'
-import { getLicenseAiUser, loadLicenseAiUsage, type AiUsagePoint } from '@/ai/licenseSession'
-import { tryGetAiRuntime } from '@/ai/runtime'
+import { loadPdfModule } from '@/views/loadPdfModule'
+import type { PdfUsagePoint } from '@/views/pdfBundleModule'
 import {
   LICENSE_INPUT_DEBOUNCE_MS,
   LICENSE_PURCHASE_URL,
@@ -30,11 +29,26 @@ type UsageBar = {
   total: number
 }
 
-const usageTotal = (point: AiUsagePoint) =>
+const formatTokenAmount = (count: number): string => {
+  if (!Number.isFinite(count) || count <= 0) {
+    return '0'
+  }
+  if (count >= 1_000_000) {
+    const rounded = Math.round((count / 1_000_000) * 10) / 10
+    return (Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)) + 'M'
+  }
+  if (count >= 1000) {
+    const rounded = Math.round((count / 1000) * 10) / 10
+    return (Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)) + 'K'
+  }
+  return String(Math.round(count))
+}
+
+const usageTotal = (point: PdfUsagePoint) =>
   point.inputTokenCount + point.outputTokenCount + point.cacheTokenCount
 
 /** One bar per day. Rows that share a date are added together. */
-const toUsageBars = (points: AiUsagePoint[]): UsageBar[] => {
+const toUsageBars = (points: PdfUsagePoint[]): UsageBar[] => {
   const order: string[] = []
   const totals = new Map<string, number>()
   for (const point of points) {
@@ -53,9 +67,9 @@ const toUsageBars = (points: AiUsagePoint[]): UsageBar[] => {
 }
 
 /** Last 7 local days, including today. All counts stay at 0. */
-const zeroUsagePoints = (): AiUsagePoint[] => {
+const zeroUsagePoints = (): PdfUsagePoint[] => {
   const today = new Date()
-  const points: AiUsagePoint[] = []
+  const points: PdfUsagePoint[] = []
   for (let offset = 6; offset >= 0; offset -= 1) {
     const date = new Date(today)
     date.setDate(today.getDate() - offset)
@@ -265,7 +279,7 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
     this.refreshLicenseStatus()
     try {
       // License API needs signer from the embedded pack, not remote cmaps/fonts.
-      await this.plugin.ensureEmbeddedRuntimeAssets()
+      await this.plugin.ensureSignerRuntime()
     } catch (error) {
       this.isLicenseChecking = false
       this.lastOutcome = {
@@ -316,7 +330,7 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
     this.lastUnbindError = null
     this.refreshLicenseStatus()
     try {
-      await this.plugin.ensureEmbeddedRuntimeAssets()
+      await this.plugin.ensureSignerRuntime()
     } catch (error) {
       this.isLicenseUnbinding = false
       this.lastUnbindError =
@@ -482,11 +496,20 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
     chartEl: HTMLElement,
     requestId: number,
   ) => {
-    const runtime = tryGetAiRuntime()
-    if (!runtime) {
+    let bundle
+    try {
+      bundle = await loadPdfModule(this.plugin)
+    } catch {
+      balanceEl.setText(
+        this.plugin.t('plugin_settings_ai_usage_unavailable', 'Usage is unavailable right now'),
+      )
       return
     }
-    const user = await getLicenseAiUser(runtime.apiClient, runtime.getLicense())
+    const runtime = bundle.tryGetAiRuntime()
+    if (!runtime || requestId !== this.usageRequestId) {
+      return
+    }
+    const user = await bundle.getLicenseAiUser(runtime.apiClient, runtime.getLicense())
     if (requestId !== this.usageRequestId) {
       return
     }
@@ -500,7 +523,7 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
     balanceEl.setText(
       this.plugin.t('plugin_settings_ai_balance', 'AI usage balance: {balance}', { balance }),
     )
-    const points = await loadLicenseAiUsage(runtime.apiClient, user.accessToken)
+    const points = await bundle.loadLicenseAiUsage(runtime.apiClient, user.accessToken)
     if (requestId !== this.usageRequestId) {
       return
     }
@@ -514,7 +537,7 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
     this.drawUsageChart(chartEl, points)
   }
 
-  private drawUsageChart = (chartEl: HTMLElement, points: AiUsagePoint[]) => {
+  private drawUsageChart = (chartEl: HTMLElement, points: PdfUsagePoint[]) => {
     const usageBars = toUsageBars(points)
     chartEl.createDiv({
       cls: 'foxycape-pdf-ai-usage__title',

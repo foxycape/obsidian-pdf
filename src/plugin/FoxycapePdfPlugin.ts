@@ -1,14 +1,13 @@
 import { Notice, Plugin, TFile } from 'obsidian'
-import { bindAiRuntime, tryGetAiRuntime } from '@/ai/runtime'
 import type { IDevice } from '@foxycape/core/kernal'
 import type { IApiClient } from '@/network'
 import { createPluginApiClient } from '@/api/createPluginApiClient'
 import { DeviceService } from '@/api/DeviceService'
 import {
-  ensureEmbeddedRuntimeAssets as unpackEmbeddedRuntimeAssets,
   ensureRemoteRuntimeAssets,
   ensureRuntimeAssets as unpackRuntimeAssets,
-  hasEmbeddedRuntimeAssets,
+  ensureSignerRuntime as downloadSignerRuntime,
+  hasSignerRuntime,
 } from '@/assets/ensureRuntimeAssets'
 import { ObsidianLocale } from '@/i18n'
 import { LicenseService } from '@/license'
@@ -29,17 +28,15 @@ import type { PdfViewPreferencePatch } from '@/reader/mediaTypes/pdf/CustomPdfOp
 import {
   DEFAULT_SETTINGS,
   OBSIDIAN_PDF_VIEW_TYPE,
+  PDF_READER_VIEW_TYPE,
   toPersistedSettings,
   type FoxycapePdfSettings,
 } from '@/settings/types'
 import { disposeWasmSignerBlobUrl } from '@/api/resolveWasmSignerUrl'
-import { disposePdfWorkerBlobSrc } from '@/reader/pdfAssets'
-import { DexieStorage } from '@/storage'
-import { LegacyMarkCatalog } from '@/storage/legacy/LegacyMarkCatalog'
 import { registerAstroidIcon } from '@/ui/astroidIcon'
 import { applyFoxycapeMenuIcon, registerFoxycapeIcon } from '@/ui/foxycapeIcon'
-import { createGlobalWorker, type IGlobalWorker } from '@/workers'
-import { PDF_READER_VIEW_TYPE, PdfReaderView } from '@/views/PdfReaderView'
+import { PdfReaderHostView } from '@/views/PdfReaderHostView'
+import type { PdfBundleModule } from '@/views/pdfBundleModule'
 
 type ViewRegistryLike = {
   registerExtensions?: (extensions: string[], viewType: string) => void
@@ -49,12 +46,6 @@ type ViewRegistryLike = {
 export class FoxycapePdfPlugin extends Plugin {
   settings: FoxycapePdfSettings = { ...DEFAULT_SETTINGS }
   locale = new ObsidianLocale(this)
-  /** Shared IndexedDB storage for marks / progress. */
-  storage = new DexieStorage({ dbName: 'foxycape-pdf' })
-  /** Leftover KV mark tables, classified once at startup. */
-  legacyMarkCatalog = new LegacyMarkCatalog()
-  /** Hashes and image work off the page thread so signer.js cannot replace WebAssembly. */
-  globalWorker: IGlobalWorker = createGlobalWorker()
   /** Shared signed API client (IApiClient + ObsidianHttpClient/requestUrl). */
   apiClient!: IApiClient
   /** Shared device identity used by API signing + registration. */
@@ -73,10 +64,10 @@ export class FoxycapePdfPlugin extends Plugin {
   } | null = null
   private isDefaultPdfBindingActive = false
   private lastSyncedLanguage = ''
+  private disposeLoadedPdfRuntime: (() => Promise<void>) | null = null
 
   async onload() {
     await this.loadSettings()
-    await this.legacyMarkCatalog.load(this.storage)
     const api = createPluginApiClient(this, {
       appId: '20',
       appVersion: this.manifest.version,
@@ -85,45 +76,20 @@ export class FoxycapePdfPlugin extends Plugin {
     this.device = api.device
     this.deviceService = new DeviceService(this, this.device)
     this.licenseService = new LicenseService(this)
-    bindAiRuntime({
-      apiClient: this.apiClient,
-      storage: this.storage,
-      getLicense: () => this.settings.license,
-      onNeedLicense: () => {
-        const hooks = tryGetAiRuntime()?.chrome
-        if (hooks) {
-          hooks.openAccess('need-license')
-          return
-        }
-        const setting = (this.app as unknown as {
-          setting?: { open: () => void; openTabById?: (id: string) => void }
-        }).setting
-        setting?.open()
-        setting?.openTabById?.(this.manifest.id)
-      },
-      onQuotaExhausted: () => {
-        const hooks = tryGetAiRuntime()?.chrome
-        if (hooks) {
-          hooks.openAccess('quota')
-          return
-        }
-        new Notice(this.t('ai_quota_exhausted', 'Official AI quota is used up.'))
-      },
-    })
-    await this.locale.initialize()
-    this.lastSyncedLanguage = this.locale.getCurrentLanguage()
     registerFoxycapeIcon()
     registerAstroidIcon()
 
     await this.licenseService.ensureTrialStarted()
-    // Unpack worker+signer from main.js, then register device / validate license.
-    // Cmaps/fonts download silently in the background.
-    void this.bootstrapRuntimeAssets()
+    // pdfjs.zip carries the reader, worker, signer, and language files.
+    // Commands are registered after that pack is on disk so their names can be translated.
+    await this.bootstrapRuntimeAssets()
+    await this.locale.initialize()
+    this.lastSyncedLanguage = this.locale.getCurrentLanguage()
     this.licenseService.startPeriodicValidation()
 
     this.registerView(
       PDF_READER_VIEW_TYPE,
-      (leaf) => new PdfReaderView(leaf, this),
+      (leaf) => new PdfReaderHostView(leaf, this),
     )
 
     // Capture linktext (with subpath) for link context menus; reuse open tabs on click.
@@ -238,10 +204,8 @@ export class FoxycapePdfPlugin extends Plugin {
     } catch (error) {
       console.warn('[Foxycape PDF] failed to restore pdf extension', error)
     }
-    disposePdfWorkerBlobSrc()
     disposeWasmSignerBlobUrl()
-    void this.globalWorker.dispose()
-    void this.storage.dispose()
+    void this.disposeLoadedPdfRuntime?.()
     void this.locale.dispose()
   }
 
@@ -249,25 +213,53 @@ export class FoxycapePdfPlugin extends Plugin {
     this.locale.getText(key, defaultText, named)
 
   /**
-   * Unpack worker+signer from main.js (no download). Cmaps/fonts keep
-   * downloading in the background and do not block opening a PDF.
+   * pdf.js, the worker, and signer ship in one zip. Opening a PDF waits on that
+   * same download when it is still running.
    */
   ensureRuntimeAssets = async () => {
     await unpackRuntimeAssets(this, { t: this.t })
+  }
+
+  /** Download pdfjs.zip if any of its files are missing. License/API needs signer.js from it. */
+  ensureSignerRuntime = async () => {
+    await downloadSignerRuntime(this, { t: this.t })
     void this.runNetworkWhenAssetsReady()
   }
 
-  /** Unpack worker+signer from main.js (no network). License/API only needs this. */
-  ensureEmbeddedRuntimeAssets = async () => {
-    await unpackEmbeddedRuntimeAssets(this, { t: this.t })
-    void this.runNetworkWhenAssetsReady()
+  /** Wire AI inside pdf.js. main.js does not keep its own copy of that runtime. */
+  bindLoadedPdfModule = (mod: PdfBundleModule) => {
+    this.disposeLoadedPdfRuntime = () => mod.disposePdfRuntime()
+    mod.bindAiRuntime({
+      apiClient: this.apiClient,
+      getLicense: () => this.settings.license,
+      onNeedLicense: () => {
+        const hooks = mod.tryGetAiRuntime()?.chrome
+        if (hooks) {
+          hooks.openAccess('need-license')
+          return
+        }
+        const setting = (this.app as unknown as {
+          setting?: { open: () => void; openTabById?: (id: string) => void }
+        }).setting
+        setting?.open()
+        setting?.openTabById?.(this.manifest.id)
+      },
+      onQuotaExhausted: () => {
+        const hooks = mod.tryGetAiRuntime()?.chrome
+        if (hooks) {
+          hooks.openAccess('quota')
+          return
+        }
+        new Notice(this.t('ai_quota_exhausted', 'Official AI quota is used up.'))
+      },
+    })
   }
 
   bootstrapRuntimeAssets = async () => {
     try {
-      await this.ensureEmbeddedRuntimeAssets()
+      await this.ensureSignerRuntime()
     } catch (error) {
-      console.error('[Foxycape PDF] failed to extract embedded runtime assets', error)
+      console.error('[Foxycape PDF] failed to download pdfjs pack', error)
       new Notice(error instanceof Error ? error.message : String(error), 8000)
     }
     void ensureRemoteRuntimeAssets(this, { t: this.t }).catch((error) => {
@@ -277,7 +269,7 @@ export class FoxycapePdfPlugin extends Plugin {
 
   /** Register device / validate license once signer.js is on disk. */
   runNetworkWhenAssetsReady = async () => {
-    if (!(await hasEmbeddedRuntimeAssets(this))) {
+    if (!(await hasSignerRuntime(this))) {
       return
     }
     void this.deviceService.registerDevice()
@@ -390,8 +382,8 @@ export class FoxycapePdfPlugin extends Plugin {
     return this.getActiveFoxycapePdfView()?.file ?? null
   }
 
-  private getActiveFoxycapePdfView = (): PdfReaderView | null => {
-    const view = this.app.workspace.getActiveViewOfType(PdfReaderView)
+  private getActiveFoxycapePdfView = (): PdfReaderHostView | null => {
+    const view = this.app.workspace.getActiveViewOfType(PdfReaderHostView)
     return view ?? null
   }
 

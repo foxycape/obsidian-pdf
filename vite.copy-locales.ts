@@ -1,28 +1,17 @@
-import { cpSync, existsSync, mkdirSync, rmSync } from 'node:fs'
-import { join } from 'node:path'
+import { cpSync, existsSync, mkdirSync } from 'node:fs'
+import { resolve } from 'node:path'
 import type { Plugin } from 'vite'
 
-/**
- * Copy locale JSON files into dist/locales so they stay out of main.js
- * and are loaded on demand at runtime (same pattern as pdf.worker.min.mjs).
- */
-export const copyLocaleAssetsPlugin = (outDir: string, localesSrcDir: string): Plugin => {
-  const localesOutDir = join(outDir, 'locales')
-
-  const copy = () => {
-    if (!existsSync(localesSrcDir)) {
-      throw new Error(`Locale source directory not found at ${localesSrcDir}`)
+/** Copy language JSON next to the plugin so local builds do not download pdfjs.zip for them. */
+export const copyLocalesPlugin = (packageDir: string, outDir: string): Plugin => ({
+  name: 'foxycape-copy-locales',
+  writeBundle() {
+    const from = resolve(packageDir, 'src/i18n/locales')
+    if (!existsSync(from)) {
+      return
     }
-
-    rmSync(localesOutDir, { recursive: true, force: true })
-    mkdirSync(localesOutDir, { recursive: true })
-    cpSync(localesSrcDir, localesOutDir, { recursive: true })
-  }
-
-  return {
-    name: 'copy-locale-assets',
-    writeBundle() {
-      copy()
-    },
-  }
-}
+    const target = resolve(outDir, 'locales')
+    mkdirSync(target, { recursive: true })
+    cpSync(from, target, { recursive: true })
+  },
+})

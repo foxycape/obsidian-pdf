@@ -30,9 +30,11 @@ jobs:
       - name: Package plugin assets
         run: |
           test -f dist/main.js
+          test -f dist/pdf.js
           test -f dist/manifest.json
           test -f dist/styles.css
-          test -f dist/foxycape-pdf-assets.zip
+          test -f dist/pdfjs-assets.zip
+          test -f dist/pdfjs.zip
           test -f dist/pdfjs/pdf.worker.min.mjs
           test -f dist/static/signer.js
           test -d dist/pdfjs/cmaps
@@ -40,8 +42,9 @@ jobs:
           mkdir -p release-assets
           # Community installer only consumes these three files.
           cp dist/main.js dist/manifest.json dist/styles.css release-assets/
-          # Sidecar zip is fetched when the on-disk pdf.js/signer id mismatches.
-          cp dist/foxycape-pdf-assets.zip release-assets/
+          # Reader, worker, signer, and language files are fetched together when any of them is missing.
+          cp dist/pdfjs.zip release-assets/
+          cp dist/pdfjs-assets.zip release-assets/
 
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
@@ -50,7 +53,28 @@ jobs:
             release-assets/main.js
             release-assets/manifest.json
             release-assets/styles.css
-            release-assets/foxycape-pdf-assets.zip
+            release-assets/pdfjs.zip
+            release-assets/pdfjs-assets.zip
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload release assets to Aliyun OSS
+        env:
+          OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+          OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
+          OSS_ENDPOINT: ${{ secrets.OSS_ENDPOINT }}
+        run: |
+          set -euo pipefail
+          curl -fsSL -o /tmp/ossutil.zip https://gosspublic.alicdn.com/ossutil/1.7.19/ossutil-v1.7.19-linux-amd64.zip
+          unzip -q /tmp/ossutil.zip -d /tmp/ossutil
+          OSSUTIL="$(find /tmp/ossutil -type f -name 'ossutil*' | head -n 1)"
+          chmod +x "$OSSUTIL"
+          VERSION="${GITHUB_REF_NAME}"
+          for file in main.js manifest.json styles.css pdfjs.zip pdfjs-assets.zip; do
+            "$OSSUTIL" cp -f "release-assets/${file}" "oss://${OSS_BUCKET}/obsidian-pdf/${VERSION}/${file}" \
+              -e "${OSS_ENDPOINT}" \
+              -i "${OSS_ACCESS_KEY_ID}" \
+              -k "${OSS_ACCESS_KEY_SECRET}"
+          done

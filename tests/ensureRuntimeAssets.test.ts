@@ -2,17 +2,25 @@ import { zipSync } from 'fflate'
 import { describe, expect, it } from 'vitest'
 import type { Plugin } from 'obsidian'
 import {
+  PDF_BUNDLE_VERSION_MARKER,
   RUNTIME_CMAPS_ID,
   RUNTIME_CMAPS_VERSION_MARKER,
+  RUNTIME_ID,
+  SIGNER_VERSION_MARKER,
+  WORKER_VERSION_MARKER,
 } from '@/assets/constants'
 import {
-  hasEmbeddedRuntimeAssets,
+  ensurePdfjsPack,
+  hasPdfBundle,
   hasRemoteRuntimeAssets,
+  hasSignerRuntime,
+  hasWorkerRuntime,
+  pdfjsPackNeedsDownload,
 } from '@/assets/ensureRuntimeAssets'
 import {
   decodeBase64ToBytes,
   extractZipToPluginDir,
-  isEmbeddedZipEntryName,
+  isPdfjsZipEntryName,
   isRemoteZipEntryName,
 } from '@/assets/runtimeAssetZip'
 
@@ -48,20 +56,26 @@ const createVault = () => {
 const bytesOf = (text: string) => new TextEncoder().encode(text)
 
 describe('runtime asset zip helpers', () => {
-  it('only allows worker/signer in the embedded pack and cmaps/fonts in the remote pack', () => {
-    expect(isEmbeddedZipEntryName('pdfjs/pdf.worker.min.mjs')).toBe(true)
-    expect(isEmbeddedZipEntryName('static/signer.js')).toBe(true)
-    expect(isEmbeddedZipEntryName('pdfjs/cmaps/Adobe-GB1-0.bcmap')).toBe(false)
+  it('only allows the reader, worker, signer, and locale json in the pdfjs pack', () => {
+    expect(isPdfjsZipEntryName('pdf.js')).toBe(true)
+    expect(isPdfjsZipEntryName('static/signer.js')).toBe(true)
+    expect(isPdfjsZipEntryName('pdfjs/pdf.worker.min.mjs')).toBe(true)
+    expect(isPdfjsZipEntryName('locales/en.json')).toBe(true)
+    expect(isPdfjsZipEntryName('locales/zh-TW.json')).toBe(true)
+    expect(isPdfjsZipEntryName('locales/en.js')).toBe(false)
+    expect(isPdfjsZipEntryName('locales/../en.json')).toBe(false)
+    expect(isPdfjsZipEntryName('pdfjs/cmaps/Adobe-GB1-0.bcmap')).toBe(false)
     expect(isRemoteZipEntryName('pdfjs/cmaps/Adobe-GB1-0.bcmap')).toBe(true)
     expect(isRemoteZipEntryName('pdfjs/standard_fonts/FoxitSerif.pfb')).toBe(true)
     expect(isRemoteZipEntryName('pdfjs/wasm/jbig2.wasm')).toBe(true)
     expect(isRemoteZipEntryName('pdfjs/iccs/CGATS001Compat-v2-micro.icc')).toBe(true)
-    expect(isEmbeddedZipEntryName('pdfjs/iccs/CGATS001Compat-v2-micro.icc')).toBe(false)
+    expect(isPdfjsZipEntryName('pdfjs/iccs/CGATS001Compat-v2-micro.icc')).toBe(false)
     expect(isRemoteZipEntryName('katex/fonts/KaTeX_Main-Regular.woff2')).toBe(true)
-    expect(isEmbeddedZipEntryName('katex/fonts/KaTeX_Main-Regular.woff2')).toBe(false)
+    expect(isPdfjsZipEntryName('katex/fonts/KaTeX_Main-Regular.woff2')).toBe(false)
     expect(isRemoteZipEntryName('pdfjs/pdf.worker.min.mjs')).toBe(false)
     expect(isRemoteZipEntryName('../secret.txt')).toBe(false)
-    expect(isEmbeddedZipEntryName('pdfjs/cmaps/')).toBe(false)
+    expect(isPdfjsZipEntryName('pdfjs/cmaps/')).toBe(false)
+    expect(isPdfjsZipEntryName('../pdf.js')).toBe(false)
   })
 
   it('decodes base64 into the original bytes', () => {
@@ -74,33 +88,72 @@ describe('runtime asset zip helpers', () => {
   it('extracts allowed zip entries without requiring a version marker', async () => {
     const { files, plugin } = createVault()
     const zipped = zipSync({
+      'pdf.js': bytesOf('bundle'),
       'pdfjs/pdf.worker.min.mjs': bytesOf('worker'),
       'static/signer.js': bytesOf('signer'),
+      'locales/en.json': bytesOf('{"ok":"yes"}'),
+      'locales/../secret.json': bytesOf('nope'),
       'pdfjs/cmaps/ignored.bcmap': bytesOf('nope'),
     })
 
     await extractZipToPluginDir(plugin, zipped, {
-      isAllowedEntry: isEmbeddedZipEntryName,
-      zipLabel: 'embedded',
+      isAllowedEntry: isPdfjsZipEntryName,
+      zipLabel: 'pdfjs',
     })
 
+    expect(files.has('plugins/foxycape-pdf/pdf.js')).toBe(true)
     expect(files.has('plugins/foxycape-pdf/pdfjs/pdf.worker.min.mjs')).toBe(true)
     expect(files.has('plugins/foxycape-pdf/static/signer.js')).toBe(true)
+    expect(files.has('plugins/foxycape-pdf/locales/en.json')).toBe(true)
+    expect(files.has('plugins/foxycape-pdf/locales/../secret.json')).toBe(false)
     expect(files.has('plugins/foxycape-pdf/pdfjs/cmaps/ignored.bcmap')).toBe(false)
-    expect(files.has('plugins/foxycape-pdf/pdfjs/.foxycape-embedded-version')).toBe(
-      false,
-    )
   })
 })
 
 describe('runtime asset install detection', () => {
-  it('treats worker and signer files as embedded assets when they exist', async () => {
+  it('treats signer as installed only when the runtime id matches', async () => {
     const { files, plugin } = createVault()
-    files.set('plugins/foxycape-pdf/pdfjs/pdf.worker.min.mjs', 'worker')
-    files.set('plugins/foxycape-pdf/static/signer.js', 'signer')
+    const runtimeId = 'pdfjs-test+signer-abcd1234'
+    expect(await hasSignerRuntime(plugin, runtimeId)).toBe(false)
 
-    expect(await hasEmbeddedRuntimeAssets(plugin)).toBe(true)
+    files.set('plugins/foxycape-pdf/static/signer.js', 'signer')
+    files.set(`plugins/foxycape-pdf/${SIGNER_VERSION_MARKER}`, `${runtimeId}\n`)
+    expect(await hasSignerRuntime(plugin, runtimeId)).toBe(true)
+    expect(await hasSignerRuntime(plugin, 'pdfjs-test+signer-other')).toBe(false)
     expect(await hasRemoteRuntimeAssets(plugin)).toBe(false)
+  })
+
+  it('treats the worker as installed only when the runtime id matches', async () => {
+    const { files, plugin } = createVault()
+    const runtimeId = 'pdfjs-test+signer-abcd1234'
+    files.set('plugins/foxycape-pdf/pdfjs/pdf.worker.min.mjs', 'worker')
+    expect(await hasWorkerRuntime(plugin, runtimeId)).toBe(false)
+    files.set(`plugins/foxycape-pdf/${WORKER_VERSION_MARKER}`, `${runtimeId}\n`)
+    expect(await hasWorkerRuntime(plugin, runtimeId)).toBe(true)
+  })
+
+  it('skips the pdfjs pack when every file marker matches', async () => {
+    const { files, plugin } = createVault()
+    expect(await pdfjsPackNeedsDownload(plugin)).toBe(true)
+
+    files.set('plugins/foxycape-pdf/pdf.js', 'bundle')
+    files.set(`plugins/foxycape-pdf/${PDF_BUNDLE_VERSION_MARKER}`, '3.4.2\n')
+    files.set('plugins/foxycape-pdf/pdfjs/pdf.worker.min.mjs', 'worker')
+    files.set(`plugins/foxycape-pdf/${WORKER_VERSION_MARKER}`, `${RUNTIME_ID}\n`)
+    files.set('plugins/foxycape-pdf/static/signer.js', 'signer')
+    files.set(`plugins/foxycape-pdf/${SIGNER_VERSION_MARKER}`, `${RUNTIME_ID}\n`)
+    files.set('plugins/foxycape-pdf/locales/en.json', '{}')
+
+    expect(await hasPdfBundle(plugin)).toBe(true)
+    expect(await pdfjsPackNeedsDownload(plugin)).toBe(false)
+    await ensurePdfjsPack(plugin)
+
+    files.delete('plugins/foxycape-pdf/locales/en.json')
+    expect(await pdfjsPackNeedsDownload(plugin)).toBe(true)
+    files.set('plugins/foxycape-pdf/locales/en.json', '{}')
+
+    files.delete(`plugins/foxycape-pdf/${SIGNER_VERSION_MARKER}`)
+    expect(await pdfjsPackNeedsDownload(plugin)).toBe(true)
   })
 
   it('requires the pdf.js cmaps marker to match before skipping the remote pack', async () => {
