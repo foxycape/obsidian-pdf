@@ -233,16 +233,7 @@ export class FoxycapePdfPlugin extends Plugin {
       apiClient: this.apiClient,
       getLicense: () => this.settings.license,
       onNeedLicense: () => {
-        const hooks = mod.tryGetAiRuntime()?.chrome
-        if (hooks) {
-          hooks.openAccess('need-license')
-          return
-        }
-        const setting = (this.app as unknown as {
-          setting?: { open: () => void; openTabById?: (id: string) => void }
-        }).setting
-        setting?.open()
-        setting?.openTabById?.(this.manifest.id)
+        mod.tryGetAiRuntime()?.chrome?.openAccess('need-license')
       },
       onQuotaExhausted: () => {
         const hooks = mod.tryGetAiRuntime()?.chrome

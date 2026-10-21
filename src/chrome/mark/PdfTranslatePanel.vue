@@ -5,6 +5,7 @@ import { Notice } from 'obsidian'
 import type { IHttpClient } from '@foxycape/core/kernal/network/IHttpClient'
 import type { DexieStorage } from '@/storage/DexieStorage'
 import { resolveAiAccessChoice, type AiAccessMode } from '@/ai/accessChoice'
+import { AiAccessError } from '@/ai/errors'
 import { countTranslates, findTranslateText, upsertTranslate } from '@/ai/passage/stores'
 import type { TranslateEngine } from '@/ai/passage/types'
 import type { FixedContentRange } from '@foxycape/core/kernal/ContentRange'
@@ -133,6 +134,17 @@ const run = async () => {
     isLoading.value = false
     return
   }
+  if (prefs.value.engine === 'ai') {
+    const mode = await resolveAiAccessChoice()
+    if (seq !== requestSeq) {
+      return
+    }
+    if (mode) {
+      isLoading.value = false
+      emit('needAccess', mode)
+      return
+    }
+  }
   isLoading.value = true
   translatedText.value = ''
   try {
@@ -178,10 +190,12 @@ const run = async () => {
     if (seq !== requestSeq) {
       return
     }
-    if (error instanceof AiAccessError && error.code === 'no-ai-token') {
-      emit('quota')
+    if (error instanceof AiAccessError && (error.code === 'no-ai-token' || error.code === 'license-required')) {
+      errorMessage.value = ''
+      emit('needAccess', error.code === 'no-ai-token' ? 'quota' : 'need-license')
+    } else {
+      errorMessage.value = error instanceof Error ? error.message : props.t('ai_translate_failed', 'Translation failed')
     }
-    errorMessage.value = error instanceof Error ? error.message : props.t('ai_translate_failed', 'Translation failed')
   } finally {
     if (seq === requestSeq) {
       isLoading.value = false

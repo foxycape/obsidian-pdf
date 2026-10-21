@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import type { Reader } from '@foxycape/core/kernal'
 import type { IMarker } from '@/mark'
 import type { DexieStorage } from '@/storage/DexieStorage'
+import { isObsidianMobile } from '@/ui/isObsidianMobile'
 import PdfMarkList from './mark-list/PdfMarkList.vue'
 import PdfPassageList from './mark-list/PdfPassageList.vue'
 
@@ -30,6 +31,13 @@ const tabs = computed(() => [
 const selectTab = (tab: MarksTab) => {
   currentTab.value = tab
 }
+
+const onNavigated = () => {
+  if (isObsidianMobile()) {
+    props.onClose()
+  }
+}
+
 watch(
   () => [props.requestedTab, props.tabNonce] as const,
   ([tab]) => {
@@ -142,7 +150,7 @@ onBeforeUnmount(() => {
           :get-marker="getMarker"
           :active="open"
           :t="t"
-          @navigated="onClose"
+          @navigated="onNavigated"
         />
         <PdfPassageList
           v-else-if="currentTab === 'explains'"
@@ -152,7 +160,7 @@ onBeforeUnmount(() => {
           :get-marker="getMarker"
           :active="open"
           :t="t"
-          @navigated="onClose"
+          @navigated="onNavigated"
         />
         <PdfPassageList
           v-else
@@ -162,7 +170,7 @@ onBeforeUnmount(() => {
           :get-marker="getMarker"
           :active="open"
           :t="t"
-          @navigated="onClose"
+          @navigated="onNavigated"
         />
       </div>
     </div>

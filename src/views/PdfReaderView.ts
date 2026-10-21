@@ -51,7 +51,7 @@ import type { ByteRangeReader } from '@/storage/legacy/ByteRangeReader'
 import { MarkNoteCompanion, syncMarkToSidecarNote } from '@/obsidian/markNoteSync'
 import { appendAiNote } from '@/ai/notes/appendAiNote'
 import { findPassageContentRange } from '@/ai/passage/stores'
-import { tryGetAiRuntime, type PassageNoteWrite } from '@/ai/runtime'
+import { setAiChromeHooks, tryGetAiRuntime, type PassageNoteWrite } from '@/ai/runtime'
 import { mountAiChatPanel, type AiChatDraft, type AiChatPanelMount } from '@/ai/ui/mountAiChatPanel'
 import { applyPdfDeepLink } from '@/obsidian/pdfDeepLink'
 import {
@@ -388,6 +388,7 @@ export class PdfReaderView {
     this.disposeMarkListPanel()
     this.aiChatMount?.dispose()
     this.aiChatMount = null
+    this.unbindAiAccessHook()
     this.disposeChrome()
     await this.disposeReader()
     this.markNoteCompanion.reset()
@@ -589,6 +590,7 @@ export class PdfReaderView {
       }
       void this.migrateLegacyMarks(source, session.reader)
       this.mountChrome(session.reader)
+      this.bindAiAccessHook()
       this.mountMarkToolbar(session.reader, session.getMarker)
       this.mountSearchBar(session.reader)
       this.mountScreenshot(session.reader)
@@ -871,6 +873,20 @@ export class PdfReaderView {
         void this.plugin.saveSettings()
       },
     })
+  }
+
+  private readonly openAiAccess = (mode: 'need-license' | 'quota') => {
+    this.ensureAiChat().openAccess(mode)
+  }
+
+  private bindAiAccessHook() {
+    setAiChromeHooks({ openAccess: this.openAiAccess })
+  }
+
+  private unbindAiAccessHook() {
+    if (tryGetAiRuntime()?.chrome?.openAccess === this.openAiAccess) {
+      setAiChromeHooks(null)
+    }
   }
 
   private ensureAiChat(): AiChatPanelMount {

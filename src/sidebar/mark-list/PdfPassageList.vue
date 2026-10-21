@@ -3,12 +3,10 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { getLanguage } from 'obsidian'
 import type { Reader } from '@foxycape/core/kernal'
 import type { FixedContentRange } from '@foxycape/core/kernal/ContentRange'
-import type { IMarker, Mark } from '@/mark'
-import { getFixedContentRange } from '@/mark'
+import { buildMark, getFixedContentRange, type IMarker } from '@/mark'
 import type { DexieStorage } from '@/storage/DexieStorage'
 import { deletePassage, listExplainMarks, listLookupMarks, listTranslateMarks, patchPassageNav } from '@/ai/passage/stores'
 import { getPdfRenderer } from '@/chrome/usePdfRenderer'
-import { flashPassageText } from '@/marker/flashPassageText'
 import { resolvePdfNavMeta } from '@/marker/pdfNavMeta'
 import ClickableIconButton from '@/ui/ClickableIconButton.vue'
 import ClampText from './ClampText.vue'
@@ -174,23 +172,17 @@ const gotoRow = async (row: Row) => {
   const existingRange = existing ? getFixedContentRange(existing) : undefined
   if (existing && existingRange?.geometries.length) {
     await marker?.goto(existing)
-  } else {
-    const range = row.contentRange?.geometries.length ? row.contentRange : existingRange
-    const flashed = range ? await marker?.flashFixedRange(range) : false
-    if (!flashed) {
-      const found = await flashPassageText(getPdfRenderer(props.reader), row.pageNumber, row.text)
-      if (!found && row.pageNumber) {
-        await marker?.goto({
-          markId: row.markId,
-          pageNumber: row.pageNumber,
-          simpleId: row.simpleId,
-          type: 'drawline',
-          text: row.text,
-          styleName: 'mark_pen',
-          contentRange: { kind: 'fixed', geometries: [] },
-        } as unknown as Mark)
-      }
-    }
+  } else if (row.contentRange?.geometries.length) {
+    await marker?.goto(
+      buildMark(row.simpleId, 'drawline', row.text, 'mark_pen', row.contentRange, row.markId),
+    )
+  } else if (row.pageNumber) {
+    const mark = buildMark(row.simpleId, 'drawline', row.text, 'mark_pen', {
+      kind: 'fixed',
+      geometries: [],
+    }, row.markId)
+    mark.pageNumber = row.pageNumber
+    await marker?.goto(mark)
   }
   emit('navigated')
 }

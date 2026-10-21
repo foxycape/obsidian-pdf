@@ -6,7 +6,7 @@ import type { PdfMarkdownLinkSource } from '@/obsidian/remotePdfLink'
 import type { IMarker } from '@/mark'
 import type { DexieStorage } from '@/storage/DexieStorage'
 import { AI_TRAFFIC_PURCHASE_URL } from '@/license/constants'
-import { setAiChromeHooks } from '../runtime'
+import { setAiChromeHooks, tryGetAiRuntime } from '../runtime'
 import type { AiAccessMode } from '../accessChoice'
 import { useHistoryLayer } from '@/history/useHistoryLayer'
 import AiAccessChoiceDialog from './AiAccessChoiceDialog.vue'
@@ -182,8 +182,10 @@ const syncStoredWidth = () => {
   applyAiWidth(clampAiWidth(readAiWidth()))
 }
 
+const accessHooks = { openAccess }
+
 onMounted(() => {
-  setAiChromeHooks({ openAccess })
+  setAiChromeHooks(accessHooks)
   const parent = chromeRoot.value?.closest('.foxycape-pdf-ai-host')?.parentElement
   if (parent) {
     widthObserver = new ResizeObserver(() => {
@@ -200,7 +202,9 @@ onBeforeUnmount(() => {
   endAiResize()
   widthObserver?.disconnect()
   widthObserver = null
-  setAiChromeHooks(null)
+  if (tryGetAiRuntime()?.chrome === accessHooks) {
+    setAiChromeHooks(null)
+  }
 })
 
 const isChatOpen = () => chatOpen.value
