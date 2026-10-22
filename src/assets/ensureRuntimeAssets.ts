@@ -1,20 +1,33 @@
 import type { Plugin } from 'obsidian'
 import {
-  PDF_BUNDLE_FILE,
-  PDF_BUNDLE_VERSION_MARKER,
+  PDF_LIB_FILE,
+  PDF_LIB_VERSION_MARKER,
   PDFJS_PACK_ZIP_NAME,
+  READER_BUNDLE_FILE,
+  READER_PACK_ZIP_NAME,
+  READER_VERSION_MARKER,
+  KATEX_FONTS_DIR,
   REMOTE_RUNTIME_MARKERS,
   RUNTIME_ASSETS_ZIP_NAME,
   RUNTIME_CMAPS_ID,
   RUNTIME_CMAPS_VERSION_MARKER,
-  RUNTIME_ID,
-  SIGNER_RELATIVE,
-  SIGNER_VERSION_MARKER,
+  LOCALES_ID,
+  LOCALES_ZIP_NAME,
+  LOCALES_VERSION_MARKER,
   LOCALE_EN_RELATIVE,
+  MARKDOWN_ID,
+  MARKDOWN_LIB_FILE,
+  MARKDOWN_VERSION_MARKER,
   WORKER_RELATIVE,
   WORKER_VERSION_MARKER,
+  buildLocalesCdnUrl,
+  buildLocalesDownloadUrl,
+  buildMarkdownLibCdnUrl,
+  buildMarkdownLibDownloadUrl,
   buildPdfjsPackCdnUrl,
   buildPdfjsPackDownloadUrl,
+  buildReaderPackCdnUrl,
+  buildReaderPackDownloadUrl,
   buildRuntimeAssetsCdnUrl,
   buildRuntimeAssetsDownloadUrl,
 } from './constants'
@@ -22,10 +35,13 @@ import {
   downloadBinaryWithProgress,
   type DownloadProgressHandler,
 } from './downloadBinaryWithProgress'
+import { evaluateMarkdownLib, invalidateMarkdownLibEval } from '@/views/loadMarkdownLib'
 import {
   ensureParentDir,
   extractZipToPluginDir,
+  isLocalesZipEntryName,
   isPdfjsZipEntryName,
+  isReaderZipEntryName,
   isRemoteZipEntryName,
   joinPluginPath,
 } from './runtimeAssetZip'
@@ -40,8 +56,12 @@ type EnsureRuntimeAssetsOptions = {
 type Adapter = Plugin['app']['vault']['adapter']
 
 let pdfjsPackPromise: Promise<void> | null = null
+let readerPackPromise: Promise<void> | null = null
+let localesPromise: Promise<void> | null = null
 let remotePromise: Promise<void> | null = null
+let markdownPromise: Promise<void> | null = null
 const pdfjsPackProgress = new Set<DownloadProgressHandler>()
+const readerPackProgress = new Set<DownloadProgressHandler>()
 
 const resolveTranslate = (
   plugin: Plugin,
@@ -127,35 +147,65 @@ const downloadHttpError = (t: Translate, status: number) =>
     ),
   )
 
-/** True when signer.js matches this build's runtime id. */
-export const hasSignerRuntime = async (
-  plugin: Plugin,
-  runtimeId = RUNTIME_ID,
-): Promise<boolean> =>
-  hasFileWithMarker(plugin, SIGNER_RELATIVE, SIGNER_VERSION_MARKER, runtimeId)
-
-/** True when pdf.worker.min.mjs matches this build's runtime id. */
+/** True when pdf.worker.min.mjs matches this build's pdf.js version. */
 export const hasWorkerRuntime = async (
   plugin: Plugin,
-  runtimeId = RUNTIME_ID,
+  runtimeId = RUNTIME_CMAPS_ID,
 ): Promise<boolean> =>
   hasFileWithMarker(plugin, WORKER_RELATIVE, WORKER_VERSION_MARKER, runtimeId)
 
-/** True when pdf.js is on disk and tagged with the current plugin version. */
-export const hasPdfBundle = async (plugin: Plugin): Promise<boolean> =>
+/** True when pdf-lib.js is on disk and tagged with this build's pdf.js version. */
+export const hasPdfLib = async (plugin: Plugin): Promise<boolean> =>
   hasFileWithMarker(
     plugin,
-    PDF_BUNDLE_FILE,
-    PDF_BUNDLE_VERSION_MARKER,
-    plugin.manifest.version,
+    PDF_LIB_FILE,
+    PDF_LIB_VERSION_MARKER,
+    RUNTIME_CMAPS_ID,
   )
 
-/** Local pdf.js, worker, signer, or English locale is missing or tagged for another build. */
+/** Local pdf-lib.js or worker is missing or tagged for another pdf.js build. */
 export const pdfjsPackNeedsDownload = async (plugin: Plugin): Promise<boolean> =>
-  !(await hasPdfBundle(plugin)) ||
-  !(await hasWorkerRuntime(plugin)) ||
-  !(await hasSignerRuntime(plugin)) ||
-  !(await hasEnglishLocale(plugin))
+  !(await hasPdfLib(plugin)) || !(await hasWorkerRuntime(plugin))
+
+/** True when reader-bundle.js is tagged with this plugin version and KaTeX fonts are present. */
+export const hasReaderBundle = async (plugin: Plugin): Promise<boolean> => {
+  if (!(await hasAllMarkerFiles(plugin, [KATEX_FONTS_DIR]))) {
+    return false
+  }
+  return hasFileWithMarker(
+    plugin,
+    READER_BUNDLE_FILE,
+    READER_VERSION_MARKER,
+    plugin.manifest.version,
+  )
+}
+
+/** Local reader bundle is missing or was installed for another plugin version. */
+export const readerPackNeedsDownload = async (plugin: Plugin): Promise<boolean> =>
+  !(await hasReaderBundle(plugin))
+
+/** Drop the version marker so the next open downloads reader-bundle.zip again. */
+export const invalidateReaderPack = async (plugin: Plugin): Promise<void> => {
+  const pluginDir = plugin.manifest.dir
+  if (!pluginDir) {
+    return
+  }
+  const adapter = plugin.app.vault.adapter as Adapter & {
+    remove?: (path: string) => Promise<void>
+  }
+  const markerPath = joinPluginPath(pluginDir, READER_VERSION_MARKER)
+  if (typeof adapter.remove === 'function') {
+    try {
+      await adapter.remove(markerPath)
+    } catch {
+      // Marker was already gone.
+    }
+    return
+  }
+  if (await adapter.exists(markerPath)) {
+    await adapter.write(markerPath, '')
+  }
+}
 
 const hasEnglishLocale = async (plugin: Plugin): Promise<boolean> => {
   const pluginDir = plugin.manifest.dir
@@ -165,8 +215,25 @@ const hasEnglishLocale = async (plugin: Plugin): Promise<boolean> => {
   return plugin.app.vault.adapter.exists(joinPluginPath(pluginDir, LOCALE_EN_RELATIVE))
 }
 
+/** True when language files match this build's locale content id. */
+export const hasLocalesPack = async (plugin: Plugin): Promise<boolean> =>
+  (await hasEnglishLocale(plugin)) &&
+  (await hasFileWithMarker(
+    plugin,
+    LOCALE_EN_RELATIVE,
+    LOCALES_VERSION_MARKER,
+    LOCALES_ID,
+  ))
+
+/** True when markdown-lib.js matches this build's KaTeX / highlight.js content id. */
+export const hasMarkdownPack = async (
+  plugin: Plugin,
+  markdownId = MARKDOWN_ID,
+): Promise<boolean> =>
+  hasFileWithMarker(plugin, MARKDOWN_LIB_FILE, MARKDOWN_VERSION_MARKER, markdownId)
+
 /** Drop the version marker so the next open downloads pdfjs.zip again. */
-export const invalidatePdfBundle = async (plugin: Plugin): Promise<void> => {
+export const invalidatePdfLib = async (plugin: Plugin): Promise<void> => {
   const pluginDir = plugin.manifest.dir
   if (!pluginDir) {
     return
@@ -174,7 +241,7 @@ export const invalidatePdfBundle = async (plugin: Plugin): Promise<void> => {
   const adapter = plugin.app.vault.adapter as Adapter & {
     remove?: (path: string) => Promise<void>
   }
-  const markerPath = joinPluginPath(pluginDir, PDF_BUNDLE_VERSION_MARKER)
+  const markerPath = joinPluginPath(pluginDir, PDF_LIB_VERSION_MARKER)
   if (typeof adapter.remove === 'function') {
     try {
       await adapter.remove(markerPath)
@@ -257,9 +324,8 @@ const downloadAndInstallPdfjsPack = async (plugin: Plugin, t: Translate) => {
     isAllowedEntry: isPdfjsZipEntryName,
     zipLabel: PDFJS_PACK_ZIP_NAME,
   })
-  await writeTextFile(plugin, PDF_BUNDLE_VERSION_MARKER, `${plugin.manifest.version}\n`)
-  await writeTextFile(plugin, WORKER_VERSION_MARKER, `${RUNTIME_ID}\n`)
-  await writeTextFile(plugin, SIGNER_VERSION_MARKER, `${RUNTIME_ID}\n`)
+  await writeTextFile(plugin, PDF_LIB_VERSION_MARKER, `${RUNTIME_CMAPS_ID}\n`)
+  await writeTextFile(plugin, WORKER_VERSION_MARKER, `${RUNTIME_CMAPS_ID}\n`)
   if (await pdfjsPackNeedsDownload(plugin)) {
     throw new Error(
       t(
@@ -339,11 +405,140 @@ export const ensurePdfjsPack = async (
   }
 }
 
-/** Same pack as `ensurePdfjsPack`. License registration waits until signer.js is inside it. */
-export const ensureSignerRuntime = ensurePdfjsPack
+const emitReaderPackProgress: DownloadProgressHandler = (loaded, total) => {
+  for (const handler of readerPackProgress) {
+    handler(loaded, total)
+  }
+}
+
+const downloadAndInstallReaderPack = async (plugin: Plugin, t: Translate) => {
+  const bytes = await downloadBytes(
+    buildReaderPackDownloadUrl(plugin.manifest.version),
+    buildReaderPackCdnUrl(plugin.manifest.version),
+    t,
+    emitReaderPackProgress,
+  )
+  await extractZipToPluginDir(plugin, bytes, {
+    isAllowedEntry: isReaderZipEntryName,
+    zipLabel: READER_PACK_ZIP_NAME,
+  })
+  await writeTextFile(plugin, READER_VERSION_MARKER, `${plugin.manifest.version}\n`)
+  if (await readerPackNeedsDownload(plugin)) {
+    throw new Error(
+      t(
+        'plugin_notice_assets_still_missing',
+        'Runtime assets are still missing after download.',
+      ),
+    )
+  }
+}
 
 /**
- * Download cmaps, standard fonts, wasm, iccs, and KaTeX woff2 from the current plugin GitHub Release.
+ * Download reader-bundle.zip when the plugin version changed.
+ * Opening a PDF waits. Plugin enable does not start this download.
+ */
+export const ensureReaderPack = async (
+  plugin: Plugin,
+  options: EnsureRuntimeAssetsOptions = {},
+): Promise<void> => {
+  if (!(await readerPackNeedsDownload(plugin))) {
+    return
+  }
+  if (options.onProgress) {
+    readerPackProgress.add(options.onProgress)
+  }
+  const t = resolveTranslate(plugin, options)
+  try {
+    readerPackPromise = shareDownload(readerPackPromise, (next) => {
+      readerPackPromise = next
+    }, () => downloadAndInstallReaderPack(plugin, t))
+    await readerPackPromise
+  } finally {
+    if (options.onProgress) {
+      readerPackProgress.delete(options.onProgress)
+    }
+  }
+}
+
+const downloadAndInstallLocales = async (plugin: Plugin, t: Translate) => {
+  const bytes = await downloadBytes(
+    buildLocalesDownloadUrl(plugin.manifest.version),
+    buildLocalesCdnUrl(plugin.manifest.version),
+    t,
+  )
+  await extractZipToPluginDir(plugin, bytes, {
+    isAllowedEntry: isLocalesZipEntryName,
+    zipLabel: LOCALES_ZIP_NAME,
+  })
+  await writeTextFile(plugin, LOCALES_VERSION_MARKER, `${LOCALES_ID}\n`)
+  if (!(await hasLocalesPack(plugin))) {
+    throw new Error(
+      t(
+        'plugin_notice_assets_still_missing',
+        'Runtime assets are still missing after download.',
+      ),
+    )
+  }
+}
+
+/** Download locales.zip when the language files are missing or their content id changed. */
+export const ensureLocalesPack = async (
+  plugin: Plugin,
+  options: EnsureRuntimeAssetsOptions = {},
+): Promise<void> => {
+  if (await hasLocalesPack(plugin)) {
+    return
+  }
+  const t = resolveTranslate(plugin, options)
+  localesPromise = shareDownload(localesPromise, (next) => {
+    localesPromise = next
+  }, () => downloadAndInstallLocales(plugin, t))
+  await localesPromise
+}
+
+const downloadAndInstallMarkdown = async (plugin: Plugin, t: Translate) => {
+  if (!(await hasMarkdownPack(plugin))) {
+    invalidateMarkdownLibEval()
+    const bytes = await downloadBytes(
+      buildMarkdownLibDownloadUrl(plugin.manifest.version),
+      buildMarkdownLibCdnUrl(plugin.manifest.version),
+      t,
+    )
+    const text = new TextDecoder().decode(bytes)
+    if (text.length < 1000 || text.trimStart().startsWith('<')) {
+      throw new Error(`Downloaded ${MARKDOWN_LIB_FILE} is empty or invalid.`)
+    }
+    await writeTextFile(plugin, MARKDOWN_LIB_FILE, text)
+    await writeTextFile(plugin, MARKDOWN_VERSION_MARKER, `${MARKDOWN_ID}\n`)
+    if (!(await hasMarkdownPack(plugin))) {
+      throw new Error(
+        t(
+          'plugin_notice_assets_still_missing',
+          'Runtime assets are still missing after download.',
+        ),
+      )
+    }
+  }
+  await evaluateMarkdownLib(plugin)
+}
+
+/**
+ * Download markdown-lib.js when KaTeX / highlight.js changed.
+ * Silent. Does not block plugin startup or opening a PDF.
+ */
+export const ensureMarkdownPack = async (
+  plugin: Plugin,
+  options: EnsureRuntimeAssetsOptions = {},
+): Promise<void> => {
+  const t = resolveTranslate(plugin, options)
+  markdownPromise = shareDownload(markdownPromise, (next) => {
+    markdownPromise = next
+  }, () => downloadAndInstallMarkdown(plugin, t))
+  await markdownPromise
+}
+
+/**
+ * Download cmaps, standard fonts, wasm, and iccs from the current plugin GitHub Release.
  * Silent (no Notice / modal). Safe to call in the background on load.
  */
 export const ensureRemoteRuntimeAssets = async (
@@ -374,5 +569,8 @@ export const ensureRuntimeAssets = async (
   })
   void ensureRemoteRuntimeAssets(plugin, options).catch((error) => {
     console.warn('[Foxycape PDF] background font download failed', error)
+  })
+  void ensureMarkdownPack(plugin, options).catch((error) => {
+    console.warn('[Foxycape PDF] markdown runtime download failed', error)
   })
 }

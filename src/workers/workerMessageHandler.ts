@@ -1,5 +1,5 @@
 import type { HashAlgorithm } from '@foxycape/core/kernal/crypto/ICrypto'
-import { digestMany, digestStream, SIMPLE_ID_BYTE_LENGTH } from '@foxycape/core/kernal/crypto/hash'
+import { digestMany, digestStream, SIMPLE_ID_BYTE_LENGTH } from '@/crypto/hash'
 import { bitmapToOffscreenCanvas, convertToBlob } from '../image/canvas'
 import type { ImageSource, ResizeImageOptions } from '../image/IImage'
 import { WebImage } from '../image/WebImage'

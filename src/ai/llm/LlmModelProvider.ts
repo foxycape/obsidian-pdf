@@ -1,6 +1,6 @@
 import { getRandomId } from '@foxycape/core/kernal/common/uuid'
-import OpenAI from 'openai'
 import { AiAccessError } from '../errors'
+import { listModelIds } from './chatHttp'
 import { createObsidianAiFetch } from '../fetch'
 import { getAiRuntime } from '../runtime'
 import { emitInuseModelChange } from './inuseModelChange'
@@ -162,17 +162,14 @@ export class LlmModelProvider {
   }
 
   listModels = async (baseUrl: string, apiKey: string): Promise<LlmModel[]> => {
-    const openai = new OpenAI({
+    const ids = await listModelIds({
       apiKey,
       baseURL: baseUrl,
-      dangerouslyAllowBrowser: true,
-      timeout: 8000,
-      maxRetries: 0,
-      fetch: getAiRuntime().fetchImpl ?? createObsidianAiFetch(),
+      timeoutMs: 8000,
+      fetchImpl: getAiRuntime().fetchImpl ?? createObsidianAiFetch(),
     })
-    const page = await openai.models.list()
-    return (page.data ?? [])
-      .map((item) => ({ name: item.id, title: item.id }))
+    return ids
+      .map((name) => ({ name, title: name }))
       .sort((a, b) => a.name.localeCompare(b.name))
   }
 

@@ -3,8 +3,8 @@
 /** Baked at build time from pdf.js version only (remote cmaps / fonts pack). */
 declare const __FOXYCAPE_PDFJS_CMAPS_ID__: string
 
-/** Baked at build time from pdf.js version + signer hash. */
-declare const __FOXYCAPE_RUNTIME_ID__: string
+/** Baked at build time from the language JSON contents. */
+declare const __FOXYCAPE_LOCALES_ID__: string
 
 declare module '*.vue' {
   import type { DefineComponent } from 'vue'

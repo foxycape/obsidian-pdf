@@ -4,10 +4,10 @@ import type { IApiClient } from '@/network'
 import { createPluginApiClient } from '@/api/createPluginApiClient'
 import { DeviceService } from '@/api/DeviceService'
 import {
+  ensureLocalesPack,
+  ensureMarkdownPack,
   ensureRemoteRuntimeAssets,
   ensureRuntimeAssets as unpackRuntimeAssets,
-  ensureSignerRuntime as downloadSignerRuntime,
-  hasSignerRuntime,
 } from '@/assets/ensureRuntimeAssets'
 import { ObsidianLocale } from '@/i18n'
 import { LicenseService } from '@/license'
@@ -32,11 +32,11 @@ import {
   toPersistedSettings,
   type FoxycapePdfSettings,
 } from '@/settings/types'
-import { disposeWasmSignerBlobUrl } from '@/api/resolveWasmSignerUrl'
 import { registerAstroidIcon } from '@/ui/astroidIcon'
 import { applyFoxycapeMenuIcon, registerFoxycapeIcon } from '@/ui/foxycapeIcon'
+import { bindAiRuntime as bindLoadedAiRuntime, tryGetAiRuntime } from '@/ai/runtime'
+import { createLazyPdfStorage, disposeInstalledPdfHost } from '@/reader/pdfHostBridge'
 import { PdfReaderHostView } from '@/views/PdfReaderHostView'
-import type { PdfBundleModule } from '@/views/pdfBundleModule'
 
 type ViewRegistryLike = {
   registerExtensions?: (extensions: string[], viewType: string) => void
@@ -64,7 +64,7 @@ export class FoxycapePdfPlugin extends Plugin {
   } | null = null
   private isDefaultPdfBindingActive = false
   private lastSyncedLanguage = ''
-  private disposeLoadedPdfRuntime: (() => Promise<void>) | null = null
+  private commandsRegistered = false
 
   async onload() {
     await this.loadSettings()
@@ -75,17 +75,23 @@ export class FoxycapePdfPlugin extends Plugin {
     this.apiClient = api.apiClient
     this.device = api.device
     this.deviceService = new DeviceService(this, this.device)
+    this.apiClient.setEnsureDeviceRegistered(() => this.deviceService.ensureRegistered())
     this.licenseService = new LicenseService(this)
     registerFoxycapeIcon()
     registerAstroidIcon()
 
     await this.licenseService.ensureTrialStarted()
-    // pdfjs.zip carries the reader, worker, signer, and language files.
-    // Commands are registered after that pack is on disk so their names can be translated.
     await this.bootstrapRuntimeAssets()
     await this.locale.initialize()
+    const savedLanguage = this.savedLanguageCode()
+    if (savedLanguage) {
+      await this.locale.changeLanguage(savedLanguage)
+    }
     this.lastSyncedLanguage = this.locale.getCurrentLanguage()
+    this.registerCommands()
+    this.bindAiRuntime()
     this.licenseService.startPeriodicValidation()
+    void this.runNetworkWhenReady()
 
     this.registerView(
       PDF_READER_VIEW_TYPE,
@@ -98,69 +104,6 @@ export class FoxycapePdfPlugin extends Plugin {
     installPdfImageRefPaste(this)
     installPdfImageRefContextMenu(this)
     installRemotePdfLinkOpen(this)
-
-    this.addCommand({
-      id: 'open-with-reader',
-      name: this.t('plugin_command_open_with', 'Open with Foxycape PDF'),
-      checkCallback: (checking) => {
-        const file = this.getActivePdfFile()
-        if (!file) {
-          return false
-        }
-        if (!checking) {
-          void this.openFileWithFoxycape(file)
-        }
-        return true
-      },
-    })
-
-    this.addCommand({
-      id: 'open-pdf-view',
-      name: this.t('plugin_command_open_view', 'Open Foxycape PDF view'),
-      callback: () => {
-        const file = this.getActivePdfFile()
-        if (file) {
-          void this.openFileWithFoxycape(file)
-          return
-        }
-        new Notice(
-          this.t(
-            'plugin_notice_select_pdf_first',
-            'Select or focus a PDF file first.',
-          ),
-        )
-      },
-    })
-
-    this.addCommand({
-      id: 'pdf-search',
-      name: this.t('plugin_command_pdf_search', 'Search in PDF'),
-      checkCallback: (checking) => {
-        const view = this.getActiveFoxycapePdfView()
-        if (!view) {
-          return false
-        }
-        if (!checking) {
-          view.requestOpenFind()
-        }
-        return true
-      },
-    })
-
-    this.addCommand({
-      id: 'pdf-screenshot',
-      name: this.t('plugin_command_pdf_screenshot', 'Screenshot region in PDF'),
-      checkCallback: (checking) => {
-        const view = this.getActiveFoxycapePdfView()
-        if (!view) {
-          return false
-        }
-        if (!checking) {
-          view.requestToggleScreenshot()
-        }
-        return true
-      },
-    })
 
     this.registerEvent(
       this.app.workspace.on('file-menu', (menu, file) => {
@@ -204,39 +147,28 @@ export class FoxycapePdfPlugin extends Plugin {
     } catch (error) {
       console.warn('[Foxycape PDF] failed to restore pdf extension', error)
     }
-    disposeWasmSignerBlobUrl()
-    void this.disposeLoadedPdfRuntime?.()
+    void disposeInstalledPdfHost()
     void this.locale.dispose()
   }
 
   t = (key: string, defaultText: string, named?: object) =>
     this.locale.getText(key, defaultText, named)
 
-  /**
-   * pdf.js, the worker, and signer ship in one zip. Opening a PDF waits on that
-   * same download when it is still running.
-   */
+  /** Fonts and the PDF.js library download in the background. Opening a PDF waits when the library is missing. */
   ensureRuntimeAssets = async () => {
     await unpackRuntimeAssets(this, { t: this.t })
   }
 
-  /** Download pdfjs.zip if any of its files are missing. License/API needs signer.js from it. */
-  ensureSignerRuntime = async () => {
-    await downloadSignerRuntime(this, { t: this.t })
-    void this.runNetworkWhenAssetsReady()
-  }
-
-  /** Wire AI inside pdf.js. main.js does not keep its own copy of that runtime. */
-  bindLoadedPdfModule = (mod: PdfBundleModule) => {
-    this.disposeLoadedPdfRuntime = () => mod.disposePdfRuntime()
-    mod.bindAiRuntime({
+  bindAiRuntime = () => {
+    bindLoadedAiRuntime({
       apiClient: this.apiClient,
+      storage: createLazyPdfStorage(),
       getLicense: () => this.settings.license,
       onNeedLicense: () => {
-        mod.tryGetAiRuntime()?.chrome?.openAccess('need-license')
+        tryGetAiRuntime()?.chrome?.openAccess('need-license')
       },
       onQuotaExhausted: () => {
-        const hooks = mod.tryGetAiRuntime()?.chrome
+        const hooks = tryGetAiRuntime()?.chrome
         if (hooks) {
           hooks.openAccess('quota')
           return
@@ -248,31 +180,125 @@ export class FoxycapePdfPlugin extends Plugin {
 
   bootstrapRuntimeAssets = async () => {
     try {
-      await this.ensureSignerRuntime()
+      await ensureLocalesPack(this, { t: this.t })
     } catch (error) {
-      console.error('[Foxycape PDF] failed to download pdfjs pack', error)
-      new Notice(error instanceof Error ? error.message : String(error), 8000)
+      console.warn('[Foxycape PDF] language pack download failed; using English', error)
     }
     void ensureRemoteRuntimeAssets(this, { t: this.t }).catch((error) => {
       console.warn('[Foxycape PDF] background font download failed', error)
     })
+    void ensureMarkdownPack(this, { t: this.t }).catch((error) => {
+      console.warn('[Foxycape PDF] markdown runtime download failed', error)
+    })
   }
 
-  /** Register device / validate license once signer.js is on disk. */
-  runNetworkWhenAssetsReady = async () => {
-    if (!(await hasSignerRuntime(this))) {
-      return
+  /** Register this device before any other signed call, then check the license. */
+  runNetworkWhenReady = async () => {
+    try {
+      await this.deviceService.ensureRegistered()
+      await this.licenseService.validateOnStartupIfNeeded()
+    } catch (error) {
+      console.warn('[Foxycape PDF] device registration failed', error)
     }
-    void this.deviceService.registerDevice()
-    void this.licenseService.validateOnStartupIfNeeded()
+  }
+
+  /** Empty when the user has not chosen a language, or the saved code is no longer supported. */
+  savedLanguageCode = (): string => {
+    const saved = this.settings.language.trim()
+    if (!saved) {
+      return ''
+    }
+    const supported = this.locale.getSupportedLanguages().some((item) => item.code === saved)
+    return supported ? saved : ''
+  }
+
+  setLanguage = async (code: string) => {
+    this.settings.language = code
+    await this.saveSettings()
+    await this.locale.changeLanguage(code)
+    this.lastSyncedLanguage = code
+    this.registerCommands()
+  }
+
+  registerCommands = () => {
+    if (this.commandsRegistered) {
+      this.removeCommand('open-with-reader')
+      this.removeCommand('open-pdf-view')
+      this.removeCommand('pdf-search')
+      this.removeCommand('pdf-screenshot')
+    }
+    this.commandsRegistered = true
+    this.addCommand({
+      id: 'open-with-reader',
+      name: this.t('plugin_command_open_with', 'Open with Foxycape PDF'),
+      checkCallback: (checking) => {
+        const file = this.getActivePdfFile()
+        if (!file) {
+          return false
+        }
+        if (!checking) {
+          void this.openFileWithFoxycape(file)
+        }
+        return true
+      },
+    })
+    this.addCommand({
+      id: 'open-pdf-view',
+      name: this.t('plugin_command_open_view', 'Open Foxycape PDF view'),
+      callback: () => {
+        const file = this.getActivePdfFile()
+        if (file) {
+          void this.openFileWithFoxycape(file)
+          return
+        }
+        new Notice(
+          this.t(
+            'plugin_notice_select_pdf_first',
+            'Select or focus a PDF file first.',
+          ),
+        )
+      },
+    })
+    this.addCommand({
+      id: 'pdf-search',
+      name: this.t('plugin_command_pdf_search', 'Search in PDF'),
+      checkCallback: (checking) => {
+        const view = this.getActiveFoxycapePdfView()
+        if (!view) {
+          return false
+        }
+        if (!checking) {
+          view.requestOpenFind()
+        }
+        return true
+      },
+    })
+    this.addCommand({
+      id: 'pdf-screenshot',
+      name: this.t('plugin_command_pdf_screenshot', 'Screenshot region in PDF'),
+      checkCallback: (checking) => {
+        const view = this.getActiveFoxycapePdfView()
+        if (!view) {
+          return false
+        }
+        if (!checking) {
+          view.requestToggleScreenshot()
+        }
+        return true
+      },
+    })
   }
 
   syncLocaleIfNeeded = async () => {
+    if (this.savedLanguageCode()) {
+      return
+    }
     const before = this.locale.getCurrentLanguage()
     await this.locale.syncFromObsidian()
     const after = this.locale.getCurrentLanguage()
     if (after !== this.lastSyncedLanguage || after !== before) {
       this.lastSyncedLanguage = after
+      this.registerCommands()
     }
   }
 

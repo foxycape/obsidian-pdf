@@ -1,4 +1,5 @@
 import '@/reader/foxycapePdfViewer'
+import '@/reader/pdfRuntimeHost'
 import { formatTokenAmount } from '@/ai/formatTokenAmount'
 import { getLicenseAiUser, loadLicenseAiUsage } from '@/ai/licenseSession'
 import { bindAiRuntime as bindAiRuntimeWithStorage, tryGetAiRuntime, type AiRuntime } from '@/ai/runtime'

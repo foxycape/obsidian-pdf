@@ -16,6 +16,8 @@ export type {
 export type FoxycapePdfSettings = {
   /** When true, clicking .pdf opens Foxycape instead of the built-in viewer. */
   useAsDefaultPdfViewer: boolean
+  /** Reader language. Empty follows Obsidian, then English when that language is unsupported. */
+  language: string
   /** User-entered license key (empty when not purchased). */
   license: string
   /** Epoch ms of first plugin start; 0 means not started yet. Sent as confirmedTryFeatureDate. */
@@ -48,6 +50,7 @@ export type ToolbarVisibility = Pick<
 
 export const DEFAULT_SETTINGS: FoxycapePdfSettings = {
   useAsDefaultPdfViewer: false,
+  language: '',
   license: '',
   trialStartedAt: 0,
   licenseValid: false,

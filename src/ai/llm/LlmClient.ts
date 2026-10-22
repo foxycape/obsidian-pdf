@@ -1,6 +1,6 @@
 import { combineUrlSegments } from '@foxycape/core/kernal/common/url'
-import OpenAI from 'openai'
 import type { ChatCompletionMessageParam, ChatCompletionTool } from 'openai/resources'
+import { createChatCompletion, streamChatCompletion } from './chatHttp'
 import { OFFICIAL_AI_GENERATE_PATH } from '@/license/constants'
 import { AiAccessError } from '../errors'
 import { createObsidianAiFetch } from '../fetch'
@@ -216,35 +216,30 @@ export class LlmClient {
       throw new AiAccessError('no-ai-provider', 'Custom AI platform is missing a base URL or API key')
     }
 
-    const openai = new OpenAI({
+    const http = {
       apiKey,
       baseURL,
-      dangerouslyAllowBrowser: true,
-      fetch: runtime.fetchImpl ?? createObsidianAiFetch(),
+      headers: {
+        x_public_appId: runtime.apiClient.apiSettings.appId ?? '20',
+        x_public_appVersion: runtime.apiClient.apiSettings.appVersion ?? '1.0.0',
+        platformId: request.platformId,
+        camelcase: 'true',
+        purpose: request.purpose ?? 'chat',
+        language: request.responseLanguage ?? '',
+        quality: request.quality ?? '',
+      },
+      body: {
+        model: request.model,
+        messages: toSdkMessages(messages),
+        ...(tools?.length ? { tools } : {}),
+      },
+      signal: request.signal,
+      fetchImpl: runtime.fetchImpl ?? createObsidianAiFetch(),
       maxRetries: 1,
-    })
-    const headers = {
-      x_public_appId: runtime.apiClient.apiSettings.appId ?? '20',
-      x_public_appVersion: runtime.apiClient.apiSettings.appVersion ?? '1.0.0',
-      platformId: request.platformId,
-      camelcase: 'true',
-      purpose: request.purpose ?? 'chat',
-      language: request.responseLanguage ?? '',
-      quality: request.quality ?? '',
     }
-    const body = {
-      model: request.model,
-      messages: toSdkMessages(messages),
-      stream,
-      ...(tools?.length ? { tools } : {}),
-    }
-    const extra = { headers, signal: request.signal }
 
     if (!stream) {
-      const completion = await openai.chat.completions.create(
-        { ...body, stream: false },
-        extra,
-      )
+      const completion = await createChatCompletion(http)
       const choice = completion.choices[0]
       const message = choice?.message as { content?: string | null; reasoning_content?: string; reasoning?: string } | undefined
       if (isOfficial) {
@@ -259,10 +254,7 @@ export class LlmClient {
       }
     }
 
-    const completion = await openai.chat.completions.create(
-      { ...body, stream: true },
-      extra,
-    )
+    const completion = streamChatCompletion(http)
     let content = ''
     let reasoning = ''
     const toolBuckets = new Map<number, LlmToolCall>()

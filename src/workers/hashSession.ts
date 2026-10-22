@@ -1,4 +1,4 @@
-import { createHasher, type StreamingHasher } from '@foxycape/core/kernal/crypto/hash'
+import { createHasher, type StreamingHasher } from '@/crypto/hash'
 
 /**
  * One SHA-1 stream at a time. The main-thread client serializes begin/update/digest

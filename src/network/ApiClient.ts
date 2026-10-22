@@ -3,34 +3,14 @@ import { convertJsonToCamelcase } from '@foxycape/core/kernal/common/object'
 import { isNullOrWhiteSpace, startsWith } from '@foxycape/core/kernal/common/text'
 import { checkIsAbsoluteUrl, stringifyParamters } from '@foxycape/core/kernal/common/url'
 import { getUuid } from '@foxycape/core/kernal/common/uuid'
-import { injectExternalJS } from '@foxycape/core/kernal/html/injector'
 import type { HttpClientOptions, IHttpClient } from '@foxycape/core/kernal/network/IHttpClient'
-import { BrowserCapabilities } from '@foxycape/core/kernal/web/BrowserCapabilities'
 import type { ApiSettings, FileInfo, IApiClient } from './IApiClient'
 import { IDevice } from '@foxycape/core/kernal'
-import { ICrypto } from '@foxycape/core/kernal/crypto/ICrypto'
-import { restoreWebAssemblyForHash } from './webAssemblyGuard'
-
-type WasmWindow = Window & {
-  Module?: { asm?: unknown }
-  stringToNewUTF8?: (value: string) => number
-  _getToken?: (ptr: number) => number
-  UTF8ToString?: (ptr: number, maxBytesToRead?: number) => string
-  _free?: (ptr: number) => void
-}
+import { canonicalSignQuery, ensureDeviceSignMaterial } from '@/api/deviceSignKey'
 
 type ApiResult = {
   code?: number
   [key: string]: unknown
-}
-
-/**
- * signer.js replaces the page WebAssembly while it initializes.
- * Signing only needs Module.asm afterwards, so hash-wasm can have the runtime object back.
- * That object may not have compile (Obsidian); restoreWebAssemblyForHash supplies it.
- */
-export const restoreNativeWebAssembly = (nativeWebAssembly?: typeof WebAssembly) => {
-  restoreWebAssemblyForHash(nativeWebAssembly)
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -57,30 +37,30 @@ const copyRequestHeaders = (headers: unknown): Record<string, string> => {
 
 /**
  * Signed API client implementing {@link IApiClient}.
- * Uses `@foxycape/core` for HTTP transport, crypto, device id, and helpers.
+ * Uses `@foxycape/core` for HTTP transport, device id, and helpers.
+ * Requests are signed with the device ECDSA key.
  */
 export class ApiClient implements IApiClient {
   private readonly currentHttpClient: IHttpClient
   private readonly maxRefreshSecretTimes = 3
   private currentRefreshSecretTimes = 0
   private lastRefreshSecretTime: Date | null = null
-  private loadedWasm = false
-  private nativeWebAssembly?: typeof WebAssembly
-  private checkTimeout: number | null = null
-  private ellapsedMillSeconds = 0
-  private readonly crypto: ICrypto
   private readonly device:IDevice;
   requestHandler?: (data: object, options?: HttpClientOptions) => Promise<void>
   responseHandler?: (response: unknown) => Promise<void>
+  private ensureDeviceRegistered: (() => Promise<void>) | null = null
+
+  /** Installed by the plugin after the device service exists. */
+  setEnsureDeviceRegistered = (ensure: () => Promise<void>): void => {
+    this.ensureDeviceRegistered = ensure
+  }
 
   constructor(
     httpClient: IHttpClient,
     device:IDevice,
-    crypto:ICrypto,
     public readonly apiSettings: ApiSettings,
   ) {
     this.currentHttpClient = httpClient
-    this.crypto = crypto
     this.device = device
   }
 
@@ -109,6 +89,7 @@ export class ApiClient implements IApiClient {
     }
 
     const isApiHost = this.isSameHost(url, this.apiSettings.endPoint)
+    await this.waitForDeviceRegistration(url, sign, isApiHost)
     let bodyData = this.normalizeRequestData(data, options)
 
     const headers = copyRequestHeaders(options?.headers)
@@ -143,7 +124,7 @@ export class ApiClient implements IApiClient {
       if (isApiHost) {
         payload = { ...bodyRecord, ...systemParameters }
         if (sign) {
-          payload.X_Public_Token = await this.getSignature(payload)
+          payload = await this.signPayload(payload)
         }
       } else {
         payload = { ...bodyRecord }
@@ -195,6 +176,7 @@ export class ApiClient implements IApiClient {
     }
 
     const isApiHost = this.isSameHost(url, this.apiSettings.endPoint)
+    await this.waitForDeviceRegistration(url, sign, isApiHost)
     const parametersData: Record<string, unknown> =
       data instanceof Map
         ? recordFromMap(data)
@@ -214,7 +196,7 @@ export class ApiClient implements IApiClient {
       const systemParameters = this.getSystemParameters(this.device.getId())
       parameters = { ...parametersData, ...systemParameters }
       if (sign) {
-        parameters.X_Public_Token = await this.getSignature(parameters)
+        parameters = await this.signPayload(parameters)
       }
     } else {
       parameters = { ...parametersData }
@@ -227,7 +209,6 @@ export class ApiClient implements IApiClient {
 
     const result = (await this.httpClient.get(url, requestOptions)) as ApiResult
     if (this.shouldRefreshSecret(result)) {
-      this.loadedWasm = false
       await this.refreshSigningEnv()
       return this.get(methodName, data, sign, options)
     }
@@ -247,11 +228,30 @@ export class ApiClient implements IApiClient {
           ? { ...methodParameters }
           : {}
     await this.handleMethodParameters(parameters)
-    await this.ensureEnvCompleted()
     const systemParameters = this.getSystemParameters(this.device.getId())
-    const signed = { ...parameters, ...systemParameters }
-    signed.X_Public_Token = await this.getSignature(signed)
-    return signed
+    return this.signPayload({ ...parameters, ...systemParameters })
+  }
+
+  /** Registration is the request that binds the key, so it must not wait for itself. */
+  private waitForDeviceRegistration = async (
+    url: string,
+    sign: boolean,
+    isApiHost: boolean,
+  ): Promise<void> => {
+    if (!sign || !isApiHost || !this.ensureDeviceRegistered || this.isDeviceRegistRequest(url)) {
+      return
+    }
+    await this.ensureDeviceRegistered()
+  }
+
+  private isDeviceRegistRequest = (url: string): boolean => {
+    let path = url
+    try {
+      path = new URL(url).pathname
+    } catch {
+      path = url.split('?')[0] ?? url
+    }
+    return path.replace(/\/+$/, '').toLowerCase().endsWith('/device/regist')
   }
 
   private joinEndpoint = (endPoint: string, methodName: string): string => {
@@ -354,106 +354,19 @@ export class ApiClient implements IApiClient {
   private refreshSigningEnv = async () => {
     this.currentRefreshSecretTimes += 1
     this.lastRefreshSecretTime = new Date()
-    await this.ensureEnvCompleted()
   }
 
-  private async ensureEnvCompleted(): Promise<void> {
-    if (this.loadedWasm || !this.apiSettings.enableWasm || !BrowserCapabilities.supportWebAssembly()) {
-      return
+  /** ECDSA P-256 over the ordinal canonical string. The private key never leaves this device. */
+  private signPayload = async (
+    payload: Record<string, unknown>,
+  ): Promise<Record<string, unknown>> => {
+    const material = await ensureDeviceSignMaterial()
+    const signed: Record<string, unknown> = {
+      ...payload,
+      X_Public_SignAlg: material.alg,
+      X_Public_SignPublicKey: material.publicKeySpki,
     }
-
-    let wasmSignerUrl = this.apiSettings.wasmSignerFilePath ?? 'static/signer.js'
-    if (this.apiSettings.getWasmSignerUrl) {
-      wasmSignerUrl = await this.apiSettings.getWasmSignerUrl(wasmSignerUrl)
-    } else {
-      const separator = wasmSignerUrl.includes('?') ? '&' : '?'
-      wasmSignerUrl = `${wasmSignerUrl}${separator}_custom_preventCacheHash=${Date.now()}`
-    }
-
-    if (!this.nativeWebAssembly) {
-      this.nativeWebAssembly = globalThis.WebAssembly
-    }
-    await injectExternalJS(
-      document,
-      wasmSignerUrl,
-      true,
-      `x_${Math.random()}_${this.currentRefreshSecretTimes}`,
-    )
-
-    this.ellapsedMillSeconds = 0
-    await new Promise<void>((resolve, reject) => {
-      this.checkWasmLoaded(resolve, reject)
-    })
-  }
-
-  private checkWasmLoaded = (resolve: () => void, reject: (reason?: unknown) => void) => {
-    if (this.checkTimeout) {
-      window.clearTimeout(this.checkTimeout)
-      this.checkTimeout = null
-    }
-
-    this.ellapsedMillSeconds += 10
-    const wasmWindow = window as WasmWindow
-    if (wasmWindow.Module?.asm) {
-      restoreNativeWebAssembly(this.nativeWebAssembly)
-      this.loadedWasm = true
-      resolve()
-      return
-    }
-
-    // The signer stub is installed before Module.asm exists. Once its instantiate
-    // tick has passed, put the runtime object back so opening a PDF can hash.
-    if (this.ellapsedMillSeconds >= 20) {
-      restoreNativeWebAssembly(this.nativeWebAssembly)
-    }
-
-    if (this.ellapsedMillSeconds >= 60 * 1000) {
-      reject(new Error('timeout'))
-      return
-    }
-
-    this.checkTimeout = window.setTimeout(() => {
-      this.checkWasmLoaded(resolve, reject)
-    }, 10)
-  }
-
-  private async getSignature(parameters: Record<string, unknown>): Promise<string> {
-    if (!parameters) {
-      return ''
-    }
-    await this.ensureEnvCompleted()
-
-    const query = Object.keys(parameters)
-      .sort((a, b) => (a.toLowerCase() >= b.toLowerCase() ? 1 : -1))
-      .map((key) => `${key}=${parameters[key]}`)
-      .join('')
-
-    if (
-      BrowserCapabilities.supportWebAssembly() &&
-      this.apiSettings.enableWasm &&
-      this.loadedWasm
-    ) {
-      const wasmWindow = window as WasmWindow
-      if (
-        !wasmWindow.stringToNewUTF8 ||
-        !wasmWindow._getToken ||
-        !wasmWindow.UTF8ToString ||
-        !wasmWindow._free
-      ) {
-        return ''
-      }
-      const p = wasmWindow.stringToNewUTF8(query)
-      const p2 = wasmWindow._getToken(p)
-      const hash = wasmWindow.UTF8ToString(p2, 40)
-      wasmWindow._free(p)
-      wasmWindow._free(p2)
-      return hash
-    }
-
-    if (this.apiSettings.getSecret) {
-      const signedQuery = query + (await this.apiSettings.getSecret())
-      return this.crypto.digest(signedQuery, 'SHA-1')
-    }
-    return ''
+    signed.X_Public_Token = await material.sign(canonicalSignQuery(signed))
+    return signed
   }
 }

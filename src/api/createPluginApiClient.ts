@@ -1,6 +1,5 @@
 import type { IDevice } from '@foxycape/core/kernal'
 import { WebBrowser } from '@foxycape/core/kernal'
-import { WebCrypto } from '@foxycape/core/kernal/crypto/WebCrypto'
 import {
   ApiClient,
   type ApiSettings,
@@ -9,7 +8,6 @@ import {
 import type { Plugin } from 'obsidian'
 import { API_ENDPOINT } from '@/license/constants'
 import { ObsidianHttpClient } from './ObsidianHttpClient'
-import { resolveWasmSignerUrl, WASM_SIGNER_RELATIVE } from './resolveWasmSignerUrl'
 
 export type PluginApiConfig = {
   endPoint?: string
@@ -25,7 +23,7 @@ export type PluginApiContext = {
 
 /** Build the shared {@link IApiClient} + {@link IDevice} used by the Obsidian PDF plugin. */
 export const createPluginApiClient = (
-  plugin: Plugin,
+  _plugin: Plugin,
   config: PluginApiConfig = {},
 ): PluginApiContext => {
   const device: IDevice = new WebBrowser()
@@ -37,17 +35,9 @@ export const createPluginApiClient = (
     apiVersion: '1.0',
     camelcase: true,
     serverIsSupportCamelcase: true,
-    enableWasm: true,
-    wasmSignerFilePath: WASM_SIGNER_RELATIVE,
-    getWasmSignerUrl: async () => resolveWasmSignerUrl(plugin),
   }
   return {
-    apiClient: new ApiClient(
-      new ObsidianHttpClient(),
-      device,
-      new WebCrypto(),
-      apiSettings,
-    ),
+    apiClient: new ApiClient(new ObsidianHttpClient(), device, apiSettings),
     device,
   }
 }

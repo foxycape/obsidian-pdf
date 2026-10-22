@@ -1,23 +1,16 @@
-import { DexieStorage } from '@/storage'
 import { LegacyMarkCatalog } from '@/storage/legacy/LegacyMarkCatalog'
-import { createGlobalWorker, type IGlobalWorker } from '@/workers'
+import type { DexieStorage } from '@/storage/DexieStorage'
+import type { IGlobalWorker } from '@/workers/IGlobalWorker'
+import { readPdfHost } from './pdfHostBridge'
 
-let storage: DexieStorage | null = null
-let worker: IGlobalWorker | null = null
 let catalog: LegacyMarkCatalog | null = null
 let ready: Promise<void> | null = null
 
-/** IndexedDB handle shared by the reader and AI. Constructed on first use. */
-export const getPdfStorage = (): DexieStorage => {
-  storage ??= new DexieStorage({ dbName: 'foxycape-pdf' })
-  return storage
-}
+/** Storage constructed when this bundle installs the host. */
+export const getPdfStorage = (): DexieStorage => readPdfHost().getStorage()
 
-/** Hash and image worker. Created the first time a PDF is opened. */
-export const getPdfWorker = (): IGlobalWorker => {
-  worker ??= createGlobalWorker()
-  return worker
-}
+/** Worker constructed when this bundle installs the host. */
+export const getPdfWorker = (): IGlobalWorker => readPdfHost().getWorker()
 
 export const getLegacyMarkCatalog = (): LegacyMarkCatalog => {
   catalog ??= new LegacyMarkCatalog()
@@ -47,12 +40,7 @@ export const ensurePdfRuntime = async (): Promise<void> => {
 }
 
 export const disposePdfRuntime = async (): Promise<void> => {
-  const currentWorker = worker
-  const currentStorage = storage
-  worker = null
-  storage = null
   catalog = null
   ready = null
-  await currentWorker?.dispose()
-  await currentStorage?.dispose()
+  await readPdfHost().dispose()
 }

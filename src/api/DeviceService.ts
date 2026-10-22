@@ -1,6 +1,8 @@
 import type { IDevice } from '@foxycape/core/kernal'
-import type { FoxycapePdfPlugin } from '@/plugin/FoxycapePdfPlugin'
+import { ensureDeviceSignMaterial } from '@/api/deviceSignKey'
 import { DEVICE_REGIST_PATH } from '@/license/constants'
+import { ResponseCode } from '@/network/ApiConstants'
+import type { FoxycapePdfPlugin } from '@/plugin/FoxycapePdfPlugin'
 
 export type DeviceRegistApiResult = {
   success?: boolean
@@ -14,10 +16,57 @@ export type DeviceRegistApiResult = {
  * (same plaintext fallback as the legacy app when AES key is unavailable).
  */
 export class DeviceService {
+  /** Public key that completed registration in this process. */
+  private registeredPublicKeySpki: string | null = null
+  /** In-flight or already successful registration. Cleared after a failure so the next call retries. */
+  private registrationPromise: Promise<void> | null = null
+
   constructor(
     private readonly plugin: FoxycapePdfPlugin,
     private readonly device: IDevice,
   ) {}
+
+  /**
+   * Register this install once per process for the current ECDSA public key.
+   * Concurrent callers share one request. A failure rejects and the next call tries again.
+   */
+  ensureRegistered = (): Promise<void> => {
+    if (this.registrationPromise) {
+      return this.registrationPromise
+    }
+    this.registrationPromise = this.registerOnce()
+    return this.registrationPromise
+  }
+
+  private registerOnce = async (): Promise<void> => {
+    try {
+      const material = await ensureDeviceSignMaterial()
+      if (this.registeredPublicKeySpki === material.publicKeySpki) {
+        return
+      }
+      const result = await this.registerDevice()
+      if (!this.isRegistrationSuccess(result)) {
+        const description =
+          result !== false && result.description
+            ? result.description
+            : 'Device registration failed.'
+        throw new Error(description)
+      }
+      this.registeredPublicKeySpki = material.publicKeySpki
+    } catch (error) {
+      this.registrationPromise = null
+      throw error
+    }
+  }
+
+  private isRegistrationSuccess = (
+    result: DeviceRegistApiResult | false,
+  ): boolean => {
+    if (result === false) {
+      return false
+    }
+    return result.success === true || result.code === ResponseCode.Success
+  }
 
   getDeviceToken = (): string => this.device.getId()
 

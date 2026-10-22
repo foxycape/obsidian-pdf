@@ -12,16 +12,13 @@ export type ApiSettings = {
   /** API base URL, e.g. https://gw.example.com */
   endPoint: string
   appId: string
-  /** Secret provider used when WASM signing is disabled */
+  /** Secret provider. Request signing uses the device ECDSA key. */
   getSecret: () => Promise<string>
   apiVersion?: string
   appVersion?: string
   /** Server response code that requires refreshing the signing environment */
   requireChangeSecretCode?: number
   accessTokenExpiredCode?: number
-  enableWasm?: boolean
-  wasmSignerFilePath?: string
-  getWasmSignerUrl?: (signerUrl: string) => Promise<string>
   /** Convert response keys to camelCase locally when server does not */
   camelcase?: boolean
   serverIsSupportCamelcase?: boolean
@@ -66,4 +63,10 @@ export type IApiClient = {
   responseHandler?: (response: unknown) => Promise<void>
 
   readonly httpClient: IHttpClient
+
+  /**
+   * Signed calls to the API host wait for this before they are sent.
+   * The device registration request itself does not.
+   */
+  setEnsureDeviceRegistered: (ensure: () => Promise<void>) => void
 }

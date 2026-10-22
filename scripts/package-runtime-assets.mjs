@@ -13,14 +13,14 @@ const packageDir = fileURLToPath(new URL('..', import.meta.url))
 const distDir = resolve(packageDir, 'dist')
 const zipPath = resolve(distDir, 'pdfjs-assets.zip')
 
-/** Remote pack: cmaps + standard_fonts + wasm + iccs + KaTeX woff2. Reader, worker, and signer ship in pdfjs.zip. */
+/** Remote pack: cmaps + standard_fonts + wasm + iccs. pdf-lib and the worker ship in pdfjs.zip. KaTeX woff2 ships in reader-bundle.zip. */
 const INCLUDE_ROOTS = [
   join('pdfjs', 'cmaps'),
   join('pdfjs', 'standard_fonts'),
   join('pdfjs', 'wasm'),
   join('pdfjs', 'iccs'),
-  join('katex', 'fonts'),
 ]
+const KATEX_FONTS = join('katex', 'fonts')
 
 const walkFiles = (dir, files = []) => {
   for (const name of readdirSync(dir)) {
@@ -73,33 +73,82 @@ const main = () => {
   const mb = (zipped.byteLength / (1024 * 1024)).toFixed(2)
   console.log(`Wrote ${zipPath} (${Object.keys(entries).length} files, ${mb} MB, ${cmapsId})`)
 
-  const pdfBundle = join(distDir, 'pdf.js')
+  const pdfLib = join(distDir, 'pdf-lib.js')
   const workerFrom = join(distDir, 'pdfjs', 'pdf.worker.min.mjs')
-  const signerFile = join(distDir, 'static', 'signer.js')
-  for (const file of [pdfBundle, workerFrom, signerFile]) {
+  for (const file of [pdfLib, workerFrom]) {
     if (!existsSync(file)) {
       throw new Error(`Missing ${file}. Run the pdf.js vite build before packaging assets.`)
     }
   }
-  const localesDir = resolve(packageDir, 'src/i18n/locales')
   /** @type {Record<string, Uint8Array>} */
   const pdfjsEntries = {
-    'pdf.js': new Uint8Array(readFileSync(pdfBundle)),
+    'pdf-lib.js': new Uint8Array(readFileSync(pdfLib)),
     'pdfjs/pdf.worker.min.mjs': new Uint8Array(readFileSync(workerFrom)),
-    'static/signer.js': new Uint8Array(readFileSync(signerFile)),
-  }
-  const localeNames = readdirSync(localesDir).filter((name) => name.endsWith('.json'))
-  if (!localeNames.includes('en.json')) {
-    throw new Error(`Missing src/i18n/locales/en.json.`)
-  }
-  for (const name of localeNames) {
-    pdfjsEntries[`locales/${name}`] = new Uint8Array(readFileSync(join(localesDir, name)))
   }
   const pdfjsZipPath = resolve(distDir, 'pdfjs.zip')
   const pdfjsZipped = zipSync(pdfjsEntries)
   writeFileSync(pdfjsZipPath, pdfjsZipped)
   const pdfjsMb = (pdfjsZipped.byteLength / (1024 * 1024)).toFixed(2)
   console.log(`Wrote ${pdfjsZipPath} (${Object.keys(pdfjsEntries).length} files, ${pdfjsMb} MB)`)
+
+  const localesDir = resolve(packageDir, 'src/i18n/locales')
+  const localeNames = readdirSync(localesDir).filter((name) => name.endsWith('.json'))
+  if (!localeNames.includes('en.json')) {
+    throw new Error('Missing src/i18n/locales/en.json.')
+  }
+  /** @type {Record<string, Uint8Array>} */
+  const localeEntries = {}
+  for (const name of localeNames) {
+    localeEntries[`locales/${name}`] = new Uint8Array(readFileSync(join(localesDir, name)))
+  }
+  const localesZipPath = resolve(distDir, 'locales.zip')
+  const localesZipped = zipSync(localeEntries)
+  writeFileSync(localesZipPath, localesZipped)
+  const localesMb = (localesZipped.byteLength / (1024 * 1024)).toFixed(2)
+  console.log(`Wrote ${localesZipPath} (${Object.keys(localeEntries).length} files, ${localesMb} MB)`)
+
+  const markdownLib = join(distDir, 'markdown-lib.js')
+  const markdownIdPath = join(distDir, '.foxycape-markdown-id')
+  const markdownMarker = join(distDir, 'markdown', '.foxycape-markdown-version')
+  for (const file of [markdownLib, markdownIdPath, markdownMarker]) {
+    if (!existsSync(file)) {
+      throw new Error(`Missing ${file}. Run the markdown vite build before packaging assets.`)
+    }
+  }
+  const markdownId = readFileSync(markdownIdPath, 'utf8').trim()
+  if (!markdownId.startsWith('markdown-')) {
+    throw new Error(`Unexpected markdown id: ${markdownId}`)
+  }
+  console.log(`markdown-lib.js ready (${markdownId})`)
+
+  const readerBundle = join(distDir, 'reader-bundle.js')
+  const readerVersion = join(distDir, '.foxycape-reader-version')
+  const katexFonts = join(distDir, KATEX_FONTS)
+  for (const file of [readerBundle, readerVersion, katexFonts]) {
+    if (!existsSync(file)) {
+      throw new Error(`Missing ${file}. Run the reader vite build before packaging assets.`)
+    }
+  }
+  /** @type {Record<string, Uint8Array>} */
+  const readerEntries = {
+    'reader-bundle.js': new Uint8Array(readFileSync(readerBundle)),
+  }
+  for (const file of walkFiles(katexFonts)) {
+    if (!file.endsWith('.woff2')) {
+      continue
+    }
+    readerEntries[toZipKey(file)] = new Uint8Array(readFileSync(file))
+  }
+  if (Object.keys(readerEntries).length < 2) {
+    throw new Error(`No KaTeX woff2 files found in ${katexFonts}.`)
+  }
+  const readerZipPath = resolve(distDir, 'reader-bundle.zip')
+  const readerZipped = zipSync(readerEntries)
+  writeFileSync(readerZipPath, readerZipped)
+  const readerMb = (readerZipped.byteLength / (1024 * 1024)).toFixed(2)
+  console.log(
+    `Wrote ${readerZipPath} (${Object.keys(readerEntries).length} files, ${readerMb} MB, ${readFileSync(readerVersion, 'utf8').trim()})`,
+  )
 }
 
 main()

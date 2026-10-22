@@ -2,9 +2,17 @@ import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { buildRuntimeAssetsCdnUrl, buildRuntimeAssetsDownloadUrl, RUNTIME_CMAPS_ID } from '@/assets/constants'
+import {
+  buildMarkdownLibCdnUrl,
+  buildMarkdownLibDownloadUrl,
+  buildRuntimeAssetsCdnUrl,
+  buildRuntimeAssetsDownloadUrl,
+  RUNTIME_CMAPS_ID,
+} from '@/assets/constants'
 import { resolveFoxycapeCore } from '../scripts/resolveFoxycapeCore'
-import { buildPdfjsCmapsId, buildRuntimeAssetsId } from '../scripts/runtimeAssetsId.mjs'
+import { buildLocalesId } from '../scripts/localesId.mjs'
+import { buildMarkdownId } from '../scripts/markdownId.mjs'
+import { buildPdfjsCmapsId } from '../scripts/runtimeAssetsId.mjs'
 
 const packageDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const { pdfjsDir } = resolveFoxycapeCore(packageDir)
@@ -18,14 +26,10 @@ describe('runtime assets identity', () => {
       readFileSync(resolve(pdfjsDir, 'package.json'), 'utf8'),
     ) as { version: string }
 
-    const assetsId = buildRuntimeAssetsId(
-      pdfjsDir,
-      resolve(packageDir, 'static/signer.js'),
-    )
-    const escapedPdfjs = pdfjsVersion.replace(/\./g, '\\.')
+    const localesId = buildLocalesId(resolve(packageDir, 'src/i18n/locales'))
 
-    expect(assetsId).toMatch(new RegExp(`^pdfjs-${escapedPdfjs}\\+signer-[0-9a-f]{8}$`))
-    expect(assetsId).not.toBe(pluginVersion)
+    expect(localesId).toMatch(/^locales-[0-9a-f]{12}$/)
+    expect(buildPdfjsCmapsId(pdfjsDir)).not.toBe(pluginVersion)
     expect(buildPdfjsCmapsId(pdfjsDir)).toBe(
       `pdfjs-${pdfjsVersion}`,
     )
@@ -38,6 +42,18 @@ describe('runtime assets identity', () => {
     )
     expect(buildRuntimeAssetsCdnUrl('3.4.1')).toBe(
       'https://cdn.tiefeiying.com/obsidian-pdf/3.4.1/pdfjs-assets.zip',
+    )
+  })
+
+  it('keys markdown-lib.js by its own content hash', () => {
+    expect(buildMarkdownId('katex-and-highlight')).toMatch(/^markdown-[0-9a-f]{12}$/)
+    expect(buildMarkdownId('katex-and-highlight')).toBe(buildMarkdownId('katex-and-highlight'))
+    expect(buildMarkdownId('other')).not.toBe(buildMarkdownId('katex-and-highlight'))
+    expect(buildMarkdownLibDownloadUrl('3.4.4')).toBe(
+      'https://github.com/foxycape/obsidian-pdf/releases/download/3.4.4/markdown-lib.js',
+    )
+    expect(buildMarkdownLibCdnUrl('3.4.4')).toBe(
+      'https://cdn.tiefeiying.com/obsidian-pdf/3.4.4/markdown-lib.js',
     )
   })
 })

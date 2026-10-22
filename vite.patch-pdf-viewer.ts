@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import type { Plugin } from 'vite'
+import { FOXYCAPE_PDFJS_LIB_GLOBAL } from './src/reader/pdfjsGlobalNames'
 import { renamePdfjsGlobalsInCode } from './vite.rename-pdfjs-globals'
 
 const VIRTUAL_ID = '\0foxycape-patched-pdf-viewer'
@@ -48,8 +49,8 @@ export const patchPdfViewerImportPlugin = (corePdfjsDir: string): Plugin => {
       // 1) Bind API from our module (not host globalThis.pdfjsLib)
       // 2) Rename leftover host globals (pdfjsViewer, etc.) to private names
       const withModuleApi =
-        `import * as __foxycapePdfjsLib from '${pdfApiPath}';\n` +
-        code.replace(needle, '} = __foxycapePdfjsLib;')
+        `import * as ${FOXYCAPE_PDFJS_LIB_GLOBAL} from '${pdfApiPath}';\n` +
+        code.replace(needle, `} = ${FOXYCAPE_PDFJS_LIB_GLOBAL};`)
 
       return renamePdfjsGlobalsInCode(withModuleApi)
     },

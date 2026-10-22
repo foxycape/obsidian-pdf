@@ -1,4 +1,4 @@
-import { digestStream } from '@foxycape/core/kernal/crypto/hash'
+import { digestStream } from '@/crypto/hash'
 import { describe, expect, it } from 'vitest'
 import { createHashSession } from '@/workers/hashSession'
 

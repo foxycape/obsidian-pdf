@@ -30,21 +30,23 @@ jobs:
       - name: Package plugin assets
         run: |
           test -f dist/main.js
-          test -f dist/pdf.js
+          test -f dist/pdf-lib.js
           test -f dist/manifest.json
           test -f dist/styles.css
           test -f dist/pdfjs-assets.zip
           test -f dist/pdfjs.zip
+          test -f dist/locales.zip
+          test -f dist/markdown-lib.js
+          test -f dist/reader-bundle.zip
+          test -f dist/reader-bundle.js
           test -f dist/pdfjs/pdf.worker.min.mjs
-          test -f dist/static/signer.js
           test -d dist/pdfjs/cmaps
           test -d dist/pdfjs/standard_fonts
           mkdir -p release-assets
           # Community installer only consumes these three files.
           cp dist/main.js dist/manifest.json dist/styles.css release-assets/
-          # Reader, worker, signer, and language files are fetched together when any of them is missing.
-          cp dist/pdfjs.zip release-assets/
-          cp dist/pdfjs-assets.zip release-assets/
+          # PDF.js library, language files, fonts, and the markdown runtime are downloaded separately.
+          cp dist/pdfjs.zip dist/locales.zip dist/pdfjs-assets.zip dist/markdown-lib.js dist/reader-bundle.zip release-assets/
 
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
@@ -54,7 +56,10 @@ jobs:
             release-assets/manifest.json
             release-assets/styles.css
             release-assets/pdfjs.zip
+            release-assets/locales.zip
             release-assets/pdfjs-assets.zip
+            release-assets/markdown-lib.js
+            release-assets/reader-bundle.zip
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -72,7 +77,7 @@ jobs:
           OSSUTIL="$(find /tmp/ossutil -type f -name 'ossutil*' | head -n 1)"
           chmod +x "$OSSUTIL"
           VERSION="${GITHUB_REF_NAME}"
-          for file in main.js manifest.json styles.css pdfjs.zip pdfjs-assets.zip; do
+          for file in main.js manifest.json styles.css pdfjs.zip locales.zip pdfjs-assets.zip markdown-lib.js reader-bundle.zip; do
             "$OSSUTIL" cp -f "release-assets/${file}" "oss://${OSS_BUCKET}/obsidian-pdf/${VERSION}/${file}" \
               -e "${OSS_ENDPOINT}" \
               -i "${OSS_ACCESS_KEY_ID}" \

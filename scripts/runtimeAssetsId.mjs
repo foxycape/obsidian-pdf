@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -18,20 +17,3 @@ const readPdfjsVersion = (pdfjsDir) => {
  */
 export const buildPdfjsCmapsId = (pdfjsDir) => `pdfjs-${readPdfjsVersion(pdfjsDir)}`
 
-/**
- * Compatibility id for the signer zip and the worker file.
- * Tied to pdf.js + signer contents, not the plugin semver — plugin-only
- * upgrades should not force those files to download again.
- *
- * @param {string} pdfjsDir Absolute path to the pdfjs package root (has package.json)
- * @param {string} signerPath Absolute path to static/signer.js
- * @returns {string} e.g. `pdfjs-4.7.76+signer-a1b2c3d4`
- */
-export const buildRuntimeAssetsId = (pdfjsDir, signerPath) => {
-  const version = readPdfjsVersion(pdfjsDir)
-  const signerHash = createHash('sha256')
-    .update(readFileSync(signerPath))
-    .digest('hex')
-    .slice(0, 8)
-  return `pdfjs-${version}+signer-${signerHash}`
-}

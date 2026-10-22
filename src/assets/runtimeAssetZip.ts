@@ -31,16 +31,28 @@ const isSafeZipPath = (name: string): boolean => {
   return !normalized.startsWith('/') && !normalized.includes('..')
 }
 
-/** pdfjs.zip contains the reader bundle, the PDF.js worker, signer.js, and language files. */
+/** reader-bundle.zip contains the reader bundle (UI, Dexie, hash worker) and KaTeX woff2. */
+export const isReaderZipEntryName = (name: string): boolean => {
+  const normalized = normalizeZipEntryName(name)
+  return (
+    isSafeZipPath(normalized) &&
+    (normalized === 'reader-bundle.js' || /^katex\/fonts\/[^/]+\.woff2$/.test(normalized))
+  )
+}
+
+/** pdfjs.zip contains the PDF.js library and its worker. */
 export const isPdfjsZipEntryName = (name: string): boolean => {
   const normalized = normalizeZipEntryName(name)
   return (
     isSafeZipPath(normalized) &&
-    (normalized === 'pdf.js' ||
-      normalized === 'pdfjs/pdf.worker.min.mjs' ||
-      normalized === 'static/signer.js' ||
-      /^locales\/[A-Za-z0-9_-]+\.json$/.test(normalized))
+    (normalized === 'pdf-lib.js' || normalized === 'pdfjs/pdf.worker.min.mjs')
   )
+}
+
+/** locales.zip contains language JSON files. */
+export const isLocalesZipEntryName = (name: string): boolean => {
+  const normalized = normalizeZipEntryName(name)
+  return isSafeZipPath(normalized) && /^locales\/[A-Za-z0-9_-]+\.json$/.test(normalized)
 }
 
 export const isRemoteZipEntryName = (name: string): boolean => {
@@ -50,8 +62,7 @@ export const isRemoteZipEntryName = (name: string): boolean => {
     (normalized.startsWith('pdfjs/cmaps/') ||
       normalized.startsWith('pdfjs/standard_fonts/') ||
       normalized.startsWith('pdfjs/wasm/') ||
-      normalized.startsWith('pdfjs/iccs/') ||
-      normalized.startsWith('katex/fonts/'))
+      normalized.startsWith('pdfjs/iccs/'))
   )
 }
 

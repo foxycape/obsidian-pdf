@@ -1,11 +1,15 @@
 import { readFileSync } from 'node:fs'
 import type { Plugin } from 'vite'
+import {
+  FOXYCAPE_PDFJS_LIB_GLOBAL,
+  FOXYCAPE_PDFJS_VIEWER_GLOBAL,
+  FOXYCAPE_PDFJS_WORKER_GLOBAL,
+} from './src/reader/pdfjsGlobalNames'
 
-/** Must stay in sync with src/reader/pdfjsGlobalNames.ts */
-const RENAMES: ReadonlyArray<readonly [from: string, to: string]> = [
-  ['globalThis.pdfjsLib', 'globalThis.__foxycapePdfjsLib'],
-  ['globalThis.pdfjsWorker', 'globalThis.__foxycapePdfjsWorker'],
-  ['globalThis.pdfjsViewer', 'globalThis.__foxycapePdfjsViewer'],
+const RENAMES: ReadonlyArray<readonly [string, string]> = [
+  ['globalThis.pdfjsLib', `globalThis.${FOXYCAPE_PDFJS_LIB_GLOBAL}`],
+  ['globalThis.pdfjsWorker', `globalThis.${FOXYCAPE_PDFJS_WORKER_GLOBAL}`],
+  ['globalThis.pdfjsViewer', `globalThis.${FOXYCAPE_PDFJS_VIEWER_GLOBAL}`],
 ]
 
 export const renamePdfjsGlobalsInCode = (code: string): string => {

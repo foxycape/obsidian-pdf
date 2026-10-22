@@ -43,7 +43,7 @@ const readLocaleFile = async (plugin: Plugin, language: string): Promise<LocaleD
 
 /**
  * Load the requested language and the English fallback from locales/{code}.json
- * next to the plugin. Those files arrive with pdfjs.zip.
+ * next to the plugin. Those files arrive in locales.zip.
  */
 export const loadLocaleResources = async (
   plugin: Plugin,

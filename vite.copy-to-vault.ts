@@ -11,23 +11,26 @@ import type { Plugin } from 'vite'
 
 const ENTRY_FILES = [
   'main.js',
-  'pdf.js',
+  'pdf-lib.js',
+  'markdown-lib.js',
+  'reader-bundle.js',
   'styles.css',
   'manifest.json',
   'versions.json',
   '.hotreload',
-  '.foxycape-pdf-bundle-version',
+  '.foxycape-pdf-lib-version',
+  '.foxycape-reader-version',
 ] as const
 
 /** Recopy even when the sidecar directory itself is unchanged. */
 const ALWAYS_FILES = [
-  'static/signer.js',
-  'static/.foxycape-signer-version',
   'pdfjs/pdf.worker.min.mjs',
   'pdfjs/.foxycape-worker-version',
+  'locales/.foxycape-locales-version',
+  'markdown/.foxycape-markdown-version',
 ] as const
 
-const SIDECAR_DIRS = ['pdfjs', 'katex', 'static'] as const
+const SIDECAR_DIRS = ['pdfjs', 'katex'] as const
 const ALWAYS_DIRS = ['locales'] as const
 const CMAPS_VERSION_FILE = '.foxycape-cmaps-version'
 
@@ -60,6 +63,38 @@ const junctionTarget = (dir: string): string | null | undefined => {
     return resolve(dirname(dir), raw)
   } catch {
     return null
+  }
+}
+
+/**
+ * Copy listed files from dist into the vault plugin folder.
+ * Skips when the destination is a junction to dist, or when no directory is set.
+ */
+export const copyVaultFiles = (
+  outDir: string,
+  vaultPluginDir: string,
+  names: readonly string[],
+): void => {
+  const dest = vaultPluginDir.trim()
+  if (!dest) {
+    return
+  }
+  const linkedTarget = junctionTarget(dest)
+  if (linkedTarget !== undefined) {
+    const pointsAtDist = linkedTarget !== null && samePath(linkedTarget, outDir)
+    if (pointsAtDist || linkedTarget === null) {
+      return
+    }
+  }
+  mkdirSync(dest, { recursive: true })
+  for (const name of names) {
+    const from = resolve(outDir, name)
+    if (!existsSync(from)) {
+      continue
+    }
+    const target = resolve(dest, name)
+    mkdirSync(dirname(target), { recursive: true })
+    cpSync(from, target)
   }
 }
 

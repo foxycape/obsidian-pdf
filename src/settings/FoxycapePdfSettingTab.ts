@@ -7,7 +7,9 @@ import {
   type TextComponent,
 } from 'obsidian'
 import { debounce } from '@foxycape/core/kernal/web/debounce'
-import { loadPdfModule } from '@/views/loadPdfModule'
+import { getLicenseAiUser, loadLicenseAiUsage } from '@/ai/licenseSession'
+import { tryGetAiRuntime } from '@/ai/runtime'
+import { getObsidianLocaleCode } from '@/i18n/resolveObsidianLanguage'
 import type { PdfUsagePoint } from '@/views/pdfBundleModule'
 import {
   LICENSE_INPUT_DEBOUNCE_MS,
@@ -123,6 +125,16 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
         this.bindDefaultViewerToggle(setting)
       },
     },
+    {
+      name: this.plugin.t('plugin_settings_language_name', 'Language'),
+      desc: this.plugin.t(
+        'plugin_settings_language_desc',
+        'Language used by Foxycape PDF. Defaults to Obsidian’s language, or English when that language is not available.',
+      ),
+      render: (setting) => {
+        this.bindLanguageDropdown(setting)
+      },
+    },
 
     {
       type: 'group',
@@ -176,6 +188,16 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
           ),
         )
       this.bindDefaultViewerToggle(defaultViewerSetting)
+
+      const languageSetting = new Setting(containerEl)
+        .setName(this.plugin.t('plugin_settings_language_name', 'Language'))
+        .setDesc(
+          this.plugin.t(
+            'plugin_settings_language_desc',
+            'Language used by Foxycape PDF. Defaults to Obsidian’s language, or English when that language is not available.',
+          ),
+        )
+      this.bindLanguageDropdown(languageSetting)
 
       new Setting(containerEl)
         .setName(this.plugin.t('plugin_settings_license_heading', 'License'))
@@ -273,22 +295,28 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
     this.renderUsageSection()
   }
 
+  private bindLanguageDropdown = (setting: Setting) => {
+    const languages = this.plugin.locale.getSupportedLanguages()
+    const codes = languages.map((item) => item.code)
+    const saved = this.plugin.settings.language
+    const selected = saved && codes.includes(saved) ? saved : getObsidianLocaleCode(codes)
+    setting.addDropdown((dropdown) => {
+      for (const language of languages) {
+        dropdown.addOption(language.code, language.nativeTitle || language.title || language.code)
+      }
+      dropdown.setValue(selected)
+      dropdown.onChange((value) => {
+        void this.plugin.setLanguage(value).then(() => {
+          this.display()
+        })
+      })
+    })
+  }
+
   private applyLicenseInput = async (value: string) => {
     this.isLicenseChecking = true
     this.lastUnbindError = null
     this.refreshLicenseStatus()
-    try {
-      // License API needs signer from the embedded pack, not remote cmaps/fonts.
-      await this.plugin.ensureSignerRuntime()
-    } catch (error) {
-      this.isLicenseChecking = false
-      this.lastOutcome = {
-        kind: 'network_error',
-        message: error instanceof Error ? error.message : String(error),
-      }
-      this.refreshLicenseStatus()
-      return
-    }
     const outcome = await this.plugin.licenseService.setLicense(value)
     this.isLicenseChecking = false
     this.lastOutcome = outcome
@@ -329,15 +357,6 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
     this.isLicenseUnbinding = true
     this.lastUnbindError = null
     this.refreshLicenseStatus()
-    try {
-      await this.plugin.ensureSignerRuntime()
-    } catch (error) {
-      this.isLicenseUnbinding = false
-      this.lastUnbindError =
-        error instanceof Error ? error.message : String(error)
-      this.refreshLicenseStatus()
-      return
-    }
     const outcome = await this.plugin.licenseService.unbindLicense()
     this.isLicenseUnbinding = false
 
@@ -496,20 +515,11 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
     chartEl: HTMLElement,
     requestId: number,
   ) => {
-    let bundle
-    try {
-      bundle = await loadPdfModule(this.plugin)
-    } catch {
-      balanceEl.setText(
-        this.plugin.t('plugin_settings_ai_usage_unavailable', 'Usage is unavailable right now'),
-      )
-      return
-    }
-    const runtime = bundle.tryGetAiRuntime()
+    const runtime = tryGetAiRuntime()
     if (!runtime || requestId !== this.usageRequestId) {
       return
     }
-    const user = await bundle.getLicenseAiUser(runtime.apiClient, runtime.getLicense())
+    const user = await getLicenseAiUser(runtime.apiClient, runtime.getLicense())
     if (requestId !== this.usageRequestId) {
       return
     }
@@ -523,7 +533,7 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
     balanceEl.setText(
       this.plugin.t('plugin_settings_ai_balance', 'AI usage balance: {balance}', { balance }),
     )
-    const points = await bundle.loadLicenseAiUsage(runtime.apiClient, user.accessToken)
+    const points = await loadLicenseAiUsage(runtime.apiClient, user.accessToken)
     if (requestId !== this.usageRequestId) {
       return
     }

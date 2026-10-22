@@ -11,7 +11,7 @@ type KatexFontsOptions = {
 }
 
 /**
- * Keep KaTeX woff2 beside pdfjs (`dist/katex/fonts`) and point styles.css at
+ * Keep KaTeX woff2 in `dist/katex/fonts` for reader-bundle.zip and point styles.css at
  * those files. Library mode would otherwise inline woff2, woff, and ttf.
  */
 export const katexFontsPlugin = (options: KatexFontsOptions): Plugin => {
@@ -47,7 +47,7 @@ export const katexFontsPlugin = (options: KatexFontsOptions): Plugin => {
     },
     writeBundle() {
       copyFonts()
-      const cssNames = ['pdf-bundle.css', 'styles.css']
+      const cssNames = ['reader-bundle.css', 'pdf-bundle.css', 'styles.css']
       let rewritten = false
       for (const name of cssNames) {
         const cssPath = join(options.outDir, name)

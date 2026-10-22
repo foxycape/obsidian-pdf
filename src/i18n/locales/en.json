@@ -55,6 +55,8 @@
   "plugin_settings_license_checking": "Validating license…",
   "plugin_settings_license_invalid": "Invalid license: {message}",
   "plugin_settings_license_network_error": "Could not reach the license server. Your previous status is kept.",
+  "plugin_settings_language_name": "Language",
+  "plugin_settings_language_desc": "Language used by Foxycape PDF. Defaults to Obsidian’s language, or English when that language is not available.",
   "plugin_settings_use_as_default_name": "Use as default PDF viewer",
   "plugin_settings_use_as_default_desc": "When enabled, opening a .pdf file uses Foxycape PDF instead of Obsidian's built-in viewer. You can still open with Foxycape from the command palette or file menu when this is off.",
   "plugin_password_title": "PDF password",

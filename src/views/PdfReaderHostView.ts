@@ -1,8 +1,14 @@
 import { ItemView, Menu, TFile, type ViewStateResult, type WorkspaceLeaf } from 'obsidian'
-import { pdfjsPackNeedsDownload } from '@/assets/ensureRuntimeAssets'
+import {
+  ensurePdfjsPack,
+  ensureReaderPack,
+  pdfjsPackNeedsDownload,
+  readerPackNeedsDownload,
+} from '@/assets/ensureRuntimeAssets'
 import type { FoxycapePdfPlugin } from '@/plugin/FoxycapePdfPlugin'
 import { PDF_READER_VIEW_TYPE } from '@/settings/types'
-import { loadPdfModule } from '@/views/loadPdfModule'
+import { loadPdfLib } from '@/views/loadPdfModule'
+import { loadReaderBundle } from '@/views/loadReaderBundle'
 import type { PdfReaderSession } from '@/views/PdfReaderSurface'
 
 const formatBytes = (value: number): string => {
@@ -19,8 +25,7 @@ const formatBytes = (value: number): string => {
 }
 
 /**
- * Thin PDF leaf that stays in main.js. The reader itself lives in pdf.js and
- * is attached the first time this view opens.
+ * Thin PDF leaf. pdf-lib.js and reader-bundle.js run before the session starts.
  */
 export class PdfReaderHostView extends ItemView {
   navigation = true
@@ -144,22 +149,51 @@ export class PdfReaderHostView extends ItemView {
 
   private run = async () => {
     try {
-      const needsDownload = await pdfjsPackNeedsDownload(this.plugin)
+      const needPdf = await pdfjsPackNeedsDownload(this.plugin)
+      const needReader = await readerPackNeedsDownload(this.plugin)
       if (this.closed) {
         return
       }
-      if (needsDownload) {
+      if (needPdf || needReader) {
         this.showInitProgress(0, 0)
       }
-      const mod = await loadPdfModule(
-        this.plugin,
-        needsDownload ? (loaded, total) => this.showInitProgress(loaded, total) : undefined,
-      )
+      const loaded = { pdf: 0, reader: 0 }
+      const totals = { pdf: 0, reader: 0 }
+      const reportProgress = () => {
+        this.showInitProgress(loaded.pdf + loaded.reader, totals.pdf + totals.reader)
+      }
+      await Promise.all([
+        needPdf
+          ? ensurePdfjsPack(this.plugin, {
+              t: this.plugin.t,
+              onProgress: (bytes, total) => {
+                loaded.pdf = bytes
+                totals.pdf = total
+                reportProgress()
+              },
+            })
+          : Promise.resolve(),
+        needReader
+          ? ensureReaderPack(this.plugin, {
+              t: this.plugin.t,
+              onProgress: (bytes, total) => {
+                loaded.reader = bytes
+                totals.reader = total
+                reportProgress()
+              },
+            })
+          : Promise.resolve(),
+      ])
+      if (this.closed) {
+        return
+      }
+      await loadPdfLib(this.plugin)
       if (this.closed) {
         return
       }
       if (!this.session) {
-        this.session = mod.attachPdfReader(this)
+        const readerBundle = await loadReaderBundle(this.plugin)
+        this.session = readerBundle.attachPdfReader(this)
       }
       if (this.closed) {
         const session = this.session

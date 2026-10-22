@@ -1,13 +1,12 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+import { writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Plugin } from 'vite'
 import { createObsidianPluginConfig } from './scripts/vite/createObsidianPluginConfig'
 import { resolveFoxycapeCore } from './scripts/resolveFoxycapeCore'
-import { buildPdfjsCmapsId, buildRuntimeAssetsId } from './scripts/runtimeAssetsId.mjs'
+import { buildPdfjsCmapsId } from './scripts/runtimeAssetsId.mjs'
 import { readObsidianPluginDir } from './scripts/readObsidianPluginDir.mjs'
 import { copyPdfjsAssetsPlugin } from './vite.copy-pdfjs'
-import { copySignerAssetsPlugin } from './vite.copy-signer'
 import { patchPdfViewerImportPlugin } from './vite.patch-pdf-viewer'
 import {
   assertNoHostPdfjsGlobalsPlugin,
@@ -17,26 +16,19 @@ import { stubPdfWorkerRawPlugin } from './vite.stub-pdf-worker-raw'
 import { assertNoDynamicScriptElementsPlugin } from './vite.strip-localforage'
 import { copyToVaultPlugin } from './vite.copy-to-vault'
 import { copyLocalesPlugin } from './vite.copy-locales'
-import { katexFontsPlugin } from './vite.katex-fonts'
 import { mergePdfBundleCssPlugin } from './vite.merge-pdf-css'
 
 const packageDir = fileURLToPath(new URL('.', import.meta.url))
 const { pdfjsDir: corePdfjsDir } = resolveFoxycapeCore(packageDir)
 const outDir = resolve(packageDir, 'dist')
-const pdfJsPath = resolve(outDir, 'pdf.js')
-const signerSrcFile = resolve(packageDir, 'static/signer.js')
+const pdfLibPath = resolve(outDir, 'pdf-lib.js')
 const pdfjsCmapsId = buildPdfjsCmapsId(corePdfjsDir)
-const runtimeId = buildRuntimeAssetsId(corePdfjsDir, signerSrcFile)
 const vaultPluginDir = readObsidianPluginDir(packageDir)
 const foxycapePdfViewer = resolve(packageDir, 'src/reader/foxycapePdfViewer.ts')
 const pdfViewerPath = resolve(corePdfjsDir, 'legacy/web/pdf_viewer.mjs').replace(
   /\\/g,
   '/',
 )
-const pluginVersion = (
-  JSON.parse(readFileSync(resolve(packageDir, 'package.json'), 'utf8')) as { version: string }
-).version
-
 /**
  * Redirect imports of core's pdf_viewer.mjs to foxycapePdfViewer, except when
  * foxycapePdfViewer itself loads the real viewer (avoids alias recursion).
@@ -62,18 +54,18 @@ const isolatePdfViewerPlugin = (): Plugin => ({
   },
 })
 
-const writePdfBundleVersionPlugin = (): Plugin => ({
-  name: 'write-pdf-bundle-version',
+const writePdfLibVersionPlugin = (): Plugin => ({
+  name: 'write-pdf-lib-version',
   writeBundle() {
-    writeFileSync(join(outDir, '.foxycape-pdf-bundle-version'), `${pluginVersion}\n`)
+    writeFileSync(join(outDir, '.foxycape-pdf-lib-version'), `${pdfjsCmapsId}\n`)
   },
 })
 
 const base = createObsidianPluginConfig({
   packageDir,
   outDirName: 'dist',
-  entry: resolve(packageDir, 'src/pdf-entry.ts'),
-  fileName: 'pdf.js',
+  entry: resolve(packageDir, 'src/pdf-lib-entry.ts'),
+  fileName: 'pdf-lib.js',
   cssFileName: 'pdf-bundle.css',
   tailwind: false,
 })
@@ -83,7 +75,6 @@ export default {
   define: {
     ...base.define,
     __FOXYCAPE_PDFJS_CMAPS_ID__: JSON.stringify(pdfjsCmapsId),
-    __FOXYCAPE_RUNTIME_ID__: JSON.stringify(runtimeId),
   },
   plugins: [
     stubPdfWorkerRawPlugin(),
@@ -91,17 +82,14 @@ export default {
     renamePdfjsGlobalsPlugin(),
     patchPdfViewerImportPlugin(corePdfjsDir),
     ...(base.plugins ?? []),
-    katexFontsPlugin({ packageDir, outDir }),
     copyPdfjsAssetsPlugin({
       outDir,
       corePdfjsDir,
       cmapsId: pdfjsCmapsId,
-      runtimeId,
     }),
-    copySignerAssetsPlugin(outDir, signerSrcFile, runtimeId),
-    writePdfBundleVersionPlugin(),
-    assertNoHostPdfjsGlobalsPlugin(pdfJsPath),
-    assertNoDynamicScriptElementsPlugin(pdfJsPath),
+    writePdfLibVersionPlugin(),
+    assertNoHostPdfjsGlobalsPlugin(pdfLibPath),
+    assertNoDynamicScriptElementsPlugin(pdfLibPath),
     mergePdfBundleCssPlugin(outDir),
     copyLocalesPlugin(packageDir, outDir),
     copyToVaultPlugin(outDir, vaultPluginDir),

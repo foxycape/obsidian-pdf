@@ -117,7 +117,7 @@ PDF 排版常把句子拦腰截断，复制后满是多余换行。照常选中�
 
 ```bash
 npm install
-npm run build      # → dist/main.js、pdf.js、styles.css、manifest.json、pdfjs.zip、字体包
+npm run build      # → dist/main.js、pdf-lib.js、markdown-lib.js、reader-bundle.js、styles.css、manifest.json、pdfjs.zip、reader-bundle.zip、locales.zip、字体包
 npm run dev        # 监听构建；若设置了 OBSIDIAN_PLUGIN_DIR，成功后拷到该插件目录
 npm test
 npm run typecheck
@@ -126,13 +126,13 @@ npm run link       # 将 dist/ junction 到 vault 的 .obsidian/plugins/foxycape
 
 在 `.env` 中设置 `OBSIDIAN_PLUGIN_DIR`（见 `.env.example`）后，`npm run dev` 会在每次构建成功时把产物拷到该目录；`npm run link` 也读取同一变量，未设置时仍使用默认 vault 路径。进程环境变量优先于文件。
 
-社区安装只会拿到 `main.js`、`manifest.json` 和 `styles.css`。启用插件时，如果 `pdf.js`、worker、signer 或英文语言包缺了任意一个，或版本标记不一致，就下载一个 `pdfjs.zip`（阅读器、PDF worker、signer 和语言包在同一个包里）。设备注册等这个包落地，命令名也等语言文件读完再注册。第一次打开 PDF 时如果包还在下载，才显示「正在初始化…」，进度是这一个包的字节数。本地已有且标记一致（包括 `npm run link`）会直接执行，不显示这一层。字符映射与标准字体（约 1.5 MB）仍按 **PDF.js 版本** 在后台从 `pdfjs-assets.zip` 下载，文件名变化不会让已经装好的字体包重下。
+社区安装只会拿到 `main.js`、`manifest.json` 和 `styles.css`。启用插件时，语言文件有变化才下载 `locales.zip`，并用本机密钥注册设备。打开 PDF 时按标记决定下载：`pdfjs.zip`（PDF.js 库和 worker）只在 **PDF.js 版本**变了才下载，`reader-bundle.zip`（阅读器、数据库、哈希和 KaTeX 字体）在 **插件版本**变了才下载。两个都要下时并行下载，进度加在一起，界面仍是「正在初始化…」。只缺其中一个就只下那一个。本地已有且标记一致（包括 `npm run link`）会直接打开，不显示这一层。设置页可以选择语言：默认是 Obsidian 当前语言，支持列表里没有时用英文；手动选过之后就固定为所选语言。字符映射与标准字体（约 1.5 MB）仍按 PDF.js 版本在后台从 `pdfjs-assets.zip` 下载。`markdown-lib.js`（KaTeX 和代码高亮）同样在后台下载，只有这份文件的内容版本变了才重新下载。没下完时聊天正文仍然显示，只是暂时没有公式和语法色。
 
 ## 发布（Obsidian 社区插件）
 
 1. 在 `package.json` 中提升 `version`（semver `x.y.z`）。构建会同步到 `manifest.json` / `versions.json`。
 2. 提交后创建 GitHub Release，**tag 必须与该 version 完全一致**（如 `3.3.6`，不要加 `v` 前缀）。
-3. 上传 `dist/main.js`、`dist/manifest.json`、`dist/styles.css`、`dist/pdfjs.zip`，以及 `dist/pdfjs-assets.zip`。
+3. 上传 `dist/main.js`、`dist/manifest.json`、`dist/styles.css`、`dist/pdfjs.zip`、`dist/reader-bundle.zip`、`dist/locales.zip`、`dist/pdfjs-assets.zip`，以及 `dist/markdown-lib.js`。
 
 推送版本 tag 会触发 [`.github/workflows/release.yml`](.github/workflows/release.yml) 自动构建并上传上述资产。
 

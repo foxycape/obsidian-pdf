@@ -1,4 +1,4 @@
-import { computeMd5 } from '@foxycape/core/kernal/crypto/MD5'
+import { computeMd5 } from '@/crypto/MD5'
 import { MemoryByteSource } from '@foxycape/core/kernal/io/MemoryByteSource'
 import type { IFileUrlParser } from '@foxycape/core/kernal/services/fileUrlParser/IFileUrlParser'
 import { describe, expect, it } from 'vitest'

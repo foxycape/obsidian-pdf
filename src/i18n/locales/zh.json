@@ -55,6 +55,8 @@
   "plugin_settings_license_checking": "正在验证许可证…",
   "plugin_settings_license_invalid": "许可证无效：{message}",
   "plugin_settings_license_network_error": "无法连接许可证服务器，已保留上次状态。",
+  "plugin_settings_language_name": "语言",
+  "plugin_settings_language_desc": "Foxycape PDF 使用的语言。默认跟随 Obsidian，若没有对应语言则使用英文。",
   "plugin_settings_use_as_default_name": "用作默认 PDF 查看器",
   "plugin_settings_use_as_default_desc": "启用后，打开 .pdf 文件将使用 Foxycape PDF 而非 Obsidian 内置查看器。关闭后仍可从命令面板或文件菜单使用 Foxycape 打开。",
   "plugin_password_title": "PDF 密码",
