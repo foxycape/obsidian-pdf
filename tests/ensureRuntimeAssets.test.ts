@@ -4,6 +4,7 @@ import type { Plugin } from 'obsidian'
 import {
   LOCALES_ID,
   LOCALES_VERSION_MARKER,
+  MARKDOWN_LIB_FILE,
   MARKDOWN_VERSION_MARKER,
   PDF_LIB_VERSION_MARKER,
   READER_BUNDLE_FILE,
@@ -184,11 +185,11 @@ describe('runtime asset install detection', () => {
     expect(await hasLocalesPack(plugin)).toBe(false)
   })
 
-  it('treats markdown-lib.js as installed only when the content id matches', async () => {
+  it('treats markdown.js as installed only when the content id matches', async () => {
     const { files, plugin } = createVault()
     const markdownId = 'markdown-abc123abc123'
     expect(await hasMarkdownPack(plugin, markdownId)).toBe(false)
-    files.set('plugins/foxycape-pdf/markdown-lib.js', 'runtime')
+    files.set(`plugins/foxycape-pdf/${MARKDOWN_LIB_FILE}`, 'runtime')
     expect(await hasMarkdownPack(plugin, markdownId)).toBe(false)
     files.set(`plugins/foxycape-pdf/${MARKDOWN_VERSION_MARKER}`, `${markdownId}\n`)
     expect(await hasMarkdownPack(plugin, markdownId)).toBe(true)

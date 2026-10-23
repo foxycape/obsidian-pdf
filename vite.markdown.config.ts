@@ -7,7 +7,7 @@ import { buildMarkdownId } from './scripts/markdownId.mjs'
 
 const packageDir = fileURLToPath(new URL('.', import.meta.url))
 const outDir = resolve(packageDir, 'dist')
-const markdownLibPath = resolve(outDir, 'markdown-lib.js')
+const markdownLibPath = resolve(outDir, 'markdown.js')
 
 const writeMarkdownIdPlugin = (): Plugin => ({
   name: 'write-markdown-id',
@@ -24,8 +24,8 @@ const base = createObsidianPluginConfig({
   packageDir,
   outDirName: 'dist',
   entry: resolve(packageDir, 'src/markdown-entry.ts'),
-  fileName: 'markdown-lib.js',
-  cssFileName: 'markdown-lib.css',
+  fileName: 'markdown.js',
+  cssFileName: 'markdown.css',
   tailwind: false,
 })
 

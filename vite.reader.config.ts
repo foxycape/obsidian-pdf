@@ -18,7 +18,7 @@ const REQUIRED_READER_MARKERS = ['Dexie', 'AGFzbQE'] as const
 const FORBIDDEN_READER_MARKERS = ['highlight.js', 'OpenAI', 'KaTeX'] as const
 const READER_VERSION_FILE = '.foxycape-reader-version'
 
-/** Dexie and hash-wasm stay in this bundle. KaTeX and highlight.js stay in markdown-lib.js. */
+/** Dexie and hash-wasm stay in this bundle. KaTeX and highlight.js stay in markdown.js. */
 const assertReaderBundlePlugins = (bundlePath: string): Plugin => ({
   name: 'assert-reader-bundle-contents',
   writeBundle() {
@@ -34,7 +34,7 @@ const assertReaderBundlePlugins = (bundlePath: string): Plugin => ({
         .join('; ')
       throw new Error(
         `[foxycape-pdf] reader-bundle.js ${details}. ` +
-          'Dexie and hash-wasm belong in reader-bundle.zip. KaTeX and highlight.js belong in markdown-lib.js.',
+          'Dexie and hash-wasm belong in reader-bundle.zip. KaTeX and highlight.js belong in markdown.js.',
       )
     }
   },

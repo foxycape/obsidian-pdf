@@ -45,15 +45,15 @@ describe('runtime assets identity', () => {
     )
   })
 
-  it('keys markdown-lib.js by its own content hash', () => {
+  it('keys markdown.js by its own content hash', () => {
     expect(buildMarkdownId('katex-and-highlight')).toMatch(/^markdown-[0-9a-f]{12}$/)
     expect(buildMarkdownId('katex-and-highlight')).toBe(buildMarkdownId('katex-and-highlight'))
     expect(buildMarkdownId('other')).not.toBe(buildMarkdownId('katex-and-highlight'))
     expect(buildMarkdownLibDownloadUrl('3.4.4')).toBe(
-      'https://github.com/foxycape/obsidian-pdf/releases/download/3.4.4/markdown-lib.js',
+      'https://github.com/foxycape/obsidian-pdf/releases/download/3.4.4/markdown.js',
     )
     expect(buildMarkdownLibCdnUrl('3.4.4')).toBe(
-      'https://cdn.tiefeiying.com/obsidian-pdf/3.4.4/markdown-lib.js',
+      'https://cdn.tiefeiying.com/obsidian-pdf/3.4.4/markdown.js',
     )
   })
 })

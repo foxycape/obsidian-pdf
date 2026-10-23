@@ -24,9 +24,9 @@ export const evaluateMarkdownLib = async (plugin: Plugin): Promise<void> => {
     throw new Error('Plugin directory is unavailable (manifest.dir is empty).')
   }
   const source = await plugin.app.vault.adapter.read(joinPluginPath(pluginDir, MARKDOWN_LIB_FILE))
-  evaluateObsidianCjs(source, 'markdown-lib.js')
+  evaluateObsidianCjs(source, 'markdown.js')
   if (!readMarkdownRuntime()?.createRehypePlugins) {
-    throw new Error('markdown-lib.js did not install the markdown runtime.')
+    throw new Error('markdown.js did not install the markdown runtime.')
   }
   evaluated = true
 }

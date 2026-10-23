@@ -46,7 +46,7 @@ const markdownIdPath = resolve(outDir, '.foxycape-markdown-id')
 const pdfApiPath = resolve(corePdfjsDir, 'legacy/build/pdf.mjs')
 const pdfViewerPath = resolve(corePdfjsDir, 'legacy/web/pdf_viewer.mjs')
 
-/** Bake the markdown-lib.js content id. The file is produced by vite.markdown.config.ts. */
+/** Bake the markdown.js content id. The file is produced by vite.markdown.config.ts. */
 const markdownIdPlugin = (): Plugin => ({
   name: 'foxycape-markdown-id',
   buildStart() {

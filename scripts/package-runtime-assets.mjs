@@ -2,6 +2,7 @@ import {
   existsSync,
   readFileSync,
   readdirSync,
+  rmSync,
   statSync,
   writeFileSync,
 } from 'node:fs'
@@ -35,6 +36,35 @@ const walkFiles = (dir, files = []) => {
 }
 
 const toZipKey = (absolutePath) => relative(distDir, absolutePath).split('\\').join('/')
+
+/** Sources already packed into the release zips, plus build-only markers. markdown.js stays. */
+const BUILD_INTERMEDIATES = [
+  'pdf-lib.js',
+  'reader-bundle.js',
+  'reader-bundle.css',
+  'pdf-bundle.css',
+  'markdown.css',
+  'markdown-lib.js',
+  'markdown-lib.css',
+  '.foxycape-reader-version',
+  '.foxycape-pdf-lib-version',
+  '.foxycape-markdown-id',
+  'pdfjs',
+  'katex',
+  'locales',
+  'markdown',
+]
+
+const removeBuildIntermediates = () => {
+  for (const name of BUILD_INTERMEDIATES) {
+    const target = join(distDir, name)
+    if (!existsSync(target)) {
+      continue
+    }
+    rmSync(target, { recursive: true, force: true })
+    console.log(`Removed ${relative(distDir, target)}`)
+  }
+}
 
 const main = () => {
   for (const root of INCLUDE_ROOTS) {
@@ -107,7 +137,7 @@ const main = () => {
   const localesMb = (localesZipped.byteLength / (1024 * 1024)).toFixed(2)
   console.log(`Wrote ${localesZipPath} (${Object.keys(localeEntries).length} files, ${localesMb} MB)`)
 
-  const markdownLib = join(distDir, 'markdown-lib.js')
+  const markdownLib = join(distDir, 'markdown.js')
   const markdownIdPath = join(distDir, '.foxycape-markdown-id')
   const markdownMarker = join(distDir, 'markdown', '.foxycape-markdown-version')
   for (const file of [markdownLib, markdownIdPath, markdownMarker]) {
@@ -119,7 +149,7 @@ const main = () => {
   if (!markdownId.startsWith('markdown-')) {
     throw new Error(`Unexpected markdown id: ${markdownId}`)
   }
-  console.log(`markdown-lib.js ready (${markdownId})`)
+  console.log(`markdown.js ready (${markdownId})`)
 
   const readerBundle = join(distDir, 'reader-bundle.js')
   const readerVersion = join(distDir, '.foxycape-reader-version')
@@ -149,6 +179,8 @@ const main = () => {
   console.log(
     `Wrote ${readerZipPath} (${Object.keys(readerEntries).length} files, ${readerMb} MB, ${readFileSync(readerVersion, 'utf8').trim()})`,
   )
+
+  removeBuildIntermediates()
 }
 
 main()

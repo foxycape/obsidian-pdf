@@ -117,7 +117,7 @@ For the smoothest experience—deep links, highlights, and theme-aware pages—t
 
 ```bash
 npm install
-npm run build      # → dist/main.js, pdf-lib.js, markdown-lib.js, reader-bundle.js, styles.css, manifest.json, pdfjs.zip, reader-bundle.zip, locales.zip, fonts zip
+npm run build      # → dist/main.js, styles.css, manifest.json, versions.json, markdown.js, pdfjs.zip, reader-bundle.zip, locales.zip, pdfjs-assets.zip
 npm run dev        # watch build; copies into OBSIDIAN_PLUGIN_DIR after each success
 npm test
 npm run typecheck
@@ -126,13 +126,13 @@ npm run link       # junction dist/ into your vault's .obsidian/plugins/foxycape
 
 Set `OBSIDIAN_PLUGIN_DIR` in `.env` (see `.env.example`). `npm run dev` copies the build there after each successful watch rebuild; `npm run link` reads the same variable and still falls back to the default vault path when it is unset. A process environment variable wins over the file.
 
-Community installs only receive `main.js`, `manifest.json`, and `styles.css`. Enabling the plugin downloads `locales.zip` when the language files changed, and registers this device with its own signing key. Opening a PDF checks two packs: `pdfjs.zip` (the PDF.js library and worker) downloads only when the **PDF.js version** changed, and `reader-bundle.zip` (the reader, database, hashing, and KaTeX fonts) downloads when the **plugin version** changed. When both are needed they download together and the progress bytes are added into the same “Initializing…” line. A pack that is already current is skipped. A matching local copy — including `npm run link` — opens immediately with no overlay. The settings page has a language dropdown; it starts on Obsidian’s language, or English when that language is not available, and stays on a language you pick. Cmaps and standard fonts (~1.5 MB) still download in the background from `pdfjs-assets.zip`, also keyed by PDF.js version. `markdown-lib.js` (KaTeX and syntax highlighting) downloads the same way, in the background, and only when that file’s content id changes. Chat text still renders if it is missing.
+Community installs only receive `main.js`, `manifest.json`, and `styles.css`. Enabling the plugin downloads `locales.zip` when the language files changed, and registers this device with its own signing key. Opening a PDF checks two packs: `pdfjs.zip` (the PDF.js library and worker) downloads only when the **PDF.js version** changed, and `reader-bundle.zip` (the reader, database, hashing, and KaTeX fonts) downloads when the **plugin version** changed. When both are needed they download together and the progress bytes are added into the same “Initializing…” line. A pack that is already current is skipped. A matching local copy — including `npm run link` — opens immediately with no overlay. The settings page has a language dropdown; it starts on Obsidian’s language, or English when that language is not available, and stays on a language you pick. Cmaps and standard fonts (~1.5 MB) still download in the background from `pdfjs-assets.zip`, also keyed by PDF.js version. `markdown.js` (KaTeX and syntax highlighting) downloads the same way, in the background, and only when that file’s content id changes. Chat text still renders if it is missing.
 
 ## Release (Obsidian Community)
 
 1. Bump `version` in `package.json` (semver `x.y.z`). Build syncs it into `manifest.json` / `versions.json`.
 2. Commit, then create a GitHub release whose **tag equals that version** (e.g. `3.3.6`, no `v` prefix).
-3. Attach `dist/main.js`, `dist/manifest.json`, `dist/styles.css`, `dist/pdfjs.zip`, `dist/reader-bundle.zip`, `dist/locales.zip`, `dist/pdfjs-assets.zip`, and `dist/markdown-lib.js`.
+3. Attach `dist/main.js`, `dist/manifest.json`, `dist/styles.css`, `dist/pdfjs.zip`, `dist/reader-bundle.zip`, `dist/locales.zip`, `dist/pdfjs-assets.zip`, and `dist/markdown.js`.
 
 Pushing a version tag runs [`.github/workflows/release.yml`](.github/workflows/release.yml), which builds and uploads those assets.
 

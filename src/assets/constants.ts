@@ -29,7 +29,7 @@ export const LOCALES_ZIP_NAME = 'locales.zip'
 export const LOCALES_VERSION_MARKER = 'locales/.foxycape-locales-version'
 
 /** KaTeX and highlight.js. Downloaded in the background when this content id changes. */
-export const MARKDOWN_LIB_FILE = 'markdown-lib.js'
+export const MARKDOWN_LIB_FILE = 'markdown.js'
 
 export const MARKDOWN_VERSION_MARKER = 'markdown/.foxycape-markdown-version'
 

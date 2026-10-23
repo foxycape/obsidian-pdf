@@ -225,7 +225,7 @@ export const hasLocalesPack = async (plugin: Plugin): Promise<boolean> =>
     LOCALES_ID,
   ))
 
-/** True when markdown-lib.js matches this build's KaTeX / highlight.js content id. */
+/** True when markdown.js matches this build's KaTeX / highlight.js content id. */
 export const hasMarkdownPack = async (
   plugin: Plugin,
   markdownId = MARKDOWN_ID,
@@ -523,7 +523,7 @@ const downloadAndInstallMarkdown = async (plugin: Plugin, t: Translate) => {
 }
 
 /**
- * Download markdown-lib.js when KaTeX / highlight.js changed.
+ * Download markdown.js when KaTeX / highlight.js changed.
  * Silent. Does not block plugin startup or opening a PDF.
  */
 export const ensureMarkdownPack = async (

@@ -12,7 +12,7 @@ import type { Plugin } from 'vite'
 const ENTRY_FILES = [
   'main.js',
   'pdf-lib.js',
-  'markdown-lib.js',
+  'markdown.js',
   'reader-bundle.js',
   'styles.css',
   'manifest.json',
