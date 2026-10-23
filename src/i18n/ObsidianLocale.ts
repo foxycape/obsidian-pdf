@@ -13,8 +13,11 @@ import {
 } from './resolveObsidianLanguage'
 
 export class ObsidianLocale implements ILocale {
-  private resource: Record<string, string> = {}
-  private currentLanguage = FALLBACK_LANGUAGE
+  /** Open reader views subscribe with onLanguageChange and refresh their own Vue state. */
+  private readonly state = {
+    language: FALLBACK_LANGUAGE,
+    resource: {} as Record<string, string>,
+  }
   private readonly listeners = new Set<LocaleChangeListener>()
   private supportedLanguages: Language[] | null = null
   private loadToken = 0
@@ -31,7 +34,7 @@ export class ObsidianLocale implements ILocale {
   async syncFromObsidian(): Promise<void> {
     const supportedCodes = this.getSupportedLanguages().map((item) => item.code)
     const language = getObsidianLocaleCode(supportedCodes)
-    if (language === this.currentLanguage && Object.keys(this.resource).length > 0) {
+    if (language === this.state.language && Object.keys(this.state.resource).length > 0) {
       return
     }
     await this.changeLanguage(language)
@@ -48,7 +51,7 @@ export class ObsidianLocale implements ILocale {
     if (!key) {
       return this.applyNamed(defaultText, named)
     }
-    return this.applyNamed(this.resource[key] || defaultText, named)
+    return this.applyNamed(this.state.resource[key] || defaultText, named)
   }
 
   private applyNamed = (text: string, named?: object): string => {
@@ -65,7 +68,7 @@ export class ObsidianLocale implements ILocale {
   async changeLanguage(language: string): Promise<void> {
     const supportedCodes = this.getSupportedLanguages().map((item) => item.code)
     const nextLanguage = resolveLocaleCode(language, supportedCodes, FALLBACK_LANGUAGE)
-    if (nextLanguage === this.currentLanguage && Object.keys(this.resource).length > 0) {
+    if (nextLanguage === this.state.language && Object.keys(this.state.resource).length > 0) {
       return
     }
     const token = ++this.loadToken
@@ -77,15 +80,15 @@ export class ObsidianLocale implements ILocale {
     if (token !== this.loadToken) {
       return
     }
-    this.currentLanguage = nextLanguage
-    this.resource = resource
+    this.state.language = nextLanguage
+    this.state.resource = resource
     for (const listener of this.listeners) {
       listener(nextLanguage)
     }
   }
 
   getCurrentLanguage(excludeRegion?: boolean): string {
-    let language = this.currentLanguage || FALLBACK_LANGUAGE
+    let language = this.state.language || FALLBACK_LANGUAGE
     if (excludeRegion) {
       language = language.split('-')[0] ?? language
     }
@@ -108,7 +111,8 @@ export class ObsidianLocale implements ILocale {
   }
 
   async dispose(): Promise<void> {
-    this.resource = {}
+    this.state.language = FALLBACK_LANGUAGE
+    this.state.resource = {}
     this.listeners.clear()
     clearLocaleCache()
   }

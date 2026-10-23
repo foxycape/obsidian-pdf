@@ -1052,6 +1052,20 @@ button.clickable-icon.foxycape-pdf-toolbar-more__item:hover {
   font-size: var(--font-ui-small);
 }
 
+.foxycape-pdf-language-pending select {
+  opacity: 0.45;
+}
+
+.foxycape-pdf-language-spinner {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  border: 1.5px solid var(--background-modifier-border);
+  border-top-color: var(--text-accent);
+  border-radius: 50%;
+  animation: foxycape-pdf-search-spin 0.7s linear infinite;
+}
+
 .foxycape-pdf-license-setting {
   flex-wrap: wrap;
   align-items: stretch;
@@ -1258,6 +1272,21 @@ button.clickable-icon.foxycape-pdf-toolbar-more__item:hover {
 .foxycape-pdf-init-status {
   max-width: 24rem;
   line-height: 1.5;
+}
+
+.foxycape-pdf-init-progress {
+  width: min(16rem, 70%);
+  height: 4px;
+  border-radius: 999px;
+  background: var(--background-modifier-border);
+  overflow: hidden;
+}
+
+.foxycape-pdf-init-progress-fill {
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: var(--interactive-accent);
 }
 
 .foxycape-pdf-init-retry {

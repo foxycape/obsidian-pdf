@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import type { Reader } from '@foxycape/core/kernal'
 import type { IMarker } from '@/mark'
 import type { DexieStorage } from '@/storage/DexieStorage'
+import ClickableIconButton from '@/ui/ClickableIconButton.vue'
 import { isObsidianMobile } from '@/ui/isObsidianMobile'
 import PdfMarkList from './mark-list/PdfMarkList.vue'
 import PdfPassageList from './mark-list/PdfPassageList.vue'
@@ -119,56 +120,64 @@ onBeforeUnmount(() => {
       @mousedown="startResize"
     />
     <div class="foxycape-pdf-mark-panel__body">
-      <div class="foxycape-pdf-mark-tabs" role="tablist">
-        <button
-          v-for="tab in tabs"
-          :key="tab.id"
-          type="button"
-          class="foxycape-pdf-mark-tabs__tab"
-          :class="{ 'is-active': currentTab === tab.id }"
-          role="tab"
-          :aria-selected="currentTab === tab.id"
-          @click="selectTab(tab.id)"
-        >
-          {{ tab.label }}
-        </button>
-      </div>
+      <header class="foxycape-pdf-mark-panel__header">
+        <div class="foxycape-pdf-mark-tabs" role="tablist">
+          <button
+            v-for="tab in tabs"
+            :key="tab.id"
+            type="button"
+            class="foxycape-pdf-mark-tabs__tab"
+            :class="{ 'is-active': currentTab === tab.id }"
+            role="tab"
+            :aria-selected="currentTab === tab.id"
+            @click="selectTab(tab.id)"
+          >
+            {{ tab.label }}
+          </button>
+        </div>
+        <ClickableIconButton
+          icon="x"
+          class-name="nav-action-button"
+          :label="t('pdf_mark_list_close', 'Close')"
+          @click="onClose"
+        />
+      </header>
       <div class="foxycape-pdf-mark-tabs__page">
         <PdfMarkList
-          v-if="currentTab === 'highlights'"
+          v-show="currentTab === 'highlights'"
           :reader="reader"
           :get-marker="getMarker"
-          :active="open"
+          :active="open && currentTab === 'highlights'"
           :t="t"
           :on-close="onClose"
         />
         <PdfPassageList
-          v-else-if="currentTab === 'translates'"
+          v-show="currentTab === 'translates'"
           kind="translate"
           :reader="reader"
           :storage="storage"
           :get-marker="getMarker"
-          :active="open"
+          :active="open && currentTab === 'translates'"
           :t="t"
           @navigated="onNavigated"
         />
         <PdfPassageList
-          v-else-if="currentTab === 'explains'"
+          v-show="currentTab === 'explains'"
           kind="explain"
           :reader="reader"
           :storage="storage"
           :get-marker="getMarker"
-          :active="open"
+          :active="open && currentTab === 'explains'"
           :t="t"
           @navigated="onNavigated"
         />
         <PdfPassageList
-          v-else
+          v-show="currentTab === 'lookups'"
           kind="lookup"
           :reader="reader"
           :storage="storage"
           :get-marker="getMarker"
-          :active="open"
+          :active="open && currentTab === 'lookups'"
           :t="t"
           @navigated="onNavigated"
         />
@@ -199,14 +208,37 @@ onBeforeUnmount(() => {
   flex-direction: column;
 }
 
+.foxycape-pdf-mark-panel__header {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding-inline-end: 4px;
+}
+
+.foxycape-pdf-mark-panel__header > :last-child {
+  flex: 0 0 auto;
+}
+
 .foxycape-pdf-mark-tabs {
   display: flex;
+  flex: 1 1 auto;
+  align-items: center;
   gap: 4px;
+  height: 100%;
+  min-width: 0;
   overflow-x: auto;
-  padding: 6px 8px;
+  padding: 0 8px;
+  scrollbar-width: none;
+}
+
+.foxycape-pdf-mark-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .foxycape-pdf-mark-tabs__tab {
+  flex: 0 0 auto;
   height: 28px;
   border: 0;
   border-radius: var(--radius-s);
@@ -229,9 +261,16 @@ onBeforeUnmount(() => {
 }
 
 .foxycape-pdf-mark-tabs__page {
-  flex: 1;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
+}
+
+.foxycape-pdf-mark-tabs__page > * {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .foxycape-pdf-mark-panel__resizer {

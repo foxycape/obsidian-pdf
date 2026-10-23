@@ -3,12 +3,14 @@ import {
   Setting,
   type App,
   type ButtonComponent,
+  type DropdownComponent,
   type SettingDefinitionItem,
   type TextComponent,
 } from 'obsidian'
 import { debounce } from '@foxycape/core/kernal/web/debounce'
 import { getLicenseAiUser, loadLicenseAiUsage } from '@/ai/licenseSession'
 import { tryGetAiRuntime } from '@/ai/runtime'
+import { ensureLocalesPack, hasLocalesPack } from '@/assets/ensureRuntimeAssets'
 import { getObsidianLocaleCode } from '@/i18n/resolveObsidianLanguage'
 import type { PdfUsagePoint } from '@/views/pdfBundleModule'
 import {
@@ -295,11 +297,14 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
     this.renderUsageSection()
   }
 
+  private languageDropdownToken = 0
+
   private bindLanguageDropdown = (setting: Setting) => {
     const languages = this.plugin.locale.getSupportedLanguages()
     const codes = languages.map((item) => item.code)
     const saved = this.plugin.settings.language
     const selected = saved && codes.includes(saved) ? saved : getObsidianLocaleCode(codes)
+    const token = ++this.languageDropdownToken
     setting.addDropdown((dropdown) => {
       for (const language of languages) {
         dropdown.addOption(language.code, language.nativeTitle || language.title || language.code)
@@ -307,10 +312,72 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
       dropdown.setValue(selected)
       dropdown.onChange((value) => {
         void this.plugin.setLanguage(value).then(() => {
-          this.display()
+          this.refreshSettings()
         })
       })
+      void this.prepareLanguageDropdown(setting, dropdown, token)
     })
+  }
+
+  /** Enable the dropdown when locales are already installed. Otherwise download without blocking the page. */
+  private prepareLanguageDropdown = async (
+    setting: Setting,
+    dropdown: DropdownComponent,
+    token: number,
+  ) => {
+    if (await hasLocalesPack(this.plugin)) {
+      return
+    }
+    if (token !== this.languageDropdownToken) {
+      return
+    }
+    dropdown.setDisabled(true)
+    setting.settingEl.addClass('foxycape-pdf-language-pending')
+    const spinner = setting.controlEl.createDiv({ cls: 'foxycape-pdf-language-spinner' })
+    const stopWaiting = () => {
+      spinner.remove()
+      setting.settingEl.removeClass('foxycape-pdf-language-pending')
+    }
+    try {
+      await ensureLocalesPack(this.plugin, { t: this.plugin.t })
+    } catch (error) {
+      spinner.remove()
+      if (token === this.languageDropdownToken) {
+        console.warn('[Foxycape PDF] language pack download failed; using English', error)
+        return
+      }
+      setting.settingEl.removeClass('foxycape-pdf-language-pending')
+      return
+    }
+    if (token !== this.languageDropdownToken) {
+      stopWaiting()
+      return
+    }
+    try {
+      const saved = this.plugin.savedLanguageCode()
+      if (saved) {
+        await this.plugin.setLanguage(saved)
+      } else {
+        await this.plugin.syncLocaleIfNeeded()
+      }
+    } catch (error) {
+      console.warn('[Foxycape PDF] failed to load downloaded language pack', error)
+    }
+    if (token !== this.languageDropdownToken) {
+      stopWaiting()
+      return
+    }
+    stopWaiting()
+    this.refreshSettings()
+  }
+
+  /** Obsidian 1.13 redraws from getSettingDefinitions(); older versions use display(). */
+  private refreshSettings = () => {
+    if (typeof this.update === 'function') {
+      this.update()
+      return
+    }
+    this.display()
   }
 
   private applyLicenseInput = async (value: string) => {

@@ -28,21 +28,12 @@ const parseExportNames = (source: string, filePath: string): string[] => {
     .filter((name) => name.length > 0)
 }
 
-const shimSource = (
-  globalName: typeof FOXYCAPE_PDFJS_LIB_GLOBAL | typeof FOXYCAPE_PDFJS_VIEWER_GLOBAL,
-  names: string[],
-) => {
-  const exports = names
-    .map((name) => `export const ${name} = bind(${JSON.stringify(name)})`)
-    .join('\n')
-  return `const read = () => {
-  const lib = globalThis.${globalName}
-  if (!lib) {
-    throw new Error('Foxycape pdf.js runtime is not loaded')
-  }
-  return lib
-}
-const bind = (name) => {
+/**
+ * Runtime injected into bundles. `newTarget` must be forwarded so
+ * `class Child extends PDFViewer` keeps Child.prototype after `super()`.
+ * A direct `new PDFViewer()` still constructs the real class, not this Proxy.
+ */
+export const pdfjsBindRuntime = `const bind = (name) => {
   const forward = function (...args) {
     const real = read()[name]
     if (typeof real === 'function') {
@@ -50,9 +41,10 @@ const bind = (name) => {
     }
     return real
   }
-  return new Proxy(forward, {
-    construct(_target, args) {
-      return Reflect.construct(read()[name], args)
+  const proxy = new Proxy(forward, {
+    construct(_target, args, newTarget) {
+      const real = read()[name]
+      return Reflect.construct(real, args, newTarget === proxy ? real : newTarget)
     },
     get(_target, prop) {
       const real = read()[name]
@@ -69,7 +61,24 @@ const bind = (name) => {
       return Reflect.apply(read()[name], thisArg, args)
     },
   })
+  return proxy
+}`
+
+const shimSource = (
+  globalName: typeof FOXYCAPE_PDFJS_LIB_GLOBAL | typeof FOXYCAPE_PDFJS_VIEWER_GLOBAL,
+  names: string[],
+) => {
+  const exports = names
+    .map((name) => `export const ${name} = bind(${JSON.stringify(name)})`)
+    .join('\n')
+  return `const read = () => {
+  const lib = globalThis.${globalName}
+  if (!lib) {
+    throw new Error('Foxycape pdf.js runtime is not loaded')
+  }
+  return lib
 }
+${pdfjsBindRuntime}
 ${exports}
 `
 }

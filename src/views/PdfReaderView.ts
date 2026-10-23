@@ -62,6 +62,7 @@ import {
 import type { PdfImageLinkSource } from '@/obsidian/pdfImageRef'
 import { PDF_READER_VIEW_TYPE } from '@/settings/types'
 import { isObsidianMobile } from '@/ui/isObsidianMobile'
+import { ref } from 'vue'
 import type { IPdfRenderer } from '@foxycape/core/mediaTypes/pdf/renderer/IPdfRenderer'
 import type { PdfReaderSurface } from '@/views/PdfReaderSurface'
 
@@ -99,10 +100,16 @@ export class PdfReaderView {
   private headerResizeObserver: ResizeObserver | null = null
   private pendingSubpath: string | null = null
   private noteWriter: ((input: PassageNoteWrite) => Promise<void>) | null = null
+  /** Reader-bundle Vue ref. Bumping it refreshes labels that call translate(). */
+  private readonly localeRevision = ref(0)
+  private readonly removeLocaleListener: () => void
 
   constructor(surface: PdfReaderSurface) {
     this.surface = surface
     this.plugin = surface.plugin
+    this.removeLocaleListener = this.plugin.locale.onLanguageChange(() => {
+      this.localeRevision.value += 1
+    })
     // Obsidian's global Mod+F / Mod+C can eat DOM keydown before the PDF
     // container sees it. View.scope overrides those while this leaf is active.
     surface.navigation = true
@@ -129,6 +136,12 @@ export class PdfReaderView {
 
   private get containerEl() {
     return this.surface.containerEl
+  }
+
+  /** Reads a reader-bundle ref so Vue recomputes labels after a language change. */
+  private readonly translate = (key: string, defaultText: string, named?: object) => {
+    void this.localeRevision.value
+    return this.plugin.t(key, defaultText, named)
   }
 
   get file() {
@@ -400,6 +413,7 @@ export class PdfReaderView {
     this.mountEl = null
     this.sidebarHost = null
     this.markPanelHost = null
+    this.removeLocaleListener()
   }
 
   getState(): PdfReaderViewState {
@@ -774,7 +788,7 @@ export class PdfReaderView {
       contentEl: this.contentEl,
       sidebarHost: this.sidebarHost,
       reader,
-      t: this.plugin.t,
+      t: this.translate,
       sidebarOpen: this.sidebarOpen,
       getViewPreferences: () => ({
         enableViewPdfImages: this.plugin.settings.enableViewPdfImages,
@@ -831,7 +845,7 @@ export class PdfReaderView {
       hostEl: this.mountEl,
       reader,
       getMarker,
-      t: this.plugin.t,
+      t: this.translate,
       storage: getPdfStorage(),
       passageStorage: getPdfStorage(),
       httpClient: this.plugin.apiClient.httpClient,
@@ -910,7 +924,7 @@ export class PdfReaderView {
         openCitedFile: (file, subpath) => this.plugin.openFileWithFoxycape(file, subpath),
         openCitedUrl: (url, subpath) => this.plugin.openUrlWithFoxycape(url, subpath),
         getLinkSource: this.resolveLinkSource,
-        t: this.plugin.t,
+        t: this.translate,
         openSettings: () => {
           const setting = (this.app as unknown as {
             setting?: { open: () => void; openTabById?: (id: string) => void }
@@ -1005,7 +1019,7 @@ export class PdfReaderView {
       this.searchBarMount = mountPdfSearchBar({
         hostEl: this.mountEl,
         reader,
-        t: this.plugin.t,
+        t: this.translate,
       })
     } catch (error) {
       console.warn('[Foxycape PDF] failed to mount search bar', error)
@@ -1023,7 +1037,7 @@ export class PdfReaderView {
         viewEl: this.containerEl,
         hostEl: this.mountEl,
         reader,
-        t: this.plugin.t,
+        t: this.translate,
         getLinkSource: this.resolveLinkSource,
         onActiveChange: (active) => {
           this.syncScreenshotMode(active)
@@ -1057,7 +1071,7 @@ export class PdfReaderView {
         storage: getPdfStorage(),
         getMarker,
         open: this.markPanelOpen,
-        t: this.plugin.t,
+        t: this.translate,
         onClose: () => {
           this.toggleMarkPanel(false)
         },
@@ -1193,7 +1207,7 @@ export class PdfReaderView {
         sourceUrl: this.sourceUrl ?? undefined,
         mark,
         selection: payload.selection,
-        t: this.plugin.t,
+        t: this.translate,
       },
       this.markNoteCompanion,
     )

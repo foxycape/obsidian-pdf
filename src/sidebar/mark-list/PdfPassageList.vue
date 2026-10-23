@@ -11,7 +11,8 @@ import { resolvePdfNavMeta } from '@/marker/pdfNavMeta'
 import ClickableIconButton from '@/ui/ClickableIconButton.vue'
 import ClampText from './ClampText.vue'
 import { formatDisplayDate } from './formatDisplayDate'
-import { groupNavItems } from './markListGroup'
+import PdfListToolbar from './PdfListToolbar.vue'
+import { groupNavItems, type MarkSortMode } from './markListGroup'
 
 const props = defineProps<{
   kind: 'translate' | 'explain' | 'lookup'
@@ -30,6 +31,7 @@ type Row = {
   markId: string
   text: string
   body: string
+  searchText: string
   pageNumber?: number
   simpleId: string
   updatedAt: number
@@ -39,10 +41,56 @@ type Row = {
 }
 
 const rows = ref<Row[]>([])
+const keyword = ref('')
+const sortMode = ref<MarkSortMode>('progress')
+const toolbarRef = ref<{ closeMenus: () => void } | null>(null)
+
+const sortOptions = computed(() => [
+  { mode: 'progress' as const, label: props.t('pdf_mark_list_sort_progress', 'Default · in document') },
+  { mode: 'updateDesc' as const, label: props.t('pdf_mark_list_sort_update_desc', 'Updated · descending') },
+  { mode: 'updateAsc' as const, label: props.t('pdf_mark_list_sort_update_asc', 'Updated · ascending') },
+])
+
+const filteredRows = computed(() => {
+  const needle = keyword.value.trim().toLowerCase()
+  if (!needle) {
+    return rows.value
+  }
+  return rows.value.filter((row) => row.searchText.toLowerCase().includes(needle))
+})
 
 const groups = computed(() =>
-  groupNavItems(rows.value, 'progress', props.t('pdf_mark_list_ungrouped', 'Ungrouped')),
+  groupNavItems(filteredRows.value, sortMode.value, props.t('pdf_mark_list_ungrouped', 'Ungrouped')),
 )
+
+const copy = computed(() => {
+  const count = rows.value.length
+  if (props.kind === 'translate') {
+    return {
+      tab: props.t('ai_marks_tab_translate', 'Translate'),
+      search: props.t('pdf_passage_search_translate', 'Filter translations'),
+      hint: props.t('pdf_passage_search_translate_hint', 'Filter {count} translations', { count }),
+      empty: props.t('pdf_passage_empty_translate', 'No translations'),
+      filterEmpty: props.t('pdf_passage_filter_empty_translate', 'No translations match the filters'),
+    }
+  }
+  if (props.kind === 'explain') {
+    return {
+      tab: props.t('ai_marks_tab_explain', 'Explain'),
+      search: props.t('pdf_passage_search_explain', 'Filter explanations'),
+      hint: props.t('pdf_passage_search_explain_hint', 'Filter {count} explanations', { count }),
+      empty: props.t('pdf_passage_empty_explain', 'No explanations'),
+      filterEmpty: props.t('pdf_passage_filter_empty_explain', 'No explanations match the filters'),
+    }
+  }
+  return {
+    tab: props.t('ai_marks_tab_lookup', 'Look up'),
+    search: props.t('pdf_passage_search_lookup', 'Filter lookups'),
+    hint: props.t('pdf_passage_search_lookup_hint', 'Filter {count} lookups', { count }),
+    empty: props.t('pdf_passage_empty_lookup', 'No lookups'),
+    filterEmpty: props.t('pdf_passage_filter_empty_lookup', 'No lookups match the filters'),
+  }
+})
 
 const stickyTitle = ref('')
 const listRoot = ref<HTMLElement | null>(null)
@@ -98,6 +146,7 @@ const load = async () => {
       markId: mark.markId,
       text: mark.text,
       body: mark.results[0]?.translatedText ?? '',
+      searchText: [mark.text, ...mark.results.map((item) => item.translatedText)].join('\n'),
       pageNumber: mark.pageNumber,
       simpleId: mark.simpleId,
       updatedAt: mark.updatedAt,
@@ -115,6 +164,7 @@ const load = async () => {
       markId: mark.markId,
       text: mark.text,
       body: mark.results[0]?.explanation ?? '',
+      searchText: [mark.text, ...mark.results.map((item) => item.explanation)].join('\n'),
       pageNumber: mark.pageNumber,
       simpleId: mark.simpleId,
       updatedAt: mark.updatedAt,
@@ -131,6 +181,7 @@ const load = async () => {
     markId: mark.markId,
     text: mark.text,
     body: mark.results[0]?.lookup ?? '',
+    searchText: [mark.text, ...mark.results.map((item) => item.lookup)].join('\n'),
     pageNumber: mark.pageNumber,
     simpleId: mark.simpleId,
     updatedAt: mark.updatedAt,
@@ -195,10 +246,12 @@ const removeRow = async (row: Row) => {
 
 watch(
   () => [props.active, props.reader, props.kind] as const,
-  () => {
-    if (props.active) {
+  ([active]) => {
+    if (active) {
       void load()
+      return
     }
+    toolbarRef.value?.closeMenus()
   },
 )
 
@@ -211,10 +264,29 @@ onMounted(async () => {
 
 <template>
   <div class="foxycape-pdf-passage-list">
+    <PdfListToolbar
+      v-if="rows.length > 0"
+      ref="toolbarRef"
+      show-search
+      :count="filteredRows.length"
+      :count-label="copy.tab"
+      :sort-mode="sortMode"
+      :sort-options="sortOptions"
+      :sort-label="t('pdf_mark_list_sort', 'Sort')"
+      :search-label="copy.search"
+      :search-placeholder="copy.hint"
+      :keyword="keyword"
+      @update:sort-mode="sortMode = $event"
+      @update:keyword="keyword = $event"
+    />
+    <div class="foxycape-pdf-passage-list__main">
     <h3 v-if="stickyTitle" class="foxycape-pdf-passage-list__group foxycape-pdf-passage-list__sticky">{{ stickyTitle }}</h3>
     <div ref="listRoot" class="foxycape-pdf-passage-list__scroller" @scroll.passive="syncStickyTitle">
       <p v-if="rows.length === 0" class="foxycape-pdf-passage-list__empty">
-        {{ t('pdf_search_no_results', 'No results') }}
+        {{ copy.empty }}
+      </p>
+      <p v-else-if="filteredRows.length === 0" class="foxycape-pdf-passage-list__empty">
+        {{ copy.filterEmpty }}
       </p>
       <template v-for="(group, groupIndex) in groups" :key="group.key || 'all'">
         <h3
@@ -250,6 +322,7 @@ onMounted(async () => {
       </article>
       </template>
     </div>
+    </div>
   </div>
 </template>
 
@@ -259,6 +332,14 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
+}
+
+.foxycape-pdf-passage-list__main {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
   min-height: 0;
 }
 

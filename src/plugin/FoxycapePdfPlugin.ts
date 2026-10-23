@@ -4,7 +4,6 @@ import type { IApiClient } from '@/network'
 import { createPluginApiClient } from '@/api/createPluginApiClient'
 import { DeviceService } from '@/api/DeviceService'
 import {
-  ensureLocalesPack,
   ensureMarkdownPack,
   ensureRemoteRuntimeAssets,
   ensureRuntimeAssets as unpackRuntimeAssets,
@@ -178,12 +177,8 @@ export class FoxycapePdfPlugin extends Plugin {
     })
   }
 
-  bootstrapRuntimeAssets = async () => {
-    try {
-      await ensureLocalesPack(this, { t: this.t })
-    } catch (error) {
-      console.warn('[Foxycape PDF] language pack download failed; using English', error)
-    }
+  /** Fonts and markdown load in the background. Language files download from the settings tab. */
+  bootstrapRuntimeAssets = () => {
     void ensureRemoteRuntimeAssets(this, { t: this.t }).catch((error) => {
       console.warn('[Foxycape PDF] background font download failed', error)
     })

@@ -11,19 +11,6 @@ import { loadPdfLib } from '@/views/loadPdfModule'
 import { loadReaderBundle } from '@/views/loadReaderBundle'
 import type { PdfReaderSession } from '@/views/PdfReaderSurface'
 
-const formatBytes = (value: number): string => {
-  if (!Number.isFinite(value) || value <= 0) {
-    return '0 B'
-  }
-  if (value >= 1024 * 1024) {
-    return `${(value / (1024 * 1024)).toFixed(1)} MB`
-  }
-  if (value >= 1024) {
-    return `${Math.round(value / 1024)} KB`
-  }
-  return `${value} B`
-}
-
 /**
  * Thin PDF leaf. pdf-lib.js and reader-bundle.js run before the session starts.
  */
@@ -234,6 +221,8 @@ export class PdfReaderHostView extends ItemView {
     }
     const overlay = this.contentEl.createDiv({ cls: 'foxycape-pdf-init-overlay' })
     overlay.createDiv({ cls: 'foxycape-pdf-init-status' })
+    const progress = overlay.createDiv({ cls: 'foxycape-pdf-init-progress' })
+    progress.createDiv({ cls: 'foxycape-pdf-init-progress-fill' })
     this.overlayEl = overlay
     return overlay
   }
@@ -244,20 +233,20 @@ export class PdfReaderHostView extends ItemView {
     }
     const overlay = this.ensureOverlay()
     const status = overlay.querySelector('.foxycape-pdf-init-status')
-    if (!status) {
+    if (status) {
+      status.textContent = this.plugin.t('plugin_pdf_init_status', 'Initializing…')
+    }
+    const fill = overlay.querySelector('.foxycape-pdf-init-progress-fill')
+    if (!(fill instanceof HTMLElement)) {
       return
     }
-    status.textContent =
-      total > 0
-        ? this.plugin.t('plugin_pdf_init_progress', 'Initializing… {loaded} / {total}', {
-            loaded: formatBytes(loaded),
-            total: formatBytes(total),
-          })
-        : this.plugin.t('plugin_pdf_init_status', 'Initializing…')
+    const ratio = total > 0 ? Math.min(1, Math.max(0, loaded / total)) : 0
+    fill.style.width = `${ratio * 100}%`
   }
 
   private showInitError = (error: unknown) => {
     const overlay = this.ensureOverlay()
+    overlay.querySelector('.foxycape-pdf-init-progress')?.remove()
     const message = error instanceof Error ? error.message : String(error)
     const status = overlay.querySelector('.foxycape-pdf-init-status')
     if (status) {

@@ -10,6 +10,7 @@ import { DEFAULT_MARK_COLORS } from '@/marker/PdfMarkConstants'
 import ClickableIconButton from '@/ui/ClickableIconButton.vue'
 import { isObsidianMobile } from '@/ui/isObsidianMobile'
 import { useDismissOnOutside } from '@/ui/useDismissOnOutside'
+import PdfListToolbar from './PdfListToolbar.vue'
 import PdfMarkListItem from './PdfMarkListItem.vue'
 import { flattenNavGroups, groupNavItems, type MarkSortMode } from './markListGroup'
 
@@ -27,19 +28,18 @@ const keyword = ref('')
 const marks = ref<Mark[]>([])
 const loading = ref(true)
 const sortMode = ref<MarkSortMode>('progress')
-const sortMenuOpen = ref(false)
 const filterOpen = ref(false)
 const searchOpen = ref(false)
 const searchInputEl = ref<HTMLInputElement | null>(null)
-const sortMenuRoot = ref<HTMLElement | null>(null)
 const searchMenuRoot = ref<HTMLElement | null>(null)
+const toolbarRef = ref<{ closeMenus: () => void } | null>(null)
 const activeKinds = ref<FilterKind[]>([])
 const activeColors = ref<string[]>([])
 
 const sortOptions = computed(() => [
-  { mode: 'progress' as const, label: props.t('pdf_mark_list_sort_progress', 'Reading order') },
-  { mode: 'updateDesc' as const, label: props.t('pdf_mark_list_sort_update_desc', 'Updated · newest') },
-  { mode: 'updateAsc' as const, label: props.t('pdf_mark_list_sort_update_asc', 'Updated · oldest') },
+  { mode: 'progress' as const, label: props.t('pdf_mark_list_sort_progress', 'Default · in document') },
+  { mode: 'updateDesc' as const, label: props.t('pdf_mark_list_sort_update_desc', 'Updated · descending') },
+  { mode: 'updateAsc' as const, label: props.t('pdf_mark_list_sort_update_asc', 'Updated · ascending') },
 ])
 
 const kindOptions = computed(() => [
@@ -155,10 +155,6 @@ const onSearchInput = (event: Event) => {
   keyword.value = (event.target as HTMLInputElement).value
 }
 
-const closeSortMenu = () => {
-  sortMenuOpen.value = false
-}
-
 const closeSearch = () => {
   searchOpen.value = false
 }
@@ -166,7 +162,7 @@ const closeSearch = () => {
 const toggleFilter = () => {
   filterOpen.value = !filterOpen.value
   if (filterOpen.value) {
-    closeSortMenu()
+    toolbarRef.value?.closeMenus()
     return
   }
   closeSearch()
@@ -175,21 +171,9 @@ const toggleFilter = () => {
 const toggleSearch = async () => {
   searchOpen.value = !searchOpen.value
   if (searchOpen.value) {
-    closeSortMenu()
+    toolbarRef.value?.closeMenus()
     await nextTick()
     searchInputEl.value?.focus()
-  }
-}
-
-const applySort = (mode: MarkSortMode) => {
-  sortMode.value = mode
-  sortMenuOpen.value = false
-}
-
-const toggleSortMenu = () => {
-  sortMenuOpen.value = !sortMenuOpen.value
-  if (sortMenuOpen.value) {
-    closeSearch()
   }
 }
 
@@ -208,15 +192,8 @@ const toggleColor = (color: string) => {
 const clearFilters = () => {
   activeKinds.value = []
   activeColors.value = []
-  keyword.value = ''
-  closeSearch()
 }
 
-useDismissOnOutside(
-  () => sortMenuOpen.value,
-  () => [sortMenuRoot.value],
-  closeSortMenu,
-)
 useDismissOnOutside(
   () => searchOpen.value,
   () => [searchMenuRoot.value],
@@ -278,7 +255,7 @@ watch(
     if (active) {
       void doSearch()
     } else {
-      closeSortMenu()
+      toolbarRef.value?.closeMenus()
       closeSearch()
     }
   },
@@ -305,48 +282,27 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="foxycape-pdf-mark-list">
-    <div class="nav-header foxycape-pdf-mark-list__header">
-      <div class="foxycape-pdf-mark-list__title">
-        <span>{{ t('pdf_mark_list_title', 'Highlights') }}</span>
-        <span v-if="visibleMarks.length > 0" class="foxycape-pdf-mark-list__count">
-          {{ visibleMarks.length }}
-        </span>
-      </div>
-      <div class="nav-buttons-container foxycape-pdf-mark-list__actions">
+    <PdfListToolbar
+      v-if="marks.length > 0"
+      ref="toolbarRef"
+      :count="visibleMarks.length"
+      :count-label="t('ai_marks_tab_highlights', 'Highlights')"
+      :sort-mode="sortMode"
+      :sort-options="sortOptions"
+      :sort-label="t('pdf_mark_list_sort', 'Sort')"
+      @update:sort-mode="sortMode = $event"
+    >
+      <template #leading>
         <ClickableIconButton
           icon="list-filter"
-          :class-name="['nav-action-button force-small-icon', { 'is-active': filterOpen || hasActiveFilters || Boolean(keyword.trim()) }]"
+          :class-name="['nav-action-button force-small-icon', { 'is-active': filterOpen || hasActiveFilters }]"
           :label="t('pdf_mark_list_filter', 'Filter marks')"
           :aria-expanded="filterOpen"
           :aria-pressed="hasActiveFilters"
           @click="toggleFilter"
         />
-        <div ref="sortMenuRoot" class="foxycape-pdf-mark-list__sort">
-          <ClickableIconButton
-            icon="arrow-up-down"
-            :class-name="['nav-action-button force-small-icon', { 'is-active': sortMenuOpen }]"
-            :label="t('pdf_mark_list_sort', 'Sort')"
-            :aria-expanded="sortMenuOpen"
-            @click="toggleSortMenu"
-          />
-          <div v-if="sortMenuOpen" class="foxycape-pdf-mark-list__sort-menu" role="menu" @pointerdown.stop>
-            <button
-              v-for="option in sortOptions"
-              :key="option.mode"
-              type="button"
-              class="foxycape-pdf-mark-list__sort-item"
-              :class="{ 'is-active': sortMode === option.mode }"
-              role="menuitemradio"
-              :aria-checked="sortMode === option.mode"
-              @click="applySort(option.mode)"
-            >
-              {{ option.label }}
-            </button>
-          </div>
-        </div>
-        <ClickableIconButton icon="x" class-name="nav-action-button" :label="t('pdf_mark_list_close', 'Close')" @click="onClose" />
-      </div>
-    </div>
+      </template>
+    </PdfListToolbar>
 
     <div v-if="filterOpen && marks.length > 0" class="foxycape-pdf-mark-list__filter">
       <div class="foxycape-pdf-mark-list__kinds">
@@ -364,7 +320,7 @@ onBeforeUnmount(() => {
         <ClickableIconButton
           icon="search"
           :class-name="['nav-action-button force-small-icon', { 'is-active': searchOpen || Boolean(keyword.trim()) }]"
-          :label="t('pdf_mark_list_search', 'Filter highlights')"
+          :label="t('pdf_mark_list_search', 'Filter {count} highlights', { count: marks.length })"
           :aria-expanded="searchOpen"
           @click="toggleSearch"
         />
@@ -374,8 +330,8 @@ onBeforeUnmount(() => {
             type="search"
             spellcheck="false"
             :value="keyword"
-            :placeholder="t('pdf_mark_list_search', 'Filter highlights')"
-            :aria-label="t('pdf_mark_list_search', 'Filter highlights')"
+            :placeholder="t('pdf_mark_list_search', 'Filter {count} highlights', { count: marks.length })"
+            :aria-label="t('pdf_mark_list_search', 'Filter {count} highlights', { count: marks.length })"
             @input="onSearchInput"
           />
         </div>
@@ -393,7 +349,7 @@ onBeforeUnmount(() => {
           @click="toggleColor(color)"
         />
       </div>
-      <button v-if="hasActiveFilters || keyword.trim()" type="button" class="foxycape-pdf-mark-list__clear" @click="clearFilters">
+      <button v-if="hasActiveFilters" type="button" class="foxycape-pdf-mark-list__clear" @click="clearFilters">
         {{ t('pdf_mark_list_clear_filters', 'Clear filters') }}
       </button>
     </div>
@@ -457,36 +413,6 @@ onBeforeUnmount(() => {
   min-height: 0;
 }
 
-.foxycape-pdf-mark-list__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding-inline: 10px 6px;
-  flex: 0 0 auto;
-  border-bottom: 1px solid var(--background-modifier-border);
-}
-
-.foxycape-pdf-mark-list__title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  color: var(--text-normal);
-  font-size: var(--font-ui-small);
-  font-weight: 600;
-}
-
-.foxycape-pdf-mark-list__count {
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-.foxycape-pdf-mark-list__actions {
-  flex: 0 0 auto;
-}
-
-.foxycape-pdf-mark-list__actions .is-active,
 .foxycape-pdf-mark-list__search .is-active {
   color: var(--text-accent);
 }
@@ -611,48 +537,6 @@ onBeforeUnmount(() => {
   z-index: 2;
   pointer-events: none;
   background: var(--background-secondary);
-}
-
-.foxycape-pdf-mark-list__sort {
-  position: relative;
-  flex: 0 0 auto;
-}
-
-.foxycape-pdf-mark-list__sort-menu {
-  position: absolute;
-  inset-block-start: calc(100% + 4px);
-  inset-inline-end: 0;
-  z-index: 20;
-  min-width: 160px;
-  padding: 4px;
-  border-radius: var(--radius-m);
-  border: 1px solid var(--background-modifier-border);
-  background: var(--background-primary);
-  box-shadow: var(--shadow-s);
-}
-
-.foxycape-pdf-mark-list__sort-item {
-  display: block;
-  width: 100%;
-  border: none;
-  border-radius: var(--radius-s);
-  background: transparent;
-  color: var(--text-normal);
-  font-size: var(--font-ui-small);
-  text-align: start;
-  padding-block: 6px;
-  padding-inline: 8px;
-  cursor: pointer;
-  box-shadow: none;
-}
-
-.foxycape-pdf-mark-list__sort-item:hover {
-  background: var(--background-modifier-hover);
-}
-
-.foxycape-pdf-mark-list__sort-item.is-active {
-  color: var(--text-accent);
-  font-weight: 600;
 }
 
 .foxycape-pdf-mark-list__scroller {

@@ -24,11 +24,29 @@ export const resolveLocaleCode = (
     return caseInsensitive
   }
 
-  const prefix = language.replace(/_/g, '-').split('-')[0] ?? language
-  const byPrefix = supportedCodes.find(
-    (code) => code === prefix || code.toLowerCase() === prefix.toLowerCase(),
-  )
+  const [primary, region] = lower.split('-')
+  if (primary === 'en') {
+    return findSupportedCode(supportedCodes, ['en-us', 'en']) ?? fallback
+  }
+  if (primary === 'pt') {
+    if (region === 'br') {
+      return findSupportedCode(supportedCodes, ['pt-br']) ?? fallback
+    }
+    return findSupportedCode(supportedCodes, ['pt-pt', 'pt']) ?? fallback
+  }
+
+  const byPrefix = supportedCodes.find((code) => code.toLowerCase() === primary)
   return byPrefix ?? fallback
+}
+
+const findSupportedCode = (supportedCodes: readonly string[], candidates: readonly string[]) => {
+  for (const candidate of candidates) {
+    const found = supportedCodes.find((code) => code.toLowerCase() === candidate)
+    if (found) {
+      return found
+    }
+  }
+  return undefined
 }
 
 export const getObsidianLocaleCode = (supportedCodes: readonly string[]) =>
