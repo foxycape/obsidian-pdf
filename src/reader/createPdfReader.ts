@@ -59,6 +59,8 @@ export const createPdfReader = async (
   const readerOptions = new Options()
   readerOptions.debug = false
   readerOptions.themeName = OBSIDIAN_THEME_NAME
+  readerOptions.scrollbarSize = '12px'
+  readerOptions.scrollbarBorder = '2px'
 
   let reader: Reader | undefined
   const simpleIdProvider = new SimpleIdProvider(async () => {
