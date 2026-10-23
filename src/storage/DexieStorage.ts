@@ -1,5 +1,6 @@
 import Dexie, { type Table } from 'dexie'
 import { DexieMarkStorage, type MarkRow } from './DexieMarkStorage'
+import { PDF_SCHEMA_VERSION } from './pdfDatabaseSchema'
 import type { IMarkStorage } from './IMarkStorage'
 import { toStorageValue } from './toStorageValue'
 import { DataStorageOptions, type IStorage } from './IStorage'
@@ -41,6 +42,9 @@ class FoxycapePdfDatabase extends Dexie {
       lookups: '[ownerId+markId], [ownerId+simpleId]',
       llmChats: '[ownerId+id], [ownerId+updatedAt]',
       segments: '[ownerId+simpleId]',
+    })
+    this.version(PDF_SCHEMA_VERSION).stores({
+      signKeys: 'id',
     })
   }
 }

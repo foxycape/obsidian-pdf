@@ -15,7 +15,7 @@ import { mergePdfBundleCssPlugin } from './vite.merge-pdf-css'
 import { stubPdfWorkerRawPlugin } from './vite.stub-pdf-worker-raw'
 import { pdfjsShimPlugin } from './vite.pdfjs-shim'
 
-const FORBIDDEN_MAIN_MARKERS = ['Dexie', 'AGFzbQE', 'photoswipe'] as const
+const FORBIDDEN_MAIN_MARKERS = ['Dexie', 'AGFzbQE', 'photoswipe', 'AI runtime is not ready'] as const
 
 /** Reader code, Dexie, and hash-wasm belong in reader-bundle.zip, not main.js. */
 const assertMainJsIsSlimPlugin = (bundlePath: string): Plugin => ({

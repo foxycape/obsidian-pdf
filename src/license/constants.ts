@@ -36,6 +36,15 @@ export const LICENSE_PURCHASE_URL = 'https://www.foxycape.com/obsidian/pricing'
 /** AI traffic packs are sold on the same page until a dedicated URL exists. */
 export const AI_TRAFFIC_PURCHASE_URL = LICENSE_PURCHASE_URL
 
+/** Free license claim page. */
+export const FREE_LICENSE_URL = 'https://obsidian.foxycape.com/license'
+
+/** Share page that grants 1M AI traffic. */
+export const SHARE_AI_TRAFFIC_URL = 'https://obsidian.foxycape.com/pricing'
+
+/** Check or claim the share reward. `check=true` only reports eligibility. */
+export const SHARE_TOPUP_PATH = '/reader/share/topup'
+
 /** Re-validate an applied license while the plugin stays loaded. */
 export const REVALIDATE_MS = 2 * 24 * 60 * 60 * 1000
 

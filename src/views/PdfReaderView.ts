@@ -51,7 +51,8 @@ import type { ByteRangeReader } from '@/storage/legacy/ByteRangeReader'
 import { MarkNoteCompanion, syncMarkToSidecarNote } from '@/obsidian/markNoteSync'
 import { appendAiNote } from '@/ai/notes/appendAiNote'
 import { findPassageContentRange } from '@/ai/passage/stores'
-import { setAiChromeHooks, tryGetAiRuntime, type PassageNoteWrite } from '@/ai/runtime'
+import { bindAiRuntime, setAiChromeHooks, tryGetAiRuntime, type PassageNoteWrite } from '@/ai/runtime'
+import { createLazyPdfStorage } from '@/reader/pdfHostBridge'
 import { mountAiChatPanel, type AiChatDraft, type AiChatPanelMount } from '@/ai/ui/mountAiChatPanel'
 import { applyPdfDeepLink } from '@/obsidian/pdfDeepLink'
 import {
@@ -1256,4 +1257,33 @@ export class PdfReaderView {
   }
 }
 
-export const attachPdfReader = (surface: PdfReaderSurface) => new PdfReaderView(surface)
+let readerAiRuntimeBound = false
+
+/** One runtime for this reader bundle. Rebinding clears the license session cache. */
+const ensureReaderAiRuntime = (plugin: FoxycapePdfPlugin) => {
+  if (readerAiRuntimeBound && tryGetAiRuntime()) {
+    return
+  }
+  bindAiRuntime({
+    apiClient: plugin.apiClient,
+    storage: createLazyPdfStorage(),
+    getLicense: () => plugin.settings.license,
+    onNeedLicense: () => {
+      tryGetAiRuntime()?.chrome?.openAccess('need-license')
+    },
+    onQuotaExhausted: () => {
+      const hooks = tryGetAiRuntime()?.chrome
+      if (hooks) {
+        hooks.openAccess('quota')
+        return
+      }
+      new Notice(plugin.t('ai_quota_exhausted', 'Official AI quota is used up.'))
+    },
+  })
+  readerAiRuntimeBound = true
+}
+
+export const attachPdfReader = (surface: PdfReaderSurface) => {
+  ensureReaderAiRuntime(surface.plugin)
+  return new PdfReaderView(surface)
+}

@@ -385,6 +385,8 @@ export const KEY_ORDER = [
   "ai_buy_quota",
   "ai_configure_key",
   "ai_enter_license",
+  "ai_free_license",
+  "ai_share_traffic",
   "ai_traffic_includes",
   "ai_purchase",
   "ai_add_model",

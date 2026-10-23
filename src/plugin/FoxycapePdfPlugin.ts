@@ -33,8 +33,7 @@ import {
 } from '@/settings/types'
 import { registerAstroidIcon } from '@/ui/astroidIcon'
 import { applyFoxycapeMenuIcon, registerFoxycapeIcon } from '@/ui/foxycapeIcon'
-import { bindAiRuntime as bindLoadedAiRuntime, tryGetAiRuntime } from '@/ai/runtime'
-import { createLazyPdfStorage, disposeInstalledPdfHost } from '@/reader/pdfHostBridge'
+import { disposeInstalledPdfHost } from '@/reader/pdfHostBridge'
 import { PdfReaderHostView } from '@/views/PdfReaderHostView'
 
 type ViewRegistryLike = {
@@ -88,7 +87,6 @@ export class FoxycapePdfPlugin extends Plugin {
     }
     this.lastSyncedLanguage = this.locale.getCurrentLanguage()
     this.registerCommands()
-    this.bindAiRuntime()
     this.licenseService.startPeriodicValidation()
     void this.runNetworkWhenReady()
 
@@ -156,25 +154,6 @@ export class FoxycapePdfPlugin extends Plugin {
   /** Fonts and the PDF.js library download in the background. Opening a PDF waits when the library is missing. */
   ensureRuntimeAssets = async () => {
     await unpackRuntimeAssets(this, { t: this.t })
-  }
-
-  bindAiRuntime = () => {
-    bindLoadedAiRuntime({
-      apiClient: this.apiClient,
-      storage: createLazyPdfStorage(),
-      getLicense: () => this.settings.license,
-      onNeedLicense: () => {
-        tryGetAiRuntime()?.chrome?.openAccess('need-license')
-      },
-      onQuotaExhausted: () => {
-        const hooks = tryGetAiRuntime()?.chrome
-        if (hooks) {
-          hooks.openAccess('quota')
-          return
-        }
-        new Notice(this.t('ai_quota_exhausted', 'Official AI quota is used up.'))
-      },
-    })
   }
 
   /** Fonts and markdown load in the background. Language files download from the settings tab. */

@@ -245,6 +245,8 @@
   "ai_buy_quota": "Buy an AI traffic pack",
   "ai_configure_key": "Configure AI key",
   "ai_enter_license": "Enter a license",
+  "ai_free_license": "Get a license for free",
+  "ai_share_traffic": "Share to get 1M AI traffic",
   "ai_traffic_includes": "Includes {tokens}",
   "ai_purchase": "Purchase",
   "ai_add_model": "Add model",

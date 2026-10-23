@@ -5,6 +5,7 @@ import type { AiAccessMode } from '../accessChoice'
 import { loadAiTrafficPacks, type AiTrafficPack } from '../trafficPacks'
 import { tryGetAiRuntime } from '../runtime'
 import { formatTokenAmount } from '../formatTokenAmount'
+import { loadShareTopupEligible } from '../shareTopup'
 
 const props = defineProps<{
   mode: AiAccessMode
@@ -16,6 +17,8 @@ const emit = defineEmits<{
   configureKey: []
   enterLicense: []
   purchase: []
+  freeLicense: []
+  shareTraffic: []
 }>()
 
 const isQuota = computed(() => props.mode === 'quota')
@@ -37,6 +40,7 @@ const description = computed(() =>
 )
 
 const packs = ref<AiTrafficPack[]>([])
+const canShareTraffic = ref(false)
 
 onMounted(() => {
   if (!isQuota.value) {
@@ -48,6 +52,9 @@ onMounted(() => {
   }
   void loadAiTrafficPacks(runtime.apiClient).then((next) => {
     packs.value = next
+  })
+  void loadShareTopupEligible(runtime.apiClient, runtime.getLicense()).then((eligible) => {
+    canShareTraffic.value = eligible
   })
 })
 </script>
@@ -75,6 +82,17 @@ onMounted(() => {
       </button>
       <button v-else type="button" class="clickable-icon fpdf-action mod-cta" @click="emit('enterLicense')">
         {{ t('ai_enter_license', 'Enter a license') }}
+      </button>
+      <button v-if="!isQuota" type="button" class="clickable-icon fpdf-action" @click="emit('freeLicense')">
+        {{ t('ai_free_license', 'Get a license for free') }}
+      </button>
+      <button
+        v-if="isQuota && canShareTraffic"
+        type="button"
+        class="clickable-icon fpdf-action"
+        @click="emit('shareTraffic')"
+      >
+        {{ t('ai_share_traffic', 'Share to get 1M AI traffic') }}
       </button>
     </div>
   </div>

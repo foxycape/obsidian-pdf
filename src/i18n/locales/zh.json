@@ -245,6 +245,8 @@
   "ai_buy_quota": "购买 AI 流量包",
   "ai_configure_key": "配置 AI Key",
   "ai_enter_license": "输入许可证",
+  "ai_free_license": "免费获取许可证",
+  "ai_share_traffic": "分享获取1M AI流量",
   "ai_traffic_includes": "包含 {tokens}",
   "ai_purchase": "购买",
   "ai_add_model": "添加模型",

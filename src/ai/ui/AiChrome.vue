@@ -5,7 +5,7 @@ import type { App, TFile } from 'obsidian'
 import type { PdfMarkdownLinkSource } from '@/obsidian/remotePdfLink'
 import type { IMarker } from '@/mark'
 import type { DexieStorage } from '@/storage/DexieStorage'
-import { AI_TRAFFIC_PURCHASE_URL } from '@/license/constants'
+import { AI_TRAFFIC_PURCHASE_URL, FREE_LICENSE_URL, SHARE_AI_TRAFFIC_URL } from '@/license/constants'
 import { setAiChromeHooks, tryGetAiRuntime } from '../runtime'
 import type { AiAccessMode } from '../accessChoice'
 import { useHistoryLayer } from '@/history/useHistoryLayer'
@@ -83,6 +83,14 @@ const openLanguage = () => {
 
 const purchase = () => {
   window.open(AI_TRAFFIC_PURCHASE_URL, '_blank', 'noopener')
+}
+
+const openFreeLicense = () => {
+  window.open(FREE_LICENSE_URL, '_blank', 'noopener')
+}
+
+const openShareTraffic = () => {
+  window.open(SHARE_AI_TRAFFIC_URL, '_blank', 'noopener')
 }
 
 const AI_WIDTH_KEY = 'foxycape-pdf.aiPanelWidth'
@@ -263,6 +271,8 @@ defineExpose({
       @configure-key="accessOpen = false; openModel()"
       @enter-license="accessOpen = false; openSettings()"
       @purchase="purchase"
+      @free-license="openFreeLicense"
+      @share-traffic="openShareTraffic"
     />
     <ModelSettingsDialog v-if="modelOpen" :t="t" @close="modelOpen = false" />
     <AiLanguageDialog v-if="languageOpen" :t="t" @close="languageOpen = false" />

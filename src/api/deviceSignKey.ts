@@ -1,11 +1,16 @@
-const DB_NAME = 'foxycape-pdf-device-sign'
-const STORE = 'keys'
-const RECORD_ID = 'device'
+import {
+  openPdfDatabase,
+  PDF_DB_NAME,
+  SIGN_KEY_ID,
+  SIGN_KEY_STORE,
+} from '@/storage/pdfDatabaseSchema'
+
 const ECDSA = { name: 'ECDSA', namedCurve: 'P-256' } as const
 
 export const SIGN_ALG = 'ecdsa-p256-sha256'
 
 type StoredSignKey = {
+  id: typeof SIGN_KEY_ID
   privateKey: CryptoKey
   publicKeySpki: string
 }
@@ -24,33 +29,16 @@ const bytesToBase64 = (bytes: Uint8Array): string => {
   return btoa(binary)
 }
 
-const openDb = (): Promise<IDBDatabase> =>
-  new Promise((resolve, reject) => {
-    if (typeof indexedDB === 'undefined') {
-      reject(new Error('IndexedDB is unavailable; cannot store the device signing key.'))
-      return
-    }
-    const request = indexedDB.open(DB_NAME, 1)
-    request.onupgradeneeded = () => {
-      const db = request.result
-      if (!db.objectStoreNames.contains(STORE)) {
-        db.createObjectStore(STORE)
-      }
-    }
-    request.onsuccess = () => resolve(request.result)
-    request.onerror = () => reject(request.error ?? new Error('Failed to open the device sign database.'))
-  })
-
 const idbGet = async (db: IDBDatabase): Promise<StoredSignKey | undefined> =>
   new Promise((resolve, reject) => {
-    const request = db.transaction(STORE, 'readonly').objectStore(STORE).get(RECORD_ID)
+    const request = db.transaction(SIGN_KEY_STORE, 'readonly').objectStore(SIGN_KEY_STORE).get(SIGN_KEY_ID)
     request.onsuccess = () => resolve(request.result as StoredSignKey | undefined)
     request.onerror = () => reject(request.error ?? new Error('Failed to read the device signing key.'))
   })
 
 const idbPut = async (db: IDBDatabase, value: StoredSignKey): Promise<void> =>
   new Promise((resolve, reject) => {
-    const request = db.transaction(STORE, 'readwrite').objectStore(STORE).put(value, RECORD_ID)
+    const request = db.transaction(SIGN_KEY_STORE, 'readwrite').objectStore(SIGN_KEY_STORE).put(value)
     request.onsuccess = () => resolve()
     request.onerror = () => reject(request.error ?? new Error('Failed to store the device signing key.'))
   })
@@ -70,6 +58,7 @@ const createStoredKey = async (): Promise<StoredSignKey> => {
   const pkcs8 = await subtle.exportKey('pkcs8', pair.privateKey)
   const privateKey = await subtle.importKey('pkcs8', pkcs8, ECDSA, false, ['sign'])
   return {
+    id: SIGN_KEY_ID,
     privateKey,
     publicKeySpki: bytesToBase64(new Uint8Array(spki)),
   }
@@ -84,6 +73,21 @@ const signQuery = async (privateKey: CryptoKey, query: string): Promise<string> 
   return bytesToBase64(new Uint8Array(signature))
 }
 
+const readOrCreateSignKey = async (): Promise<StoredSignKey> => {
+  const db = await openPdfDatabase(PDF_DB_NAME)
+  try {
+    const stored = await idbGet(db)
+    if (stored) {
+      return stored
+    }
+    const created = await createStoredKey()
+    await idbPut(db, created)
+    return created
+  } finally {
+    db.close()
+  }
+}
+
 let materialPromise: Promise<DeviceSignMaterial> | null = null
 
 /** Ordinal key order, excluding the signature field. Matches the API verifier. */
@@ -94,30 +98,23 @@ export const canonicalSignQuery = (parameters: Record<string, unknown>): string 
 }
 
 /**
- * Per-install ECDSA P-256 key. The private key stays in IndexedDB and is not extractable.
+ * Per-install ECDSA P-256 key stored in the business database.
+ * The private key stays in IndexedDB and is not extractable.
  * The same promise is shared so concurrent requests do not create two keys.
  */
 export const ensureDeviceSignMaterial = (): Promise<DeviceSignMaterial> => {
   if (materialPromise === null) {
     materialPromise = (async () => {
-      const db = await openDb()
-      try {
-        const stored = (await idbGet(db)) ?? (await createStoredKey().then(async (created) => {
-          await idbPut(db, created)
-          return created
-        }))
-        if (!stored.privateKey || !stored.publicKeySpki) {
-          throw new Error('Stored device signing key is incomplete.')
-        }
-        const material: DeviceSignMaterial = {
-          alg: SIGN_ALG,
-          publicKeySpki: stored.publicKeySpki,
-          sign: (query: string) => signQuery(stored.privateKey, query),
-        }
-        return material
-      } finally {
-        db.close()
+      const stored = await readOrCreateSignKey()
+      if (!stored.privateKey || !stored.publicKeySpki) {
+        throw new Error('Stored device signing key is incomplete.')
       }
+      const material: DeviceSignMaterial = {
+        alg: SIGN_ALG,
+        publicKeySpki: stored.publicKeySpki,
+        sign: (query: string) => signQuery(stored.privateKey, query),
+      }
+      return material
     })().catch((error: unknown) => {
       materialPromise = null
       throw error

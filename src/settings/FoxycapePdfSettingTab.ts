@@ -8,8 +8,6 @@ import {
   type TextComponent,
 } from 'obsidian'
 import { debounce } from '@foxycape/core/kernal/web/debounce'
-import { getLicenseAiUser, loadLicenseAiUsage } from '@/ai/licenseSession'
-import { tryGetAiRuntime } from '@/ai/runtime'
 import { ensureLocalesPack, hasLocalesPack } from '@/assets/ensureRuntimeAssets'
 import { getObsidianLocaleCode } from '@/i18n/resolveObsidianLanguage'
 import type { PdfUsagePoint } from '@/views/pdfBundleModule'
@@ -20,6 +18,8 @@ import {
 } from '@/license'
 import type { FoxycapePdfPlugin } from '@/plugin/FoxycapePdfPlugin'
 import { showConfirmModal } from '@/ui/ConfirmModal'
+import { loadPdfLib } from '@/views/loadPdfModule'
+import { loadReaderBundle } from '@/views/loadReaderBundle'
 
 const formatUsageDuration = (date: Date): string => {
   const year = date.getFullYear()
@@ -582,36 +582,48 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
     chartEl: HTMLElement,
     requestId: number,
   ) => {
-    const runtime = tryGetAiRuntime()
-    if (!runtime || requestId !== this.usageRequestId) {
-      return
-    }
-    const user = await getLicenseAiUser(runtime.apiClient, runtime.getLicense())
-    if (requestId !== this.usageRequestId) {
-      return
-    }
-    if (!user?.accessToken) {
+    const unavailable = () => {
+      if (requestId !== this.usageRequestId) {
+        return
+      }
       balanceEl.setText(
         this.plugin.t('plugin_settings_ai_usage_unavailable', 'Usage is unavailable right now'),
       )
-      return
     }
-    const balance = formatTokenAmount(user.availableAITokenCount ?? 0)
-    balanceEl.setText(
-      this.plugin.t('plugin_settings_ai_balance', 'AI usage balance: {balance}', { balance }),
-    )
-    const points = await loadLicenseAiUsage(runtime.apiClient, user.accessToken)
-    if (requestId !== this.usageRequestId) {
-      return
-    }
-    chartEl.empty()
-    if (!points) {
-      chartEl.setText(
-        this.plugin.t('plugin_settings_ai_usage_unavailable', 'Usage is unavailable right now'),
+    try {
+      await loadPdfLib(this.plugin)
+      const bundle = await loadReaderBundle(this.plugin)
+      if (requestId !== this.usageRequestId) {
+        return
+      }
+      const user = await bundle.getLicenseAiUser(this.plugin.apiClient, this.plugin.settings.license)
+      if (requestId !== this.usageRequestId) {
+        return
+      }
+      if (!user?.accessToken) {
+        unavailable()
+        return
+      }
+      const balance = formatTokenAmount(user.availableAITokenCount ?? 0)
+      balanceEl.setText(
+        this.plugin.t('plugin_settings_ai_balance', 'AI usage balance: {balance}', { balance }),
       )
-      return
+      const points = await bundle.loadLicenseAiUsage(this.plugin.apiClient, user.accessToken)
+      if (requestId !== this.usageRequestId) {
+        return
+      }
+      chartEl.empty()
+      if (!points) {
+        chartEl.setText(
+          this.plugin.t('plugin_settings_ai_usage_unavailable', 'Usage is unavailable right now'),
+        )
+        return
+      }
+      this.drawUsageChart(chartEl, points)
+    } catch (error) {
+      console.warn('[Foxycape PDF] failed to load AI usage', error)
+      unavailable()
     }
-    this.drawUsageChart(chartEl, points)
   }
 
   private drawUsageChart = (chartEl: HTMLElement, points: PdfUsagePoint[]) => {
