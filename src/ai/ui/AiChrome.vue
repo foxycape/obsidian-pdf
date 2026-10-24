@@ -125,12 +125,17 @@ const clampAiWidth = (width: number) => {
   return Math.min(max, Math.max(MIN_AI_WIDTH, width))
 }
 
-const applyAiWidth = (width: number) => {
+const aiHost = (): HTMLElement | null => {
   const host = chromeRoot.value?.closest('.foxycape-pdf-ai-host')
-  if (!(host instanceof HTMLElement)) {
-    return
-  }
-  host.style.setProperty('--foxycape-pdf-ai-width', `${Math.round(width)}px`)
+  return host instanceof HTMLElement ? host : null
+}
+
+const syncChatOpenClass = (open: boolean) => {
+  aiHost()?.classList.toggle('is-chat-open', open)
+}
+
+const applyAiWidth = (width: number) => {
+  aiHost()?.style.setProperty('--foxycape-pdf-ai-width', `${Math.round(width)}px`)
 }
 
 let resizeSession: { startX: number; startWidth: number; sign: number } | null = null
@@ -176,6 +181,7 @@ const beginAiResize = (event: PointerEvent) => {
 }
 
 watch(chatOpen, (open) => {
+  syncChatOpenClass(open)
   if (open) {
     applyAiWidth(clampAiWidth(readAiWidth()))
   }
@@ -194,6 +200,7 @@ const accessHooks = { openAccess }
 
 onMounted(() => {
   setAiChromeHooks(accessHooks)
+  syncChatOpenClass(chatOpen.value)
   const parent = chromeRoot.value?.closest('.foxycape-pdf-ai-host')?.parentElement
   if (parent) {
     widthObserver = new ResizeObserver(() => {
@@ -207,6 +214,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  syncChatOpenClass(false)
   endAiResize()
   widthObserver?.disconnect()
   widthObserver = null

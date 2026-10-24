@@ -256,7 +256,11 @@ const saveSelected = async () => {
       <p class="fpdf-muted">
         {{ t('ai_fetch_models_hint', 'Fetch available models from this provider, then select one or more to add.') }}
       </p>
-      <div v-if="showFetchButton || remoteModels.length" class="fpdf-fetch-row">
+      <div
+        v-if="showFetchButton || remoteModels.length"
+        class="fpdf-fetch-row"
+        :class="{ 'is-fetch-only': !remoteModels.length }"
+      >
         <div v-if="remoteModels.length" class="fpdf-fetch-row__filter">
           <input v-model="keyword" class="fpdf-input" :placeholder="t('ai_filter_models', 'Filter models')" />
           <button

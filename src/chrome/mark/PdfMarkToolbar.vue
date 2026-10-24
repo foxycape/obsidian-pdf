@@ -173,6 +173,7 @@ const toolbarClass = computed(() => [
   'foxycape-pdf-mark-toolbar',
   'popup-toolbar',
   state.panelMode !== 'toolbar' ? 'is-panel' : '',
+  hasOpenedTranslate.value && passage.value ? 'has-translate' : '',
 ])
 
 const onStyleClick = async (styleName: MarkStyleName) => {

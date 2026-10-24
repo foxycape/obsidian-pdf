@@ -307,7 +307,7 @@ body.foxycape-pdf-resizing .workspace-leaf-content[data-type="foxycape-pdf"] .te
   overflow: visible;
 }
 
-.foxycape-pdf-ai-host:has(.is-chat-open) {
+.foxycape-pdf-ai-host.is-chat-open {
   position: relative;
   z-index: 2;
   width: var(--foxycape-pdf-ai-width, 360px);
@@ -316,7 +316,7 @@ body.foxycape-pdf-resizing .workspace-leaf-content[data-type="foxycape-pdf"] .te
   background: var(--background-primary);
 }
 
-.foxycape-pdf-ai-host:has(.is-chat-open) .fpdf-chrome {
+.foxycape-pdf-ai-host.is-chat-open .fpdf-chrome {
   position: relative;
   height: 100%;
   min-height: 0;
@@ -354,7 +354,7 @@ body.foxycape-pdf-resizing .workspace-leaf-content[data-type="foxycape-pdf"] .te
   }
 }
 
-body.is-mobile .foxycape-pdf-ai-host:has(.is-chat-open) {
+body.is-mobile .foxycape-pdf-ai-host.is-chat-open {
   position: absolute;
   inset-block: 0;
   inset-inline-end: 0;
@@ -378,7 +378,7 @@ body.is-mobile .foxycape-pdf-ai-resizer {
   align-items: stretch;
 }
 
-.foxycape-pdf-mark-toolbar.is-panel:has(.fpdf-drill--translate) {
+.foxycape-pdf-mark-toolbar.is-panel.has-translate {
   width: min(350px, 92vw);
 }
 

@@ -1531,7 +1531,7 @@ button.clickable-icon.fpdf-segment__btn.is-active {
   padding-inline: 12px;
 }
 
-.fpdf-fetch-row:not(:has(.fpdf-fetch-row__filter)) button.clickable-icon.fpdf-form-btn {
+.fpdf-fetch-row.is-fetch-only button.clickable-icon.fpdf-form-btn {
   width: 100%;
 }
 
