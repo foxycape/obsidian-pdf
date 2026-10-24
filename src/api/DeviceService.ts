@@ -31,7 +31,7 @@ export class DeviceService {
    * Concurrent callers share one request. A failure rejects and the next call tries again.
    */
   ensureRegistered = (): Promise<void> => {
-    if (this.registrationPromise) {
+    if (this.registrationPromise !== null) {
       return this.registrationPromise
     }
     this.registrationPromise = this.registerOnce()

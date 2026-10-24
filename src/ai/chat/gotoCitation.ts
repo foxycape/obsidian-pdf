@@ -1,5 +1,5 @@
 import type { Reader } from '@foxycape/core/kernal'
-import { TFile, type App, type WorkspaceLeaf } from 'obsidian'
+import { ItemView, TFile, type App, type WorkspaceLeaf } from 'obsidian'
 import { getPdfRenderer } from '@/chrome/usePdfRenderer'
 import { flashPassageText } from '@/marker/flashPassageText'
 import { highlightPdfPageTextOffset } from '@/obsidian/pageTextHighlight'
@@ -63,21 +63,20 @@ export const findOpenPdfReader = (app: App, simpleId: string): OpenReader | null
   if (!simpleId) {
     return null
   }
-  const active = app.workspace.activeLeaf
-  if (active) {
-    const current = matchLeaf(active, simpleId)
-    if (current) {
-      return current
-    }
-  }
-  let found: OpenReader | null = null
+  const activeView = app.workspace.getActiveViewOfType(ItemView)
+  let activeMatch: OpenReader | null = null
+  let fallback: OpenReader | null = null
   app.workspace.iterateAllLeaves((leaf) => {
-    if (found) {
+    const current = matchLeaf(leaf, simpleId)
+    if (!current) {
       return
     }
-    found = matchLeaf(leaf, simpleId)
+    fallback ??= current
+    if (activeView && leaf.view === activeView) {
+      activeMatch = current
+    }
   })
-  return found
+  return activeMatch ?? fallback
 }
 
 const waitForPdfReader = async (app: App, simpleId: string) => {

@@ -214,7 +214,7 @@ export const listModelIds = async (options: ListModelsOptions): Promise<string[]
   const controller = new AbortController()
   const timeoutMs = options.timeoutMs ?? 8000
   let timedOut = false
-  const timer = setTimeout(() => {
+  const timer = window.setTimeout(() => {
     timedOut = true
     controller.abort()
   }, timeoutMs)
@@ -245,6 +245,6 @@ export const listModelIds = async (options: ListModelsOptions): Promise<string[]
     }
     throw error
   } finally {
-    clearTimeout(timer)
+    window.clearTimeout(timer)
   }
 }

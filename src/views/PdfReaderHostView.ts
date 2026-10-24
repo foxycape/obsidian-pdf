@@ -123,7 +123,7 @@ export class PdfReaderHostView extends ItemView {
   }
 
   private kick = (): Promise<void> => {
-    if (!this.boot) {
+    if (this.boot === null) {
       this.boot = this.run().catch((error: unknown) => {
         this.boot = null
         if (!this.closed) {
@@ -237,7 +237,7 @@ export class PdfReaderHostView extends ItemView {
       status.textContent = this.plugin.t('plugin_pdf_init_status', 'Initializing…')
     }
     const fill = overlay.querySelector('.foxycape-pdf-init-progress-fill')
-    if (!(fill instanceof HTMLElement)) {
+    if (!fill?.instanceOf(HTMLElement)) {
       return
     }
     const ratio = total > 0 ? Math.min(1, Math.max(0, loaded / total)) : 0

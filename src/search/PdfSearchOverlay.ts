@@ -22,9 +22,6 @@ export {
   PDF_SEARCH_LAYER_CLASS,
 }
 
-/** @deprecated Use MARK_HIGHLIGHT_ID_ATTR; kept for existing query selectors. */
-export const PDF_SEARCH_HIT_ID_ATTR = MARK_HIGHLIGHT_ID_ATTR
-
 const ensureSearchLayer = (pageEl: HTMLElement): HTMLElement =>
   ensureOverlayLayer(pageEl, PDF_SEARCH_LAYER_CLASS, {
     relativeClass: PDF_PAGE_RELATIVE_CLASS,

@@ -76,6 +76,17 @@ export type PdfReaderViewState = {
 
 const FILE_LOADING_DELAY_MS = 2000
 
+const copyRecord = (value: unknown): Record<string, unknown> => {
+  if (!value || typeof value !== 'object') {
+    return {}
+  }
+  const state: Record<string, unknown> = {}
+  for (const key of Object.keys(value)) {
+    state[key] = (value as Record<string, unknown>)[key]
+  }
+  return state
+}
+
 export class PdfReaderView {
   private readonly surface: PdfReaderSurface
 
@@ -487,10 +498,11 @@ export class PdfReaderView {
   }
 
   getEphemeralState(): Record<string, unknown> {
-    return {
-      ...ItemView.prototype.getEphemeralState.call(this.surface),
-      subpath: this.pendingSubpath ?? undefined,
+    const state = copyRecord(ItemView.prototype.getEphemeralState.call(this.surface) as unknown)
+    if (this.pendingSubpath) {
+      state.subpath = this.pendingSubpath
     }
+    return state
   }
 
   setEphemeralState(state: unknown): void {

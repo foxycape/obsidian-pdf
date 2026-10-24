@@ -79,7 +79,7 @@ export class FoxycapePdfPlugin extends Plugin {
     registerAstroidIcon()
 
     await this.licenseService.ensureTrialStarted()
-    await this.bootstrapRuntimeAssets()
+    this.bootstrapRuntimeAssets()
     await this.locale.initialize()
     const savedLanguage = this.savedLanguageCode()
     if (savedLanguage) {

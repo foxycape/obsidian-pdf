@@ -69,7 +69,7 @@ const openNative = (name: string, version?: number): Promise<IDBDatabase> =>
     }
     const request = version == null ? indexedDB.open(name) : indexedDB.open(name, version)
     request.onupgradeneeded = (event) => {
-      const oldVersion = (event as IDBVersionChangeEvent).oldVersion
+      const oldVersion = event.oldVersion
       if (oldVersion < PDF_NATIVE_VERSION) {
         createMissingStores(request.result)
       }

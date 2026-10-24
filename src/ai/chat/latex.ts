@@ -1,8 +1,18 @@
 import { checkRegexAssertionsSupport } from '@foxycape/core/kernal/common/regex'
 
+type LatexReplace = (
+  match: string,
+  code: string | undefined,
+  display: string | undefined,
+  inline: string | undefined,
+) => string
+
+/** Compiled only when the engine supports lookbehind. A literal would fail to parse before iOS 16.4. */
+const unescapedPipePattern = (): RegExp => new RegExp('(?<' + '!\\\\)\\|', 'g')
+
 const replaceUnescapedPipes = (formula: string): string => {
   if (checkRegexAssertionsSupport().negativeLookbehind) {
-    return formula.replace(/(?<!\\)\|/g, '\\vert{}')
+    return formula.replace(unescapedPipePattern(), '\\vert{}')
   }
   return formula.replace(/(^|[^\\])\|/g, '$1\\vert{}')
 }
@@ -35,29 +45,53 @@ export const escapeMhchemCommands = (text: string): string => {
   return text.replace(/\$\\ce\{/g, '$\\\\ce{').replace(/\$\\pu\{/g, '$\\\\pu{')
 }
 
-export const escapeLatexPipes = (text: string): string => {
-  const pattern = checkRegexAssertionsSupport().negativeLookbehind
-    ? /(```[\S\s]*?```|`[^\n`]*`)|\$\$([\S\s]*?)\$\$|(?<!\$)\$(?!\$)([\S\s]*?)(?<!\$)\$(?!\$)/g
-    : /(```[\s\S]*?```|`[^\n`]*`)|\$\$([\s\S]*?)\$\$|\$([^\n$]*)\$/g
-
-  return text.replace(pattern, (match, code, display, inline) => {
-    if (code !== undefined) {
-      return code
-    }
-    if (display !== undefined) {
-      return `$$${replaceUnescapedPipes(display)}$$`
-    }
-    if (inline !== undefined) {
-      return `$${replaceUnescapedPipes(inline)}$`
-    }
-    return match
-  })
+const escapePipesInMatch: LatexReplace = (match, code, display, inline) => {
+  if (code !== undefined) {
+    return code
+  }
+  if (display !== undefined) {
+    return `$$${replaceUnescapedPipes(display)}$$`
+  }
+  if (inline !== undefined) {
+    return `$${replaceUnescapedPipes(inline)}$`
+  }
+  return match
 }
 
+const escapeLatexPipesWithLookbehind = (text: string): string => {
+  const pattern = new RegExp(
+    '(```[\\S\\s]*?```|`[^\\n`]*`)|\\$\\$([\\S\\s]*?)\\$\\$|' +
+      '(?<' +
+      '!\\$)\\$(?!\\$)([\\S\\s]*?)' +
+      '(?<' +
+      '!\\$)\\$(?!\\$)',
+    'g',
+  )
+  return text.replace(pattern, escapePipesInMatch)
+}
+
+const escapeLatexPipesWithoutLookbehind = (text: string): string =>
+  text.replace(
+    /(```[\s\S]*?```|`[^\n`]*`)|\$\$([\s\S]*?)\$\$|\$([^\n$]*)\$/g,
+    escapePipesInMatch,
+  )
+
+export const escapeLatexPipes = (text: string): string => {
+  if (checkRegexAssertionsSupport().negativeLookbehind) {
+    return escapeLatexPipesWithLookbehind(text)
+  }
+  return escapeLatexPipesWithoutLookbehind(text)
+}
+
+const escapeUnderscoresWithLookbehind = (textContent: string): string =>
+  textContent.replace(unescapedUnderscorePattern(), '\\_')
+
+const unescapedUnderscorePattern = (): RegExp => new RegExp('(?<' + '!\\\\)_', 'g')
+
 export const escapeTextUnderscores = (text: string): string => {
-  return text.replace(/\\text{([^}]*)}/g, (_match, textContent: string) => {
+  return text.replace(/\\text{([^}]*)}/g, (_match: string, textContent: string) => {
     if (checkRegexAssertionsSupport().negativeLookbehind) {
-      return `\\text{${textContent.replace(/(?<!\\)_/g, '\\_')}}`
+      return `\\text{${escapeUnderscoresWithLookbehind(textContent)}}`
     }
     return `\\text{${textContent.replace(/(^|[^\\])_/g, '$1\\_')}}`
   })

@@ -25,12 +25,6 @@ export type EnsureOverlayLayerOptions = {
 
 const DEFAULT_ID_ATTR = "data-highlight-id"
 
-const createDiv = (ownerDocument: Document, className: string): HTMLElement => {
-    const el = ownerDocument.createElement("div")
-    el.className = className
-    return el
-}
-
 export const ensureOverlayLayer = (
     host: HTMLElement,
     layerClass: string,
@@ -38,15 +32,10 @@ export const ensureOverlayLayer = (
 ): HTMLElement => {
     let layer = host.querySelector<HTMLElement>(`:scope > .${layerClass}`)
     if (!layer) {
-        layer = createDiv(host.ownerDocument, layerClass)
-        host.appendChild(layer)
+        layer = host.createDiv({ cls: layerClass })
         const style = host.ownerDocument.defaultView?.getComputedStyle(host)
-        if (style && style.position === "static") {
-            if (options?.relativeClass) {
-                host.classList.add(options.relativeClass)
-            } else {
-                host.style.position = "relative"
-            }
+        if (style && style.position === "static" && options?.relativeClass) {
+            host.classList.add(options.relativeClass)
         }
     }
     const sizeElement = options?.sizeElement
@@ -97,12 +86,11 @@ export const paintRects = (
     if (spec.replace !== false) {
         layer.querySelectorAll(`[${idAttr}="${CSS.escape(spec.id)}"]`).forEach((node) => node.remove())
     }
-    const ownerDocument = layer.ownerDocument
     for (const rect of rects) {
         if (rect.width <= 0 || rect.height <= 0) {
             continue
         }
-        const mask = createDiv(ownerDocument, spec.className)
+        const mask = layer.createDiv({ cls: spec.className })
         mask.setAttribute(idAttr, spec.id)
         if (spec.attrs) {
             for (const [key, value] of Object.entries(spec.attrs)) {
@@ -114,7 +102,6 @@ export const paintRects = (
             "style",
             `${extra}left:${rect.x}px;top:${rect.y}px;width:${rect.width}px;height:${rect.height}px;`,
         )
-        layer.appendChild(mask)
     }
 }
 

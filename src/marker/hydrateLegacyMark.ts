@@ -1,4 +1,4 @@
-import { getFixedContentRange, type Mark, type Note } from '@/mark/Mark'
+import { getFixedContentRange, type Mark } from '@/mark/Mark'
 
 type LegacyTimeFields = {
   createTime?: string | number
@@ -43,6 +43,6 @@ export const hydrateLegacyMark = (mark: LegacyMark): Mark => {
     }
   }
   normalizeTimes(mark as Mark & LegacyTimeFields)
-  mark.notes?.forEach((note) => normalizeTimes(note as Note & LegacyTimeFields))
-  return mark as Mark
+  mark.notes?.forEach((note) => normalizeTimes(note))
+  return mark
 }

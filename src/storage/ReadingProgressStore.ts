@@ -10,7 +10,7 @@ type ReadingProgressTableSource = () => Table<ReadingProgressRow, [string, strin
 
 const toProgress = (row: ReadingProgressRow): Progress => {
   const { ownerId: _ownerId, simpleId: _simpleId, ...progress } = row
-  return progress as Progress
+  return progress
 }
 
 /**

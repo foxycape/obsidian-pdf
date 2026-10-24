@@ -1,9 +1,9 @@
-import { getLanguage } from 'obsidian'
+import { readAppLanguage } from './readAppLanguage'
 
 const FALLBACK_LANGUAGE = 'en'
 
 /**
- * Resolve Obsidian `getLanguage()` to a locale file name.
+ * Resolve the Obsidian UI language to a locale file name.
  * Locale files use the same codes as Obsidian (e.g. `zh`, `zh-TW`, `pt-BR`).
  */
 export const resolveLocaleCode = (
@@ -50,6 +50,6 @@ const findSupportedCode = (supportedCodes: readonly string[], candidates: readon
 }
 
 export const getObsidianLocaleCode = (supportedCodes: readonly string[]) =>
-  resolveLocaleCode(getLanguage(), supportedCodes, FALLBACK_LANGUAGE)
+  resolveLocaleCode(readAppLanguage(), supportedCodes, FALLBACK_LANGUAGE)
 
 export { FALLBACK_LANGUAGE }

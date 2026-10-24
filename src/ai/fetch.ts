@@ -42,14 +42,14 @@ const bodyToString = (body: BodyInit | null | undefined): string | undefined => 
 
 /**
  * Non-streaming calls go through Obsidian `requestUrl` (no CORS).
- * Streaming calls use global `fetch` so SSE can arrive incrementally.
+ * Streaming calls use `window.fetch` so SSE can arrive incrementally.
  */
 export const createObsidianAiFetch = (): typeof fetch => {
-  return async (input, init) => {
+  const obsidianFetch: typeof fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     const body = bodyToString(init?.body)
     const wantsStream = !!body && /"stream"\s*:\s*true/.test(body)
     if (wantsStream) {
-      return globalThis.fetch(input, init)
+      return window.fetch(input, init)
     }
     const response = await requestUrl({
       url: resolveUrl(input),
@@ -64,4 +64,5 @@ export const createObsidianAiFetch = (): typeof fetch => {
       headers: { 'content-type': contentType },
     })
   }
+  return obsidianFetch
 }

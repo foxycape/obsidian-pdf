@@ -4,9 +4,9 @@ export type MarkdownRuntime = {
   createRehypePlugins: () => unknown[]
 }
 
-type MarkdownGlobal = typeof globalThis & {
+type MarkdownGlobal = Window & {
   __foxycapeMarkdownRuntime?: MarkdownRuntime
 }
 
 export const readMarkdownRuntime = (): MarkdownRuntime | null =>
-  (globalThis as MarkdownGlobal).__foxycapeMarkdownRuntime ?? null
+  (window as MarkdownGlobal).__foxycapeMarkdownRuntime ?? null

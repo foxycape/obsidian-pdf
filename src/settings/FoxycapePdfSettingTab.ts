@@ -1,5 +1,6 @@
 import {
   PluginSettingTab,
+  requireApiVersion,
   Setting,
   type App,
   type ButtonComponent,
@@ -21,6 +22,10 @@ import type { FoxycapePdfPlugin } from '@/plugin/FoxycapePdfPlugin'
 import { showConfirmModal } from '@/ui/ConfirmModal'
 import { loadPdfLib } from '@/views/loadPdfModule'
 import { loadReaderBundle } from '@/views/loadReaderBundle'
+
+const refreshLegacySettings = (tab: { display(): void }) => {
+  tab.display()
+}
 
 const formatUsageDuration = (date: Date): string => {
   const year = date.getFullYear()
@@ -374,11 +379,11 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
 
   /** Obsidian 1.13 redraws from getSettingDefinitions(); older versions use display(). */
   private refreshSettings = () => {
-    if (typeof this.update === 'function') {
+    if (requireApiVersion('1.13.0')) {
       this.update()
       return
     }
-    this.display()
+    refreshLegacySettings(this)
   }
 
   private applyLicenseInput = async (value: string) => {

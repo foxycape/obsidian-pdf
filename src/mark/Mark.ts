@@ -151,7 +151,7 @@ export const buildMark = (
 };
 
 export const getFixedContentRange = (mark: Mark): FixedContentRange | undefined => {
-    const range = mark.contentRange as ContentRange | undefined;
+    const range = mark.contentRange;
     if (!range) {
         return undefined;
     }

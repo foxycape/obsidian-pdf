@@ -10,16 +10,17 @@ export type PdfRuntimeHost = {
 
 const HOST_KEY = '__foxycapePdfHost'
 
-type HostGlobal = typeof globalThis & {
-  __foxycapePdfHost?: PdfRuntimeHost
+type HostGlobal = Window & {
+  [HOST_KEY]?: PdfRuntimeHost
 }
+
+const hostWindow = (): HostGlobal => window
 
 export const installPdfHost = (host: PdfRuntimeHost): void => {
-  ;(globalThis as HostGlobal).__foxycapePdfHost = host
+  hostWindow()[HOST_KEY] = host
 }
 
-export const tryReadPdfHost = (): PdfRuntimeHost | null =>
-  (globalThis as HostGlobal).__foxycapePdfHost ?? null
+export const tryReadPdfHost = (): PdfRuntimeHost | null => hostWindow()[HOST_KEY] ?? null
 
 export const readPdfHost = (): PdfRuntimeHost => {
   const host = tryReadPdfHost()

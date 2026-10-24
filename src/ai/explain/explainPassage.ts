@@ -5,6 +5,7 @@ import { getAiRuntime } from '../runtime'
 import { upsertExplain } from '../passage/stores'
 import type { DexieStorage } from '@/storage/DexieStorage'
 import type { FixedContentRange } from '@foxycape/core/kernal/ContentRange'
+import { splitSentences } from '../splitSentences'
 
 const clip = (text: string) => {
   const trimmed = text.trim()
@@ -20,11 +21,7 @@ export const normalizeExplainPassage = (content: string, detail: ExplainDetail):
     .map((line) => line.replace(/^\s*(?:[-*]|\d+\.)\s+/, '').trim())
     .filter(Boolean)
   const text = lines.join(' ').replace(/\s+/g, ' ').trim()
-  const sentences = text
-    .split(/(?<=[。！？.!?])(?:\s+)?/)
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .slice(0, sentenceLimit(detail))
+  const sentences = splitSentences(text).slice(0, sentenceLimit(detail))
   const joiner = sentences.some((item) => /[。！？]$/.test(item)) ? '' : ' '
   return sentences.join(joiner)
 }

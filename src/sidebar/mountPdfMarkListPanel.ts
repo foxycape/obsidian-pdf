@@ -39,7 +39,7 @@ export const mountPdfMarkListPanel = (options: {
     reader: markRaw(options.reader),
     getMarker: options.getMarker,
     open: options.open,
-    requestedTab: 'highlights' as MarksTabId,
+    requestedTab: 'highlights',
     tabNonce: 0,
     t: options.t,
     onClose: options.onClose,

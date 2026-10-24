@@ -39,10 +39,10 @@ export const translateWithEdge = async (
   const onAbort = () => controller.abort()
   signal?.addEventListener('abort', onAbort)
   try {
-    const raw = await httpClient.post(url, [source], {
+    const raw = (await httpClient.post(url, [source], {
       requestBodyType: 'raw',
       abortController: controller,
-    })
+    })) as unknown
     return parseEdge(raw)
   } finally {
     signal?.removeEventListener('abort', onAbort)

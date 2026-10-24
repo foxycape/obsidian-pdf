@@ -50,7 +50,7 @@ export const mountAiChatPanel = (options: {
     open: (reader, getMarker, draft) => {
       chrome.value?.openChat(reader, getMarker, draft)
     },
-    isOpen: () => chrome.value?.isChatOpen() ?? false,
+    isOpen: () => chrome.value?.isChatOpen() === true,
     openAccess: (mode) => {
       chrome.value?.openAccess(mode)
     },

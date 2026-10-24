@@ -1,7 +1,7 @@
 import { toRaw, unref } from 'vue'
 
 const isPlainObject = (value: object) => {
-  const proto = Object.getPrototypeOf(value)
+  const proto = Reflect.getPrototypeOf(value)
   return proto === Object.prototype || proto === null
 }
 
@@ -13,11 +13,11 @@ const isBinary = (value: object) =>
  * Keeps ArrayBuffer / Date / Map / Set intact; only rebuilds plain objects and arrays.
  */
 export const toStorageValue = <T>(value: T, seen = new WeakMap<object, unknown>()): T => {
-  const unwrapped = unref(value) as T
+  const unwrapped = unref(value)
   if (unwrapped === null || unwrapped === undefined || typeof unwrapped !== 'object') {
     return unwrapped
   }
-  const raw = toRaw(unwrapped) as T & object
+  const raw = toRaw(unwrapped)
   if (seen.has(raw)) {
     return seen.get(raw) as T
   }

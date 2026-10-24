@@ -7,8 +7,6 @@ export type LlmToolCall = {
   function: { name: string; arguments: string }
 }
 
-export type LlmFinishReason = 'stop' | 'length' | 'tool_calls' | 'content_filter' | 'function_call'
-
 export type LlmAudioOutput = {
   id: string
   data: string
@@ -31,7 +29,7 @@ export type AssistantContentPart = {
   audio?: LlmAudioOutput
   annotations?: Array<{ type: 'url_citation'; url_citation: LlmUrlCitation }>
   usage?: TokenUsage
-  finishReason?: LlmFinishReason | string
+  finishReason?: string
 }
 
 export type ToolContentPart = {

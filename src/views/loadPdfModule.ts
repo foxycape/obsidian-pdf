@@ -11,7 +11,7 @@ import { evaluateObsidianCjs } from '@/views/evaluateObsidianCjs'
 
 const evaluatePdfLib = (source: string): void => {
   evaluateObsidianCjs(source, 'pdf-lib.js')
-  const runtime = globalThis as typeof globalThis & Record<string, object | undefined>
+  const runtime = window as unknown as Window & Record<string, object | undefined>
   if (!runtime[FOXYCAPE_PDFJS_LIB_GLOBAL] || !runtime[FOXYCAPE_PDFJS_VIEWER_GLOBAL]) {
     throw new Error('pdf-lib.js did not install the PDF.js runtime.')
   }
@@ -35,7 +35,7 @@ export const loadPdfLib = async (
   plugin: Plugin,
   onProgress?: DownloadProgressHandler,
 ): Promise<void> => {
-  if (cached) {
+  if (cached !== null) {
     await cached
     return
   }

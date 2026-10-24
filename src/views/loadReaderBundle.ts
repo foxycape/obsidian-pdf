@@ -32,9 +32,9 @@ const evaluateReaderBundle = (source: string): ReaderBundle => {
     typeof exported === 'object' &&
     exported !== null &&
     'default' in exported &&
-    isReaderBundle((exported as { default: unknown }).default)
+    isReaderBundle(exported.default)
   ) {
-    return (exported as { default: ReaderBundle }).default
+    return exported.default
   }
   throw new Error('Reader bundle did not export attachPdfReader.')
 }
@@ -44,7 +44,7 @@ const evaluateReaderBundle = (source: string): ReaderBundle => {
  * reader-bundle.js. Call only after pdf-lib.js has installed the PDF.js globals.
  */
 export const loadReaderBundle = (plugin: Plugin): Promise<ReaderBundle> => {
-  if (cached) {
+  if (cached !== null) {
     return cached
   }
   const translate = (plugin as Plugin & { t?: (key: string, fallback: string) => string }).t

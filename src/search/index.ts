@@ -3,7 +3,6 @@ export { PdfSearcher } from './PdfSearcher'
 export {
   PDF_SEARCH_HIT_ACTIVE_CLASS,
   PDF_SEARCH_HIT_CLASS,
-  PDF_SEARCH_HIT_ID_ATTR,
   PDF_SEARCH_LAYER_CLASS,
 } from './PdfSearchOverlay'
 export {

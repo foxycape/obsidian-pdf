@@ -14,7 +14,7 @@ export const parseRelatedQuestions = (content: string): string[] => {
       return value.filter((item): item is string => typeof item === 'string').map((item) => item.trim()).filter(Boolean).slice(0, 3)
     }
     if (value && typeof value === 'object' && 'questions' in value) {
-      return read((value as { questions: unknown }).questions)
+      return read(value.questions)
     }
     return []
   }

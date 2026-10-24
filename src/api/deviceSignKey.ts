@@ -44,7 +44,7 @@ const idbPut = async (db: IDBDatabase, value: StoredSignKey): Promise<void> =>
   })
 
 const requireSubtle = (): SubtleCrypto => {
-  const subtle = globalThis.crypto?.subtle
+  const subtle = window.crypto?.subtle
   if (!subtle) {
     throw new Error('WebCrypto is unavailable; cannot sign API requests.')
   }

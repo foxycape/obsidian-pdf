@@ -1,4 +1,5 @@
-import { getLanguage } from 'obsidian'
+import { requestUrl } from 'obsidian'
+import { readAppLanguage } from '@/i18n/readAppLanguage'
 import { tryGetAiRuntime } from '../runtime'
 import supportedLanguagesJson from '@/i18n/supported_languages.json'
 
@@ -46,7 +47,7 @@ const asLanguages = (value: unknown): ListedLanguage[] => {
 }
 
 export const loadEdgeLanguages = async (): Promise<ListedLanguage[]> => {
-  const ui = getLanguage() || 'en'
+  const ui = readAppLanguage()
   if (memory?.ui === ui && memory.languages.length > 0) {
     return memory.languages
   }
@@ -59,13 +60,15 @@ export const loadEdgeLanguages = async (): Promise<ListedLanguage[]> => {
     }
   }
   try {
-    const response = await fetch(LANGUAGES_URL, {
+    const response = await requestUrl({
+      url: LANGUAGES_URL,
       headers: { 'Accept-Language': ui, Accept: 'application/json' },
+      throw: false,
     })
-    if (!response.ok) {
+    if (response.status < 200 || response.status >= 300) {
       return fallbackLanguages()
     }
-    const languages = asLanguages(await response.json())
+    const languages = asLanguages(response.json as unknown)
     if (!languages.length) {
       return fallbackLanguages()
     }

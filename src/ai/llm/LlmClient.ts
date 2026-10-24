@@ -272,16 +272,7 @@ export class LlmClient {
       if (request.signal?.aborted) {
         throw new DOMException('Aborted', 'AbortError')
       }
-      const delta = chunk.choices[0]?.delta as {
-        content?: string
-        reasoning_content?: string
-        reasoning?: string
-        tool_calls?: {
-          index?: number
-          id?: string
-          function?: { name?: string; arguments?: string }
-        }[]
-      } | undefined
+      const delta = chunk.choices[0]?.delta
       let changed = false
       if (delta?.content) {
         content += delta.content

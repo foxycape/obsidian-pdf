@@ -9,7 +9,7 @@ const runtime: MarkdownRuntime = {
   ],
 }
 
-const host = globalThis as typeof globalThis & {
+const host = window as Window & {
   __foxycapeMarkdownRuntime?: MarkdownRuntime
   dispatchEvent?: (event: Event) => boolean
 }

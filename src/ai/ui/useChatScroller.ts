@@ -17,7 +17,7 @@ export const useChatScroller = (scrollerEl: Ref<HTMLElement | null>) => {
   let pinned = false
   let lastScrollTime = 0
   let observer: ResizeObserver | undefined
-  let throttleTimer: ReturnType<typeof setTimeout> | undefined
+  let throttleTimer: number | undefined
 
   const follow = async (type?: 'auto' | 'force') => {
     lastScrollTime = Date.now()
@@ -41,7 +41,7 @@ export const useChatScroller = (scrollerEl: Ref<HTMLElement | null>) => {
     const wait = SCROLL_THROTTLE_MS - (now - lastScrollTime)
     if (wait > 0) {
       if (!throttleTimer) {
-        throttleTimer = setTimeout(() => {
+        throttleTimer = window.setTimeout(() => {
           throttleTimer = undefined
           void follow(type)
         }, wait)
@@ -54,7 +54,7 @@ export const useChatScroller = (scrollerEl: Ref<HTMLElement | null>) => {
   const unpin = () => {
     pinned = false
     if (throttleTimer) {
-      clearTimeout(throttleTimer)
+      window.clearTimeout(throttleTimer)
       throttleTimer = undefined
     }
     observer?.disconnect()

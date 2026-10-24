@@ -20,7 +20,6 @@ import {
   findOverlayIdAtPoint,
   paintRects,
   removeOverlaysById,
-  type OverlayRect,
 } from '@/mark/overlay'
 import {
   PDF_MARK_LAYER_CLASS,
@@ -262,7 +261,7 @@ export class PdfHighlighter implements IHighlighter {
     ]
       .filter(Boolean)
       .join(' ')
-    paintRects(layer, item.rects as OverlayRect[], {
+    paintRects(layer, item.rects, {
       id: item.id,
       className,
       idAttr: MARK_HIGHLIGHT_ID_ATTR,

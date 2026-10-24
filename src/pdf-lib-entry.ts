@@ -5,7 +5,7 @@ import {
   FOXYCAPE_PDFJS_VIEWER_GLOBAL,
 } from '@/reader/pdfjsGlobalNames'
 
-const runtime = globalThis as typeof globalThis & Record<string, object | undefined>
+const runtime = window as unknown as Window & Record<string, object | undefined>
 
 runtime[FOXYCAPE_PDFJS_LIB_GLOBAL] = pdfjsLib
 runtime[FOXYCAPE_PDFJS_VIEWER_GLOBAL] = pdfjsViewer

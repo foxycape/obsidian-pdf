@@ -17,10 +17,13 @@ export const bindReadingProgress = (reader: Reader, store: IReadingProgressStore
     }
     await store.save(simpleId, progress)
   }
+  const onProgressChange = (progress: Progress) => {
+    void onProgress(progress)
+  }
   const onDisposed = () => {
-    reader.events.off(EventNames.ProgressChange, onProgress)
+    reader.events.off(EventNames.ProgressChange, onProgressChange)
     reader.events.off(EventNames.ReaderDisposed, onDisposed)
   }
-  reader.events.on(EventNames.ProgressChange, onProgress)
+  reader.events.on(EventNames.ProgressChange, onProgressChange)
   reader.events.on(EventNames.ReaderDisposed, onDisposed)
 }

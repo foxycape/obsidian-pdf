@@ -19,22 +19,15 @@ type NodeFs = {
 }
 
 const resolveNodeFs = (): NodeFs | undefined => {
-  const scopes: unknown[] = [globalThis]
-  if (typeof window !== 'undefined') {
-    scopes.push(window)
+  const requireFn = (window as Window & { require?: (id: string) => unknown }).require
+  if (typeof requireFn !== 'function') {
+    return undefined
   }
-  for (const scope of scopes) {
-    const requireFn = (scope as { require?: (id: string) => unknown } | undefined)?.require
-    if (typeof requireFn !== 'function') {
-      continue
-    }
-    try {
-      return requireFn('fs') as NodeFs
-    } catch {
-      return undefined
-    }
+  try {
+    return requireFn('fs') as NodeFs
+  } catch {
+    return undefined
   }
-  return undefined
 }
 
 /**

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import { getLanguage } from 'obsidian'
+import { readAppLanguage } from '@/i18n/readAppLanguage'
 import type { Reader } from '@foxycape/core/kernal'
 import type { FixedContentRange } from '@foxycape/core/kernal/ContentRange'
 import { buildMark, getFixedContentRange, type IMarker } from '@/mark'
@@ -202,7 +202,7 @@ const metaParts = (row: Row): MetaPart[] => {
   }
   if (row.updatedAt) {
     const display = formatDisplayDate(row.updatedAt, {
-      locale: getLanguage() || 'en',
+      locale: readAppLanguage(),
       todayLabel: props.t('pdf_date_today', 'Today'),
       yesterdayLabel: props.t('pdf_date_yesterday', 'Yesterday'),
     })

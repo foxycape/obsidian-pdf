@@ -88,7 +88,7 @@ export const upsertTranslate = async (
     updatedAt: now,
     ownerId: ANONYMOUS_OWNER_ID,
   }
-  await table.put(toStorageValue(mark) as unknown as Record<string, unknown>)
+  await table.put(toStorageValue(mark))
   return mark
 }
 
@@ -142,7 +142,7 @@ const upsertDetailMark = async <T extends { markId: string; results: { id: strin
     updatedAt: now,
     ownerId: ANONYMOUS_OWNER_ID,
   })
-  await table.put(toStorageValue({ ...mark }) as Record<string, unknown>)
+  await table.put(toStorageValue({ ...mark }))
   return mark
 }
 

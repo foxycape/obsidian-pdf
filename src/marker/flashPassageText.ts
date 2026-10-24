@@ -60,6 +60,16 @@ const compactIndex = (haystack: string, needle: string) => {
   return { start, length: end - start }
 }
 
+type PdfTextPage = {
+  getTextContent: (options: { disableNormalization: boolean }) => Promise<{ items?: unknown }>
+}
+
+const isPdfTextPage = (value: unknown): value is PdfTextPage =>
+  typeof value === 'object' &&
+  value !== null &&
+  'getTextContent' in value &&
+  typeof value.getTextContent === 'function'
+
 const findRectsOnPage = async (
   renderer: IPdfRenderer,
   pageNumber: number,
@@ -73,12 +83,13 @@ const findRectsOnPage = async (
   await waitForPageRendered(renderer, pageNumber)
   const pageEl = await waitForTextLayer(renderer, pageNumber)
   const pageView = renderer.getPageView(pageNumber)
-  const pdfPage = pageView?.pdfPage
-  if (!pageEl || !pdfPage) {
+  const pdfPage = pageView?.pdfPage as unknown
+  if (!pageEl || !isPdfTextPage(pdfPage)) {
     return []
   }
   const textContent = await pdfPage.getTextContent({ disableNormalization: true })
-  const mapping = buildTextLayerMapping(textContent.items)
+  const items = Array.isArray(textContent.items) ? textContent.items : []
+  const mapping = buildTextLayerMapping(items)
   const located = compactIndex(mapping.texts.join(''), needle)
   if (!located) {
     return []

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { getLanguage } from 'obsidian'
+import { readAppLanguage } from '@/i18n/readAppLanguage'
 import { cutString } from '@foxycape/core/kernal/common/text'
 import type { IMarker, Mark } from '@/mark'
 import { DEFAULT_MARK_COLORS } from '@/marker/PdfMarkConstants'
@@ -37,7 +37,7 @@ const textStyle = computed(() => {
 
 const displayDate = computed(() =>
   formatDisplayDate(props.mark.updatedAt, {
-    locale: getLanguage() || 'en',
+    locale: readAppLanguage(),
     todayLabel: props.t('pdf_date_today', 'Today'),
     yesterdayLabel: props.t('pdf_date_yesterday', 'Yesterday'),
   }),

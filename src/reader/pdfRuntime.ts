@@ -19,7 +19,7 @@ export const getLegacyMarkCatalog = (): LegacyMarkCatalog => {
 
 /** Open the database and classify leftover mark tables before the first PDF session. */
 export const ensurePdfRuntime = async (): Promise<void> => {
-  if (!ready) {
+  if (ready === null) {
     const opening = (async () => {
       const store = getPdfStorage()
       getPdfWorker()

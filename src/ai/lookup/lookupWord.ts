@@ -5,6 +5,7 @@ import { getLlm } from '../llm'
 import { upsertLookup } from '../passage/stores'
 import type { ExplainDetail } from '../passage/types'
 import { getAiRuntime } from '../runtime'
+import { splitSentences } from '../splitSentences'
 
 const clip = (text: string) => {
   const trimmed = text.trim()
@@ -15,11 +16,7 @@ const sentenceLimit = (detail: ExplainDetail) => (detail === 'detailed' ? 10 : 2
 
 const normalizeLookup = (content: string, detail: ExplainDetail): string => {
   const text = content.replace(/\s+/g, ' ').trim()
-  const sentences = text
-    .split(/(?<=[。！？.!?])(?:\s+)?/)
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .slice(0, sentenceLimit(detail))
+  const sentences = splitSentences(text).slice(0, sentenceLimit(detail))
   const joiner = sentences.some((item) => /[。！？]$/.test(item)) ? '' : ' '
   return sentences.join(joiner)
 }

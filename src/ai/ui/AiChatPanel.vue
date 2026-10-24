@@ -19,7 +19,8 @@ import {
   Trash2,
   X,
 } from '@lucide/vue'
-import { getLanguage, Notice, TFile, type App } from 'obsidian'
+import { Notice, TFile, type App } from 'obsidian'
+import { readAppLanguage } from '@/i18n/readAppLanguage'
 import { calcToolbarPosition } from '@foxycape/core/kernal/html/geometry'
 import type { Reader } from '@foxycape/core/kernal'
 import type { IMarker } from '@/mark'
@@ -168,7 +169,7 @@ const title = computed(() => chat.value?.title || props.t('ai_chat_title', 'Ask 
 
 const chatTime = (value: number) =>
   formatDisplayDate(value, {
-    locale: getLanguage() || 'en',
+    locale: readAppLanguage(),
     todayLabel: props.t('pdf_date_today', 'Today'),
     yesterdayLabel: props.t('pdf_date_yesterday', 'Yesterday'),
   })
