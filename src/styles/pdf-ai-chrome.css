@@ -409,8 +409,21 @@ button.fpdf-icon-btn {
 }
 
 .foxycape-pdf-ai-balance {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   margin-top: 0.375rem;
   color: var(--text-normal);
+}
+
+button.foxycape-pdf-ai-balance__buy {
+  height: auto;
+  margin: 0;
+  padding: 0.15rem 0.5rem;
+  font-size: var(--font-ui-smaller);
+  line-height: 1.4;
+  white-space: nowrap;
 }
 
 .foxycape-pdf-ai-usage-hint {

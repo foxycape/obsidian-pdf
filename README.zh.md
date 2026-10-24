@@ -3,9 +3,9 @@
   <h1>Foxycape PDF</h1>
 </div>
 
-面向 Obsidian 的 PDF 阅读器：划线、引用与深度链接都能回到原文，和笔记工作流连在一起。
+面向 Obsidian 的 PDF 阅读器：划线、引用与深度链接都能回到原文，和笔记工作流连在一起。读论文或学习资料时，翻译、查词、解释和提问都在当前 PDF 里完成，不用另开网页或别的应用。
 
-[English](README.md) | [中文](README.zh.md)
+[English](README.md) | [العربية](README.ar.md) | [Deutsch](README.de.md) | [Español](README.es.md) | [Français](README.fr.md) | [Bahasa Indonesia](README.id.md) | [Italiano](README.it.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Nederlands](README.nl.md) | [Polski](README.pl.md) | [Português](README.pt.md) | [Português (Brasil)](README.pt-BR.md) | [Русский](README.ru.md) | [ไทย](README.th.md) | [Türkçe](README.tr.md) | [Українська](README.uk.md) | [Tiếng Việt](README.vi.md) | [中文](README.zh.md) | [繁體中文](README.zh-TW.md)
 
 ## 为什么需要它
 
@@ -17,9 +17,37 @@
 - 深色主题下，浅色 PDF 页很刺眼。
 - 换阅读器后，已有的页码/选区链接可能失效。
 
+读论文或学习资料时，生词、长句和陌生概念会卡住，翻译、词典和提问却要换到别的工具，页码还得自己对。
+
 Foxycape PDF 在 Obsidian 内补上这些缺口。
 
 ## 功能特点
+
+### 在当前页读懂论文和学习资料
+
+#### 一篇外文论文，从扫读到读懂
+
+选中一段即可翻译，先看懂大意。默认用微软翻译，扫读不占 AI 流量；要更贴近专业表述时，换成 AI，并可在速度优先和质量优先之间切换，目标语言自选。
+
+这段里若还有一个词拿不准，就查这个词：读音用国际音标、拼音或假名标出，并给出它在这一段里的意思。选中的是整句时，先给句意，再点出难词。
+
+这段还是没读懂，用「解释这段」把这一段讲开，方便接着往下读。简要一两句就够时继续翻页；要展开再选详细。还想追问，点「了解更多」，这段原文和已有解释会进入侧栏的问 AI。
+
+译文、解释和查词都留在这份 PDF 的侧边列表里，之后可以筛选并跳回那一页。需要记到笔记时，在设置里分别打开写入（默认关闭），追加到与 PDF 同名的 Markdown。
+
+<!-- GIF: docs/gifs/read-in-place.gif — 选中后翻译、查词、解释 -->
+
+#### 一份长资料，边读边问
+
+选中一段即可问 AI，问题会带上这段原文。文档较长时，会先问要不要分析这份文档：同意后，回答结合文档里的段落，引用可以点回对应页；不同意就按一般知识回答，之后仍可在菜单里选「分析此书」。
+
+从引用回到某一页后，那一段若还没读懂，翻译、查词和解释仍可接着用。答完后会给出可继续点的相关问题。对话按这份 PDF 保存，下次打开还能搜历史、开新对话。
+
+<!-- GIF: docs/gifs/ask-while-reading.gif — 问当前 PDF，引用跳回对应页 -->
+
+### 模型与额度
+
+解释、查词、AI 翻译和问 AI 用当前模型。官方模型的用量记在许可证的 AI 流量上，也可以填写自己的接口地址和 API Key。微软翻译不占这份额度。许可证可以免费领取，流量也可以购买，或通过分享获取。
 
 ### 划线同步笔记
 
@@ -126,23 +154,13 @@ npm run link       # 将 dist/ junction 到 vault 的 .obsidian/plugins/foxycape
 
 在 `.env` 中设置 `OBSIDIAN_PLUGIN_DIR`（见 `.env.example`）后，`npm run dev` 会在每次构建成功时把产物拷到该目录；`npm run link` 也读取同一变量，未设置时仍使用默认 vault 路径。进程环境变量优先于文件。
 
-社区安装只会拿到 `main.js`、`manifest.json` 和 `styles.css`。启用插件时，语言文件有变化才下载 `locales.zip`，并用本机密钥注册设备。打开 PDF 时按标记决定下载：`pdfjs.zip`（PDF.js 库和 worker）只在 **PDF.js 版本**变了才下载，`reader-bundle.zip`（阅读器、数据库、哈希和 KaTeX 字体）在 **插件版本**变了才下载。两个都要下时并行下载，进度加在一起，界面仍是「正在初始化…」。只缺其中一个就只下那一个。本地已有且标记一致（包括 `npm run link`）会直接打开，不显示这一层。设置页可以选择语言：默认是 Obsidian 当前语言，支持列表里没有时用英文；手动选过之后就固定为所选语言。字符映射与标准字体（约 1.5 MB）仍按 PDF.js 版本在后台从 `pdfjs-assets.zip` 下载。`markdown.js`（KaTeX 和代码高亮）同样在后台下载，只有这份文件的内容版本变了才重新下载。没下完时聊天正文仍然显示，只是暂时没有公式和语法色。
-
-## 发布（Obsidian 社区插件）
-
-1. 在 `package.json` 中提升 `version`（semver `x.y.z`）。构建会同步到 `manifest.json` / `versions.json`。
-2. 提交后创建 GitHub Release，**tag 必须与该 version 完全一致**（如 `3.3.6`，不要加 `v` 前缀）。
-3. 上传 `dist/main.js`、`dist/manifest.json`、`dist/styles.css`、`dist/pdfjs.zip`、`dist/reader-bundle.zip`、`dist/locales.zip`、`dist/pdfjs-assets.zip`，以及 `dist/markdown.js`。
-
-推送版本 tag 会触发 [`.github/workflows/release.yml`](.github/workflows/release.yml) 自动构建并上传上述资产。
-
 ## 许可证
 
 本仓库为 **源码可见（source available）**，适用 [Foxycape Plugins License Agreement](LICENSE.md)。
 
 - 允许使用、修改与再分发，但限制将其做成面向多人的、与 Foxycape 商业产品构成竞争的 Obsidian（或同类笔记应用）通用产品——包括去掉试用/授权校验后的免费公开上架。
 - 私人使用、单一组织内部使用，以及非通用分发的定制/客户项目不受该限制。
-- 若需要超出该协议的权利，见 [定价页](https://www.foxycape.com/obsidian/pricing)，或联系 **company@tiefeiying.com**。
+- 若需要超出该协议的权利，联系 **company@tiefeiying.com**。
 
 第三方组件（如 PDF.js）以及单独发布的包（如 MIT 许可的 `@foxycape/core`）仍遵循各自许可证。
 

@@ -3,9 +3,9 @@
   <h1>Foxycape PDF</h1>
 </div>
 
-A PDF reader for Obsidian that stays connected to your notes — highlights, citations, and deep links that take you back to the source.
+A PDF reader for Obsidian that stays connected to your notes — highlights, citations, and deep links that take you back to the source. When you read a paper or study material, translation, word lookup, explanations, and questions all happen in the PDF you already have open.
 
-[English](README.md) | [中文](README.zh.md)
+[English](README.md) | [العربية](README.ar.md) | [Deutsch](README.de.md) | [Español](README.es.md) | [Français](README.fr.md) | [Bahasa Indonesia](README.id.md) | [Italiano](README.it.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Nederlands](README.nl.md) | [Polski](README.pl.md) | [Português](README.pt.md) | [Português (Brasil)](README.pt-BR.md) | [Русский](README.ru.md) | [ไทย](README.th.md) | [Türkçe](README.tr.md) | [Українська](README.uk.md) | [Tiếng Việt](README.vi.md) | [中文](README.zh.md) | [繁體中文](README.zh-TW.md)
 
 ## Why
 
@@ -17,9 +17,37 @@ Reading PDFs inside Obsidian often breaks the note-taking loop:
 - Light PDF pages feel harsh in a dark vault theme.
 - Switching readers can break page/selection links you already use.
 
-Foxycape PDF addresses these gaps without asking you to leave Obsidian.
+In a paper or a study text, an unfamiliar word, a long sentence, or a new concept brings reading to a stop. Translation, a dictionary, and questions belong to another tool, and the page still has to be matched by hand.
+
+Foxycape PDF fills these gaps inside Obsidian.
 
 ## Features
+
+### Understand a paper or study text on this page
+
+#### A paper in another language, from a skim to a close reading
+
+Select a passage to translate it and catch the sense first. Microsoft translation is the default and does not use AI traffic. For wording closer to the field, switch to AI, then choose Speed first or Quality first and pick the target language.
+
+If a word in that passage is still unclear, use Look up. Pronunciation is shown in IPA, pinyin, or kana, together with the meaning it has in this passage. When the selection is a whole sentence, the sentence meaning comes first, then the difficult words.
+
+If the passage is still unclear, use Explain to open it up so you can keep reading. Brief — a sentence or two — is enough to turn the page. Choose Detailed when you want more. Learn more sends the passage and the explanation you already have into Ask AI in the side panel.
+
+Translations, explanations, and lookups stay in the list for this PDF. You can filter them and jump back to the page. To keep them in a note, turn writing on for each one in settings (off by default). They are appended to the Markdown file with the same name as the PDF.
+
+<!-- GIF: docs/gifs/read-in-place.gif — select text, then translate, look up, or explain -->
+
+#### Ask while you read a long text
+
+Select a passage and ask AI. The question includes that passage. On a long document, Foxycape first asks whether to analyze it. If you agree, the answer draws on passages in the document, and a citation opens the page. If you decline, the answer uses general knowledge. You can choose **Analyze this book** from the menu later.
+
+When a citation brings you back to a page and that passage is still unclear, translate it, look it up, or explain it, then keep reading. After an answer, related questions are there to continue. Chats are saved with this PDF, so next time you can search them or start a new one.
+
+<!-- GIF: docs/gifs/ask-while-reading.gif — ask about the open PDF and jump back from a citation -->
+
+### Model and traffic
+
+Explain, lookup, AI translation, and Ask AI use the model you have selected. Usage of the official model is counted against the AI traffic on your license. You can also enter your own Base URL and API key. Microsoft translation does not use that traffic. A license can be claimed for free. Traffic can be purchased, or received by sharing.
 
 ### Highlight → note sync
 
@@ -126,23 +154,13 @@ npm run link       # junction dist/ into your vault's .obsidian/plugins/foxycape
 
 Set `OBSIDIAN_PLUGIN_DIR` in `.env` (see `.env.example`). `npm run dev` copies the build there after each successful watch rebuild; `npm run link` reads the same variable and still falls back to the default vault path when it is unset. A process environment variable wins over the file.
 
-Community installs only receive `main.js`, `manifest.json`, and `styles.css`. Enabling the plugin downloads `locales.zip` when the language files changed, and registers this device with its own signing key. Opening a PDF checks two packs: `pdfjs.zip` (the PDF.js library and worker) downloads only when the **PDF.js version** changed, and `reader-bundle.zip` (the reader, database, hashing, and KaTeX fonts) downloads when the **plugin version** changed. When both are needed they download together and the progress bytes are added into the same “Initializing…” line. A pack that is already current is skipped. A matching local copy — including `npm run link` — opens immediately with no overlay. The settings page has a language dropdown; it starts on Obsidian’s language, or English when that language is not available, and stays on a language you pick. Cmaps and standard fonts (~1.5 MB) still download in the background from `pdfjs-assets.zip`, also keyed by PDF.js version. `markdown.js` (KaTeX and syntax highlighting) downloads the same way, in the background, and only when that file’s content id changes. Chat text still renders if it is missing.
-
-## Release (Obsidian Community)
-
-1. Bump `version` in `package.json` (semver `x.y.z`). Build syncs it into `manifest.json` / `versions.json`.
-2. Commit, then create a GitHub release whose **tag equals that version** (e.g. `3.3.6`, no `v` prefix).
-3. Attach `dist/main.js`, `dist/manifest.json`, `dist/styles.css`, `dist/pdfjs.zip`, `dist/reader-bundle.zip`, `dist/locales.zip`, `dist/pdfjs-assets.zip`, and `dist/markdown.js`.
-
-Pushing a version tag runs [`.github/workflows/release.yml`](.github/workflows/release.yml), which builds and uploads those assets.
-
 ## License
 
 This repository is **source available** under the [Foxycape Plugins License Agreement](LICENSE.md).
 
 - You may use, modify, and redistribute the code, with a restriction on general-purpose competing Obsidian (or similar) offerings — including free public listings that strip trial/license controls.
 - Private use, internal use within a single organization, and bespoke client-specific work remain allowed.
-- For rights beyond that Agreement, see [pricing](https://www.foxycape.com/obsidian/pricing) or contact **company@tiefeiying.com**.
+- For rights beyond that Agreement, contact **company@tiefeiying.com**.
 
 Third-party components (for example PDF.js) and separately published packages (for example `@foxycape/core` under MIT) keep their own licenses.
 

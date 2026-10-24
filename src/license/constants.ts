@@ -31,10 +31,10 @@ export const LICENSE_API_URL = `${API_ENDPOINT}${LICENSE_VERIFY_PATH}`
 export const DEVICE_REGIST_PATH = '/reader/device/regist'
 
 /** Public purchase / license info page. */
-export const LICENSE_PURCHASE_URL = 'https://www.foxycape.com/obsidian/pricing'
+export const LICENSE_PURCHASE_URL = 'https://obsidian.foxycape.com/license'
 
-/** AI traffic packs are sold on the same page until a dedicated URL exists. */
-export const AI_TRAFFIC_PURCHASE_URL = LICENSE_PURCHASE_URL
+/** AI traffic pack catalog. */
+export const AI_TRAFFIC_PURCHASE_URL = 'https://obsidian.foxycape.com/pricing'
 
 /** Free license claim page. */
 export const FREE_LICENSE_URL = 'https://obsidian.foxycape.com/license'

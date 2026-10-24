@@ -12,6 +12,7 @@ import { ensureLocalesPack, hasLocalesPack } from '@/assets/ensureRuntimeAssets'
 import { getObsidianLocaleCode } from '@/i18n/resolveObsidianLanguage'
 import type { PdfUsagePoint } from '@/views/pdfBundleModule'
 import {
+  AI_TRAFFIC_PURCHASE_URL,
   LICENSE_INPUT_DEBOUNCE_MS,
   LICENSE_PURCHASE_URL,
   type LicenseValidationOutcome,
@@ -565,7 +566,8 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
     const chartEl = el.createDiv({ cls: 'foxycape-pdf-ai-usage' })
     if (!this.plugin.settings.licenseValid) {
       this.usageRequestId += 1
-      balanceEl.setText(
+      this.renderBalanceLine(
+        balanceEl,
         this.plugin.t('plugin_settings_ai_balance', 'AI usage balance: {balance}', {
           balance: formatTokenAmount(0),
         }),
@@ -586,7 +588,8 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
       if (requestId !== this.usageRequestId) {
         return
       }
-      balanceEl.setText(
+      this.renderBalanceLine(
+        balanceEl,
         this.plugin.t('plugin_settings_ai_usage_unavailable', 'Usage is unavailable right now'),
       )
     }
@@ -605,7 +608,8 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
         return
       }
       const balance = formatTokenAmount(user.availableAITokenCount ?? 0)
-      balanceEl.setText(
+      this.renderBalanceLine(
+        balanceEl,
         this.plugin.t('plugin_settings_ai_balance', 'AI usage balance: {balance}', { balance }),
       )
       const points = await bundle.loadLicenseAiUsage(this.plugin.apiClient, user.accessToken)
@@ -624,6 +628,19 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
       console.warn('[Foxycape PDF] failed to load AI usage', error)
       unavailable()
     }
+  }
+
+  private renderBalanceLine = (balanceEl: HTMLElement, text: string) => {
+    balanceEl.empty()
+    balanceEl.createSpan({ text })
+    const button = balanceEl.createEl('button', {
+      cls: 'foxycape-pdf-ai-balance__buy',
+      text: this.plugin.t('ai_buy_quota', 'Buy an AI traffic pack'),
+    })
+    button.type = 'button'
+    button.addEventListener('click', () => {
+      window.open(AI_TRAFFIC_PURCHASE_URL, '_blank', 'noopener')
+    })
   }
 
   private drawUsageChart = (chartEl: HTMLElement, points: PdfUsagePoint[]) => {

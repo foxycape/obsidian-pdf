@@ -19,7 +19,7 @@ This restriction does not limit private use, internal use within a single organi
 
 If you need rights beyond this Agreement (for example, to distribute a general-purpose Obsidian product or service that would otherwise violate condition 2), you may request a separate commercial license from the Licensor.
 
-- Purchase / product info: https://www.foxycape.com/obsidian/pricing
+- Purchase / product info: https://obsidian.foxycape.com/pricing
 - Commercial licensing contact: company@tiefeiying.com
 
 ## Third-party and separate components
