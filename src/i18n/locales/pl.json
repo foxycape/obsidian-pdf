@@ -200,6 +200,7 @@
   "ai_translate_ai": "AI",
   "ai_explain_brief": "Krótko",
   "ai_explain_detailed": "Szczegółowo",
+  "ai_detail_label": "Domyślny poziom szczegółowości",
   "ai_chat_title": "Zapytaj AI",
   "ai_chat_placeholder": "Zapytaj AI …",
   "ai_chat_send": "Wyślij",

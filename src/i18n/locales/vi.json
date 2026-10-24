@@ -200,6 +200,7 @@
   "ai_translate_ai": "AI",
   "ai_explain_brief": "Ngắn gọn",
   "ai_explain_detailed": "Chi tiết",
+  "ai_detail_label": "Mức chi tiết mặc định",
   "ai_chat_title": "Hỏi AI",
   "ai_chat_placeholder": "Hỏi AI …",
   "ai_chat_send": "Gửi",

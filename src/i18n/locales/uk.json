@@ -200,6 +200,7 @@
   "ai_translate_ai": "AI",
   "ai_explain_brief": "Стисло",
   "ai_explain_detailed": "Докладно",
+  "ai_detail_label": "Деталізація за замовчуванням",
   "ai_chat_title": "Запитати ШІ",
   "ai_chat_placeholder": "Запитати ШІ …",
   "ai_chat_send": "Надіслати",

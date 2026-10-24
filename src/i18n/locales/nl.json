@@ -200,6 +200,7 @@
   "ai_translate_ai": "AI",
   "ai_explain_brief": "Kort",
   "ai_explain_detailed": "Uitgebreid",
+  "ai_detail_label": "Standaarddetail",
   "ai_chat_title": "Vraag AI",
   "ai_chat_placeholder": "Vraag AI …",
   "ai_chat_send": "Verzenden",

@@ -200,6 +200,7 @@
   "ai_translate_ai": "AI",
   "ai_explain_brief": "Kısa",
   "ai_explain_detailed": "Ayrıntılı",
+  "ai_detail_label": "Varsayılan ayrıntı",
   "ai_chat_title": "Yapay zekâya sor",
   "ai_chat_placeholder": "Yapay zekâya sor …",
   "ai_chat_send": "Gönder",

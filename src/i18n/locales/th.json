@@ -200,6 +200,7 @@
   "ai_translate_ai": "AI",
   "ai_explain_brief": "ย่อ",
   "ai_explain_detailed": "ละเอียด",
+  "ai_detail_label": "ระดับรายละเอียดเริ่มต้น",
   "ai_chat_title": "ถาม AI",
   "ai_chat_placeholder": "ถาม AI …",
   "ai_chat_send": "ส่ง",

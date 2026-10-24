@@ -200,6 +200,7 @@
   "ai_translate_ai": "AI",
   "ai_explain_brief": "Kurz",
   "ai_explain_detailed": "Ausführlich",
+  "ai_detail_label": "Standarddetailgrad",
   "ai_chat_title": "KI fragen",
   "ai_chat_placeholder": "KI fragen …",
   "ai_chat_send": "Senden",

@@ -200,6 +200,7 @@
   "ai_translate_ai": "AI",
   "ai_explain_brief": "Singkat",
   "ai_explain_detailed": "Rinci",
+  "ai_detail_label": "Tingkat detail bawaan",
   "ai_chat_title": "Tanya AI",
   "ai_chat_placeholder": "Tanya AI …",
   "ai_chat_send": "Kirim",

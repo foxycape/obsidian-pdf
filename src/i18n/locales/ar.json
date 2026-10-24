@@ -200,6 +200,7 @@
   "ai_translate_ai": "AI",
   "ai_explain_brief": "موجز",
   "ai_explain_detailed": "مفصّل",
+  "ai_detail_label": "التفصيل الافتراضي",
   "ai_chat_title": "اسأل الذكاء الاصطناعي",
   "ai_chat_placeholder": "اسأل الذكاء الاصطناعي …",
   "ai_chat_send": "إرسال",

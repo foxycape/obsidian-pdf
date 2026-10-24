@@ -99,7 +99,7 @@ export const openPdfDatabase = async (name = PDF_DB_NAME): Promise<IDBDatabase> 
     if (!db.objectStoreNames.contains(SIGN_KEY_STORE)) {
       db.close()
       throw new Error(
-        'signKeys is missing. Raise PDF_SCHEMA_VERSION together with the Dexie schema.',
+        'signKeys is missing. Raise PDF_SCHEMA_VERSION together with the database schema.',
       )
     }
     return db

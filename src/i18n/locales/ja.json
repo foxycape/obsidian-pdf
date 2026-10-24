@@ -200,6 +200,7 @@
   "ai_translate_ai": "AI",
   "ai_explain_brief": "簡潔",
   "ai_explain_detailed": "詳細",
+  "ai_detail_label": "既定の詳しさ",
   "ai_chat_title": "AI に質問",
   "ai_chat_placeholder": "AI に質問…",
   "ai_chat_send": "送信",

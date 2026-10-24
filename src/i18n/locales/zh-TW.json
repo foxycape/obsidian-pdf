@@ -200,6 +200,7 @@
   "ai_translate_ai": "AI",
   "ai_explain_brief": "簡要",
   "ai_explain_detailed": "詳細",
+  "ai_detail_label": "預設詳略",
   "ai_chat_title": "問 AI",
   "ai_chat_placeholder": "問 AI …",
   "ai_chat_send": "傳送",

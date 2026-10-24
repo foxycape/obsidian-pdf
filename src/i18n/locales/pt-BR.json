@@ -200,6 +200,7 @@
   "ai_translate_ai": "AI",
   "ai_explain_brief": "Breve",
   "ai_explain_detailed": "Detalhada",
+  "ai_detail_label": "Detalhe padrão",
   "ai_chat_title": "Pergunte à IA",
   "ai_chat_placeholder": "Pergunte à IA …",
   "ai_chat_send": "Enviar",

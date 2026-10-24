@@ -13,7 +13,7 @@ const props = defineProps<{
 }>()
 
 const currentScaleValue = ref('auto')
-const currentScaleLabel = ref('')
+const currentScale = ref(0)
 const open = ref(false)
 const panelRef = ref<HTMLElement | null>(null)
 const triggerRef = ref<HTMLElement | null>(null)
@@ -30,6 +30,19 @@ const scaleOptions = computed<PdfScaleOption[]>(() => [
   { label: '300%', value: '3' },
 ])
 
+const currentScaleLabel = computed(() => {
+  const scaleValue = currentScaleValue.value
+  const values = [scaleValue]
+  if (scaleValue === 'auto' || scaleValue === 'page-fit') {
+    values.push('auto', 'page-fit')
+  }
+  const option = scaleOptions.value.find((item) => values.includes(item.value))
+  if (option) {
+    return option.label
+  }
+  return `${Math.round(currentScale.value * 100)}%`
+})
+
 const menuOptions = computed(() => {
   const options = [...scaleOptions.value]
   const matched = options.some((item) => item.value === currentScaleValue.value)
@@ -42,25 +55,14 @@ const menuOptions = computed(() => {
   return options
 })
 
-const setScaleLabel = (scale: number, scaleValue: string) => {
-  const values = [scaleValue]
-  if (scaleValue === 'auto' || scaleValue === 'page-fit') {
-    values.push('auto', 'page-fit')
-  }
-  const option = scaleOptions.value.find((item) => values.includes(item.value))
-  currentScaleLabel.value = option
-    ? option.label
-    : `${Math.round(scale * 100)}%`
-}
-
 const syncFromRenderer = () => {
   const renderer = getPdfRenderer(props.reader)
   if (!renderer?.scalable) {
     return
   }
   const value = renderer.scalable.currentScaleValue || 'auto'
+  currentScale.value = renderer.scalable.currentScale
   currentScaleValue.value = value === 'page-fit' ? 'auto' : value
-  setScaleLabel(renderer.scalable.currentScale, currentScaleValue.value)
 
   const matched = scaleOptions.value.some((item) => item.value === currentScaleValue.value)
   if (!matched && renderer.scalable.currentScale > 0) {
@@ -91,8 +93,8 @@ const zoomOut = async () => {
 }
 
 const onScaleChanging = (scale: number, scaleValue: string) => {
+  currentScale.value = scale
   currentScaleValue.value = scaleValue === 'page-fit' ? 'auto' : scaleValue
-  setScaleLabel(scale, currentScaleValue.value)
 }
 
 const positionPanel = () => {

@@ -200,6 +200,7 @@
   "ai_translate_ai": "AI",
   "ai_explain_brief": "간략히",
   "ai_explain_detailed": "자세히",
+  "ai_detail_label": "기본 상세 수준",
   "ai_chat_title": "AI에게 질문",
   "ai_chat_placeholder": "AI에게 질문…",
   "ai_chat_send": "보내기",

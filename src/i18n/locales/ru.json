@@ -200,6 +200,7 @@
   "ai_translate_ai": "AI",
   "ai_explain_brief": "Кратко",
   "ai_explain_detailed": "Подробно",
+  "ai_detail_label": "Подробность по умолчанию",
   "ai_chat_title": "Спросить ИИ",
   "ai_chat_placeholder": "Спросить ИИ …",
   "ai_chat_send": "Отправить",

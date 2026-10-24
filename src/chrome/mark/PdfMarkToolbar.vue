@@ -473,7 +473,7 @@ const getCheckColor = (color: string) => {
 
       <div class="foxycape-pdf-mark-toolbar__main">
         <div class="foxycape-pdf-mark-toolbar__copy-wrap" :class="{ 'is-menu-open': state.showCopyMenu }" @mouseleave="closeCopyMenu">
-          <button type="button" class="foxycape-pdf-mark-toolbar__btn clickable-icon" :aria-label="labels.copyDesc()" :title="labels.copyDesc()" @click.stop="copyText">
+          <button type="button" class="foxycape-pdf-mark-toolbar__btn clickable-icon" :aria-label="labels.copyDesc()" @click.stop="copyText">
             <Copy class="fpdf-icon" />
           </button>
           <button
@@ -496,40 +496,40 @@ const getCheckColor = (color: string) => {
         </div>
 
         <div v-if="visibility.displayMarkPenInToolbar" class="foxycape-pdf-mark-toolbar__style-wrap">
-          <button type="button" class="foxycape-pdf-mark-toolbar__btn clickable-icon" :aria-label="labels.markPen()" :title="labels.markPen()" @click.stop="onStyleClick('mark_pen')">
+          <button type="button" class="foxycape-pdf-mark-toolbar__btn clickable-icon" :aria-label="labels.markPen()" @click.stop="onStyleClick('mark_pen')">
             <Highlighter class="fpdf-icon" />
           </button>
           <i class="foxycape-pdf-mark-toolbar__style-dot" :class="{ 'is-on': state.activeStyle === 'mark_pen' }" />
         </div>
         <div v-if="visibility.displayWavyInToolbar" class="foxycape-pdf-mark-toolbar__style-wrap">
-          <button type="button" class="foxycape-pdf-mark-toolbar__btn clickable-icon" :aria-label="labels.wavy()" :title="labels.wavy()" @click.stop="onStyleClick('wavy_line')">
+          <button type="button" class="foxycape-pdf-mark-toolbar__btn clickable-icon" :aria-label="labels.wavy()" @click.stop="onStyleClick('wavy_line')">
             <SpellCheck2 class="fpdf-icon" />
           </button>
           <i class="foxycape-pdf-mark-toolbar__style-dot" :class="{ 'is-on': state.activeStyle === 'wavy_line' }" />
         </div>
         <div v-if="visibility.displayUnderlineInToolbar" class="foxycape-pdf-mark-toolbar__style-wrap">
-          <button type="button" class="foxycape-pdf-mark-toolbar__btn clickable-icon" :aria-label="labels.underline()" :title="labels.underline()" @click.stop="onStyleClick('underline_straight')">
+          <button type="button" class="foxycape-pdf-mark-toolbar__btn clickable-icon" :aria-label="labels.underline()" @click.stop="onStyleClick('underline_straight')">
             <Baseline class="fpdf-icon" />
           </button>
           <i class="foxycape-pdf-mark-toolbar__style-dot" :class="{ 'is-on': state.activeStyle === 'underline_straight' }" />
         </div>
-        <button v-if="state.markId" type="button" class="foxycape-pdf-mark-toolbar__btn clickable-icon" :aria-label="labels.delete()" :title="labels.delete()" @click.stop="removeMark">
+        <button v-if="state.markId" type="button" class="foxycape-pdf-mark-toolbar__btn clickable-icon" :aria-label="labels.delete()" @click.stop="removeMark">
           <Eraser class="fpdf-icon" />
         </button>
-        <button v-if="visibility.displayTranslateInToolbar" type="button" class="foxycape-pdf-mark-toolbar__btn clickable-icon" :aria-label="labels.translate()" :title="labels.translate()" @click.stop="openTranslate">
+        <button v-if="visibility.displayTranslateInToolbar" type="button" class="foxycape-pdf-mark-toolbar__btn clickable-icon" :aria-label="labels.translate()" @click.stop="openTranslate">
           <Languages class="fpdf-icon" />
         </button>
-        <button v-if="visibility.displayExplainPassageInToolbar" type="button" class="foxycape-pdf-mark-toolbar__btn clickable-icon" :aria-label="labels.explain()" :title="labels.explain()" @click.stop="openExplain">
+        <button v-if="visibility.displayExplainPassageInToolbar" type="button" class="foxycape-pdf-mark-toolbar__btn clickable-icon" :aria-label="labels.explain()" @click.stop="openExplain">
           <MessageCircleQuestionMark class="fpdf-icon" />
         </button>
-        <button v-if="visibility.displayLookupWordInToolbar" type="button" class="foxycape-pdf-mark-toolbar__btn clickable-icon" :aria-label="labels.lookup()" :title="labels.lookup()" @click.stop="openLookup">
+        <button v-if="visibility.displayLookupWordInToolbar" type="button" class="foxycape-pdf-mark-toolbar__btn clickable-icon" :aria-label="labels.lookup()" @click.stop="openLookup">
           <BookA class="fpdf-icon" />
         </button>
-        <button v-if="visibility.displayAiInToolbar" type="button" class="foxycape-pdf-mark-toolbar__btn clickable-icon" :aria-label="labels.ai()" :title="labels.ai()" @click.stop="openAi()">
+        <button v-if="visibility.displayAiInToolbar" type="button" class="foxycape-pdf-mark-toolbar__btn clickable-icon" :aria-label="labels.ai()" @click.stop="openAi()">
           <Astroid class="fpdf-icon" />
         </button>
         <div ref="moreRoot" class="foxycape-pdf-mark-toolbar__more-wrap">
-          <button type="button" class="foxycape-pdf-mark-toolbar__btn clickable-icon" :aria-label="labels.more()" :title="labels.more()" :aria-expanded="moreOpen" @click.stop="moreOpen = !moreOpen">
+          <button type="button" class="foxycape-pdf-mark-toolbar__btn clickable-icon" :aria-label="labels.more()" :aria-expanded="moreOpen" @click.stop="moreOpen = !moreOpen">
             <EllipsisVertical class="fpdf-icon" />
           </button>
           <div v-if="moreOpen" class="foxycape-pdf-toolbar-more" @pointerdown.stop>
