@@ -6,12 +6,15 @@
   /* Obsidian UI chrome often uses user-select:none; opt this view back into text selection. */
   -webkit-user-select: text;
   user-select: text;
+  /* iOS long-press callout (Copy / Look Up). Double-tap word selection still shows it. */
+  -webkit-touch-callout: none;
 }
 
 .workspace-leaf-content[data-type="foxycape-pdf"] .pdfViewer,
 .workspace-leaf-content[data-type="foxycape-pdf"] .textLayer {
   -webkit-user-select: text;
   user-select: text;
+  -webkit-touch-callout: none;
 }
 
 .menu-item .foxycape-menu-logo {
