@@ -155,6 +155,7 @@
   "pdf_ocr_review_issue_reason": "A possible problem was found",
   "pdf_ocr_review_confirm_reason": "Please check this result",
   "pdf_ocr_review_irreparable_reason": "This could not be proofread reliably",
+  "pdf_ocr_review_error_reason": "Proofreading failed",
   "pdf_search_placeholder": "Find in document",
   "pdf_search_find": "Find",
   "pdf_mark_list": "Highlight list",
