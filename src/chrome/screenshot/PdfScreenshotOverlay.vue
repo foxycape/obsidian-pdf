@@ -2,14 +2,17 @@
 import { computed } from 'vue'
 import type { Reader } from '@foxycape/core/kernal'
 import type { PdfImageLinkSource } from '@/obsidian/pdfImageRef'
+import type { IApiClient } from '@/network'
 import ClickableIconButton from '@/ui/ClickableIconButton.vue'
 import { HANDLE_CURSOR, type ScreenshotHandle } from '@/screenshot/screenshotGeometry'
+import PdfOcrResultSheet from './PdfOcrResultSheet.vue'
 import { usePdfScreenshot } from './usePdfScreenshot'
 
 const props = defineProps<{
   reader: Reader
   hostEl: HTMLElement
-  t: (key: string, fallback: string) => string
+  apiClient: IApiClient
+  t: (key: string, fallback: string, named?: object) => string
   getLinkSource?: () => PdfImageLinkSource | null
   onActiveChange?: (active: boolean) => void
 }>()
@@ -25,9 +28,14 @@ const {
   close,
   copyImage,
   copyImageReference,
+  recognizeRegion,
+  copyOcrResult,
+  reviewOcrResult,
+  dismissOcrResult,
 } = usePdfScreenshot({
   reader: props.reader,
   hostEl: props.hostEl,
+  apiClient: props.apiClient,
   t: props.t,
   getLinkSource: props.getLinkSource,
   onActiveChange: props.onActiveChange,
@@ -77,7 +85,11 @@ const menuStyle = computed(() => ({
 
 <template>
   <Teleport v-if="state.active && viewerEl" :to="viewerEl">
-    <div ref="overlayEl" class="foxycape-pdf-crop-layer">
+    <div
+      ref="overlayEl"
+      class="foxycape-pdf-crop-layer"
+      :class="{ 'is-comparing': state.ocrResult }"
+    >
       <div v-if="state.rect" class="foxycape-pdf-crop-mask">
         <div class="foxycape-pdf-crop-hole" :style="rectStyle" />
       </div>
@@ -105,6 +117,37 @@ const menuStyle = computed(() => ({
         role="toolbar"
       >
         <ClickableIconButton
+          :icon="state.recognizing === 'text' ? 'loader-2' : 'type'"
+          :class-name="{
+            'foxycape-pdf-screenshot-menu__btn': true,
+            'is-spinning': state.recognizing === 'text',
+          }"
+          :label="t('pdf_ocr_recognize_text', 'Recognize text')"
+          :disabled="state.busy"
+          @click.stop="recognizeRegion('text')"
+        />
+        <ClickableIconButton
+          :icon="state.recognizing === 'equation' ? 'loader-2' : 'sigma'"
+          :class-name="{
+            'foxycape-pdf-screenshot-menu__btn': true,
+            'is-spinning': state.recognizing === 'equation',
+          }"
+          :label="t('pdf_ocr_recognize_equation', 'Recognize equation')"
+          :disabled="state.busy"
+          @click.stop="recognizeRegion('equation')"
+        />
+        <ClickableIconButton
+          :icon="state.recognizing === 'table' ? 'loader-2' : 'table'"
+          :class-name="{
+            'foxycape-pdf-screenshot-menu__btn': true,
+            'is-spinning': state.recognizing === 'table',
+          }"
+          :label="t('pdf_ocr_recognize_table', 'Recognize table')"
+          :disabled="state.busy"
+          @click.stop="recognizeRegion('table', 'ocr-complex-table')"
+        />
+        <span class="foxycape-pdf-screenshot-menu__divider" />
+        <ClickableIconButton
           icon="copy"
           class-name="foxycape-pdf-screenshot-menu__btn"
           :label="t('pdf_image_menu_copy', 'Copy image')"
@@ -122,9 +165,21 @@ const menuStyle = computed(() => ({
           icon="x"
           class-name="foxycape-pdf-screenshot-menu__btn"
           :label="t('pdf_image_close', 'Close')"
+          :disabled="state.busy"
           @click.stop="close"
         />
       </div>
     </div>
+  </Teleport>
+  <Teleport v-if="state.ocrResult" :to="hostEl">
+    <PdfOcrResultSheet
+      :result="state.ocrResult"
+      :frame="state.sheetFrame"
+      :busy="state.reviewing"
+      :t="t"
+      @copy="copyOcrResult"
+      @review="reviewOcrResult"
+      @close="dismissOcrResult"
+    />
   </Teleport>
 </template>

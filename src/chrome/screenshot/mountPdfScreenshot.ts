@@ -1,5 +1,6 @@
 import { createApp, h, markRaw, ref, type App } from 'vue'
 import type { Reader } from '@foxycape/core/kernal'
+import type { IApiClient } from '@/network'
 import type { PdfImageLinkSource } from '@/obsidian/pdfImageRef'
 import PdfScreenshotOverlay from './PdfScreenshotOverlay.vue'
 
@@ -20,7 +21,8 @@ export const mountPdfScreenshot = (options: {
   viewEl: HTMLElement
   hostEl: HTMLElement
   reader: Reader
-  t: (key: string, fallback: string) => string
+  apiClient: IApiClient
+  t: (key: string, fallback: string, named?: object) => string
   getLinkSource?: () => PdfImageLinkSource | null
   onActiveChange?: (active: boolean) => void
 }): PdfScreenshotMount => {
@@ -33,6 +35,7 @@ export const mountPdfScreenshot = (options: {
         ref: overlayRef,
         reader: markRaw(options.reader),
         hostEl: options.hostEl,
+        apiClient: options.apiClient,
         t: options.t,
         getLinkSource: options.getLinkSource,
         onActiveChange: options.onActiveChange,

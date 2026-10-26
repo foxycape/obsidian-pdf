@@ -54,7 +54,7 @@ const writeReaderVersionPlugin = (
     if (!this.meta.watchMode) {
       return
     }
-    copyVaultFiles(outDir, vaultPluginDir, ['reader-bundle.js', READER_VERSION_FILE])
+    copyVaultFiles(outDir, vaultPluginDir, ['reader-bundle.js', READER_VERSION_FILE, 'katex/katex.css'])
   },
 })
 

@@ -6,7 +6,7 @@ import type { PdfMarkdownLinkSource } from '@/obsidian/remotePdfLink'
 import type { IMarker } from '@/mark'
 import type { DexieStorage } from '@/storage/DexieStorage'
 import { AI_TRAFFIC_PURCHASE_URL, FREE_LICENSE_URL, SHARE_AI_TRAFFIC_URL } from '@/license/constants'
-import { setAiChromeHooks, tryGetAiRuntime } from '../runtime'
+import { setAiChromeHooks, tryGetAiRuntime, type AiAccessPrompt } from '../runtime'
 import type { AiAccessMode } from '../accessChoice'
 import { useHistoryLayer } from '@/history/useHistoryLayer'
 import AiAccessChoiceDialog from './AiAccessChoiceDialog.vue'
@@ -42,6 +42,7 @@ const sendToken = ref(0)
 const chatOpen = ref(false)
 const accessOpen = ref(false)
 const accessMode = ref<AiAccessMode>('need-license')
+const accessOfficialOnly = ref(false)
 const modelOpen = ref(false)
 const languageOpen = ref(false)
 
@@ -58,8 +59,9 @@ useHistoryLayer(languageOpen, () => {
   languageOpen.value = false
 })
 
-const openAccess = (mode: AiAccessMode) => {
+const openAccess = (mode: AiAccessMode, prompt?: AiAccessPrompt) => {
   accessMode.value = mode
+  accessOfficialOnly.value = prompt?.officialOnly === true
   accessOpen.value = true
 }
 
@@ -274,6 +276,7 @@ defineExpose({
     <AiAccessChoiceDialog
       v-if="accessOpen"
       :mode="accessMode"
+      :official-only="accessOfficialOnly"
       :t="t"
       @close="accessOpen = false"
       @configure-key="accessOpen = false; openModel()"

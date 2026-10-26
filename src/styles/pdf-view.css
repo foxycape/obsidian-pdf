@@ -1178,6 +1178,12 @@ button.clickable-icon.foxycape-pdf-toolbar-more__item:hover {
   touch-action: none;
 }
 
+.workspace-leaf-content.foxycape-pdf--screenshot-mode .pdfViewer:has(.foxycape-pdf-crop-layer.is-comparing),
+.workspace-leaf-content.foxycape-pdf--screenshot-mode .pdfViewer:has(.foxycape-pdf-crop-layer.is-comparing) .textLayer {
+  cursor: auto;
+  touch-action: auto;
+}
+
 .foxycape-pdf-screenshot-root {
   pointer-events: none;
 }
@@ -1190,6 +1196,17 @@ button.clickable-icon.foxycape-pdf-toolbar-more__item:hover {
   pointer-events: auto;
   touch-action: none;
   cursor: crosshair;
+}
+
+.foxycape-pdf-crop-layer.is-comparing,
+.foxycape-pdf-crop-layer.is-comparing .foxycape-pdf-crop-rect {
+  pointer-events: none;
+  touch-action: auto;
+  cursor: default;
+}
+
+.foxycape-pdf-crop-layer.is-comparing .foxycape-pdf-crop-mask {
+  display: none;
 }
 
 .foxycape-pdf-crop-mask {
@@ -1236,6 +1253,7 @@ button.clickable-icon.foxycape-pdf-toolbar-more__item:hover {
   position: absolute;
   z-index: 2;
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 4px;
   padding: 6px;
@@ -1252,6 +1270,199 @@ button.clickable-icon.foxycape-pdf-toolbar-more__item:hover {
   height: 32px;
   min-width: 32px;
   min-height: 32px;
+  flex: 0 0 auto;
+}
+
+.foxycape-pdf-screenshot-menu__divider {
+  width: 1px;
+  align-self: stretch;
+  margin: 4px 2px;
+  background: var(--background-modifier-border);
+  flex: 0 0 auto;
+}
+
+.foxycape-pdf-screenshot-menu__btn.is-spinning svg,
+.foxycape-pdf-ocr-sheet__spin svg {
+  animation: foxycape-pdf-spin 0.8s linear infinite;
+}
+
+@keyframes foxycape-pdf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.foxycape-pdf-ocr-sheet {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.foxycape-pdf-ocr-sheet__card {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  pointer-events: auto;
+  border-radius: var(--radius-m, 8px);
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  box-shadow: var(--shadow-s);
+  overflow: visible;
+}
+
+.foxycape-pdf-ocr-sheet__header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  min-height: 2rem;
+  padding: 0.5rem 2.4rem 0 1rem;
+}
+
+.foxycape-pdf-ocr-sheet__header h3 {
+  margin: 0;
+  font-size: var(--font-ui-medium);
+  font-weight: var(--font-semibold);
+}
+
+.foxycape-pdf-ocr-sheet__close {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  --icon-size: 16px;
+  width: 28px;
+  height: 28px;
+}
+
+.foxycape-pdf-ocr-sheet__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.75rem 1rem;
+}
+
+.foxycape-pdf-ocr-sheet__text,
+.foxycape-pdf-ocr-sheet__source pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--font-text);
+}
+
+.foxycape-pdf-ocr-sheet__source {
+  margin-top: 0.75rem;
+}
+
+.foxycape-pdf-ocr-sheet__table {
+  overflow: auto;
+}
+
+.foxycape-pdf-ocr-sheet__table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.foxycape-pdf-ocr-sheet__table th,
+.foxycape-pdf-ocr-sheet__table td {
+  border: 1px solid var(--background-modifier-border);
+  padding: 0.35rem 0.5rem;
+  text-align: start;
+  vertical-align: top;
+}
+
+.foxycape-pdf-ocr-sheet__verdict {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  min-width: 0;
+  color: var(--text-normal);
+}
+
+.foxycape-pdf-ocr-sheet__spin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.foxycape-pdf-ocr-sheet__error {
+  min-width: 0;
+  color: var(--text-muted);
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.foxycape-pdf-ocr-sheet__actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.foxycape-pdf-ocr-sheet__buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.foxycape-pdf-ocr-sheet__buttons button {
+  height: var(--input-height);
+  padding: 0 0.8rem;
+}
+
+.foxycape-pdf-ocr-sheet__help {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.foxycape-pdf-ocr-sheet__buttons .foxycape-pdf-ocr-sheet__help-btn {
+  --icon-size: 16px;
+  width: var(--input-height);
+  padding: 0;
+}
+
+.foxycape-pdf-ocr-sheet__tip {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 2;
+  width: min(16rem, calc(100vw - 2rem));
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--radius-s, 6px);
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  box-shadow: var(--shadow-s);
+  color: var(--text-normal);
+  font-size: var(--font-ui-small);
+  line-height: 1.45;
+  text-align: start;
+  white-space: normal;
+}
+
+.foxycape-pdf-ocr-sheet__review {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-width: 4.5rem;
+}
+
+.foxycape-pdf-ocr-sheet__spin {
+  --icon-size: 16px;
+  width: 16px;
+  height: 16px;
 }
 
 .foxycape-pdf-init-overlay {

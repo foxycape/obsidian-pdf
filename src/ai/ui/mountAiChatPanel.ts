@@ -11,7 +11,7 @@ export type { AiChatDraft }
 export type AiChatPanelMount = {
   open: (reader: Reader, getMarker: () => IMarker | undefined, draft: AiChatDraft) => void
   isOpen: () => boolean
-  openAccess: (mode: 'need-license' | 'quota') => void
+  openAccess: (mode: 'need-license' | 'quota', prompt?: { officialOnly?: boolean }) => void
   openModel: () => void
   openLanguage: () => void
   close: () => void
@@ -51,8 +51,8 @@ export const mountAiChatPanel = (options: {
       chrome.value?.openChat(reader, getMarker, draft)
     },
     isOpen: () => chrome.value?.isChatOpen() === true,
-    openAccess: (mode) => {
-      chrome.value?.openAccess(mode)
+    openAccess: (mode, prompt) => {
+      chrome.value?.openAccess(mode, prompt)
     },
     openModel: () => {
       chrome.value?.openModel()

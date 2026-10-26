@@ -14,15 +14,13 @@ const packageDir = fileURLToPath(new URL('..', import.meta.url))
 const distDir = resolve(packageDir, 'dist')
 const zipPath = resolve(distDir, 'pdfjs-assets.zip')
 
-/** Remote pack: cmaps + standard_fonts + wasm + iccs. pdf-lib and the worker ship in pdfjs.zip. KaTeX woff2 ships in reader-bundle.zip. */
+/** Remote pack: cmaps + standard_fonts + wasm + iccs. pdf-lib and the worker ship in pdfjs.zip. KaTeX CSS ships in reader-bundle.zip. */
 const INCLUDE_ROOTS = [
   join('pdfjs', 'cmaps'),
   join('pdfjs', 'standard_fonts'),
   join('pdfjs', 'wasm'),
   join('pdfjs', 'iccs'),
 ]
-const KATEX_FONTS = join('katex', 'fonts')
-
 const walkFiles = (dir, files = []) => {
   for (const name of readdirSync(dir)) {
     const full = join(dir, name)
@@ -153,24 +151,20 @@ const main = () => {
 
   const readerBundle = join(distDir, 'reader-bundle.js')
   const readerVersion = join(distDir, '.foxycape-reader-version')
-  const katexFonts = join(distDir, KATEX_FONTS)
-  for (const file of [readerBundle, readerVersion, katexFonts]) {
+  const katexCss = join(distDir, 'katex', 'katex.css')
+  for (const file of [readerBundle, readerVersion, katexCss]) {
     if (!existsSync(file)) {
       throw new Error(`Missing ${file}. Run the reader vite build before packaging assets.`)
     }
   }
+  const katexCssText = readFileSync(katexCss, 'utf8')
+  if (!katexCssText.includes('data:font/woff2;base64,') || katexCssText.includes('url(fonts/')) {
+    throw new Error(`${katexCss} is missing embedded KaTeX fonts.`)
+  }
   /** @type {Record<string, Uint8Array>} */
   const readerEntries = {
     'reader-bundle.js': new Uint8Array(readFileSync(readerBundle)),
-  }
-  for (const file of walkFiles(katexFonts)) {
-    if (!file.endsWith('.woff2')) {
-      continue
-    }
-    readerEntries[toZipKey(file)] = new Uint8Array(readFileSync(file))
-  }
-  if (Object.keys(readerEntries).length < 2) {
-    throw new Error(`No KaTeX woff2 files found in ${katexFonts}.`)
+    'katex/katex.css': new Uint8Array(readFileSync(katexCss)),
   }
   const readerZipPath = resolve(distDir, 'reader-bundle.zip')
   const readerZipped = zipSync(readerEntries)

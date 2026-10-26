@@ -9,6 +9,7 @@ import { loadShareTopupEligible } from '../shareTopup'
 
 const props = defineProps<{
   mode: AiAccessMode
+  officialOnly?: boolean
   t: (key: string, fallback: string, named?: object) => string
 }>()
 
@@ -27,8 +28,20 @@ const title = computed(() =>
     ? props.t('ai_quota_title', 'AI usage is used up')
     : props.t('ai_access_title', 'Use the official model'),
 )
-const description = computed(() =>
-  isQuota.value
+const description = computed(() => {
+  if (props.officialOnly && isQuota.value) {
+    return props.t(
+      'ai_ocr_quota_choice',
+      'Recognition and proofreading can only use the official model. The AI usage on this license is used up. A traffic pack tops up this license.',
+    )
+  }
+  if (props.officialOnly) {
+    return props.t(
+      'ai_ocr_access_choice',
+      'Recognition and proofreading can only use the official model. Enter a license first.',
+    )
+  }
+  return isQuota.value
     ? props.t(
         'ai_quota_choice',
         'The license is still valid, but the AI usage on it is used up. A traffic pack tops up this license. You can also switch to your own AI key.',
@@ -36,8 +49,8 @@ const description = computed(() =>
     : props.t(
         'ai_access_choice',
         'The official model needs a license. AI usage is stored on that license. You can also configure your own AI key and skip official usage.',
-      ),
-)
+      )
+})
 
 const packs = ref<AiTrafficPack[]>([])
 const canShareTraffic = ref(false)
@@ -74,7 +87,7 @@ onMounted(() => {
       </li>
     </ul>
     <div class="fpdf-dialog__actions">
-      <button type="button" class="clickable-icon fpdf-action" @click="emit('configureKey')">
+      <button v-if="!officialOnly" type="button" class="clickable-icon fpdf-action" @click="emit('configureKey')">
         {{ t('ai_configure_key', 'Configure AI key') }}
       </button>
       <button v-if="isQuota" type="button" class="clickable-icon fpdf-action mod-cta" @click="emit('purchase')">

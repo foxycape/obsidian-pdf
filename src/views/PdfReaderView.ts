@@ -902,8 +902,11 @@ export class PdfReaderView {
     })
   }
 
-  private readonly openAiAccess = (mode: 'need-license' | 'quota') => {
-    this.ensureAiChat().openAccess(mode)
+  private readonly openAiAccess = (
+    mode: 'need-license' | 'quota',
+    prompt?: { officialOnly?: boolean },
+  ) => {
+    this.ensureAiChat().openAccess(mode, prompt)
   }
 
   private bindAiAccessHook() {
@@ -1050,6 +1053,7 @@ export class PdfReaderView {
         viewEl: this.containerEl,
         hostEl: this.mountEl,
         reader,
+        apiClient: this.plugin.apiClient,
         t: this.translate,
         getLinkSource: this.resolveLinkSource,
         onActiveChange: (active) => {
@@ -1280,13 +1284,13 @@ const ensureReaderAiRuntime = (plugin: FoxycapePdfPlugin) => {
     apiClient: plugin.apiClient,
     storage: createLazyPdfStorage(),
     getLicense: () => plugin.settings.license,
-    onNeedLicense: () => {
-      tryGetAiRuntime()?.chrome?.openAccess('need-license')
+    onNeedLicense: (prompt) => {
+      tryGetAiRuntime()?.chrome?.openAccess('need-license', prompt)
     },
-    onQuotaExhausted: () => {
+    onQuotaExhausted: (prompt) => {
       const hooks = tryGetAiRuntime()?.chrome
       if (hooks) {
-        hooks.openAccess('quota')
+        hooks.openAccess('quota', prompt)
         return
       }
       new Notice(plugin.t('ai_quota_exhausted', 'Official AI quota is used up.'))

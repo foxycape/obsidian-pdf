@@ -19,7 +19,7 @@ export type BinaryRequestFn = (
 const MAX_REDIRECTS = 10
 const RANGE_CHUNK_SIZE = 256 * 1024
 /** No new bytes for this long aborts the current host. */
-const IDLE_TIMEOUT_MS = 10_000
+const IDLE_TIMEOUT_MS = 5_000
 /** Same-URL retries when the caller did not provide a fallback host. */
 const MAX_DOWNLOAD_ATTEMPTS = 3
 /** GitHub is tried once. The CDN mirror is tried twice. */

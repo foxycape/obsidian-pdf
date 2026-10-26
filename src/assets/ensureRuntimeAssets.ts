@@ -6,7 +6,7 @@ import {
   READER_BUNDLE_FILE,
   READER_PACK_ZIP_NAME,
   READER_VERSION_MARKER,
-  KATEX_FONTS_DIR,
+  KATEX_CSS,
   REMOTE_RUNTIME_MARKERS,
   RUNTIME_ASSETS_ZIP_NAME,
   RUNTIME_CMAPS_ID,
@@ -36,6 +36,7 @@ import {
   type DownloadProgressHandler,
 } from './downloadBinaryWithProgress'
 import { evaluateMarkdownLib, invalidateMarkdownLibEval } from '@/views/loadMarkdownLib'
+import { installKatexStylesheet } from './installKatexStylesheet'
 import {
   ensureParentDir,
   extractZipToPluginDir,
@@ -167,9 +168,9 @@ export const hasPdfLib = async (plugin: Plugin): Promise<boolean> =>
 export const pdfjsPackNeedsDownload = async (plugin: Plugin): Promise<boolean> =>
   !(await hasPdfLib(plugin)) || !(await hasWorkerRuntime(plugin))
 
-/** True when reader-bundle.js is tagged with this plugin version and KaTeX fonts are present. */
+/** True when reader-bundle.js is tagged with this plugin version and KaTeX CSS is present. */
 export const hasReaderBundle = async (plugin: Plugin): Promise<boolean> => {
-  if (!(await hasAllMarkerFiles(plugin, [KATEX_FONTS_DIR]))) {
+  if (!(await hasAllMarkerFiles(plugin, [KATEX_CSS]))) {
     return false
   }
   return hasFileWithMarker(
@@ -442,6 +443,7 @@ export const ensureReaderPack = async (
   options: EnsureRuntimeAssetsOptions = {},
 ): Promise<void> => {
   if (!(await readerPackNeedsDownload(plugin))) {
+    await installKatexStylesheet(plugin)
     return
   }
   if (options.onProgress) {
@@ -453,6 +455,7 @@ export const ensureReaderPack = async (
       readerPackPromise = next
     }, () => downloadAndInstallReaderPack(plugin, t))
     await readerPackPromise
+    await installKatexStylesheet(plugin)
   } finally {
     if (options.onProgress) {
       readerPackProgress.delete(options.onProgress)

@@ -1,35 +1,60 @@
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { Plugin } from 'vite'
 
-const FONT_URL = /url\(fonts\/(KaTeX_[^)]+?\.woff2)\) format\("woff2"\),url\(fonts\/KaTeX_[^)]+?\.woff\) format\("woff"\),url\(fonts\/KaTeX_[^)]+?\.ttf\) format\("truetype"\)/g
-const PLACEHOLDER = /url\(data:application\/x-foxycape-katex,([^)]+)\)/g
+const FONT_SRC = /url\(fonts\/(KaTeX_[^)]+?\.woff2)\) format\("woff2"\),url\(fonts\/KaTeX_[^)]+?\.woff\) format\("woff"\),url\(fonts\/KaTeX_[^)]+?\.ttf\) format\("truetype"\)/g
 
 type KatexFontsOptions = {
   packageDir: string
   outDir: string
 }
 
+/** Keep KaTeX layout rules and embed each woff2 as a data URI. */
+export const embedKatexWoff2 = (
+  css: string,
+  readWoff2: (fileName: string) => Buffer,
+): string => {
+  let embedded = 0
+  const next = css.replace(FONT_SRC, (_match, fileName: string) => {
+    embedded += 1
+    const base64 = readWoff2(fileName).toString('base64')
+    return `url(data:font/woff2;base64,${base64}) format("woff2")`
+  })
+  if (
+    embedded === 0 ||
+    next.includes('url(fonts/') ||
+    next.includes('format("woff")') ||
+    next.includes('format("truetype")')
+  ) {
+    throw new Error('KaTeX woff2 fonts were not embedded')
+  }
+  return next
+}
+
 /**
- * Keep KaTeX woff2 in `dist/katex/fonts` for reader-bundle.zip and point styles.css at
- * those files. Library mode would otherwise inline woff2, woff, and ttf.
+ * Write `dist/katex/katex.css` with embedded woff2.
+ * Bundled plugin CSS must not contain KaTeX: Obsidian injects styles.css as a style tag.
  */
 export const katexFontsPlugin = (options: KatexFontsOptions): Plugin => {
   const fontsSrc = join(options.packageDir, 'node_modules', 'katex', 'dist', 'fonts')
-  const fontsOut = join(options.outDir, 'katex', 'fonts')
+  const cssSrc = join(options.packageDir, 'node_modules', 'katex', 'dist', 'katex.min.css')
+  const katexOut = join(options.outDir, 'katex')
+  const cssOut = join(katexOut, 'katex.css')
 
-  const copyFonts = () => {
-    if (!existsSync(fontsSrc)) {
-      throw new Error(`KaTeX fonts not found at ${fontsSrc}`)
+  const writeCss = () => {
+    if (!existsSync(cssSrc) || !existsSync(fontsSrc)) {
+      throw new Error(`KaTeX CSS not found at ${cssSrc}`)
     }
-    rmSync(join(options.outDir, 'katex'), { recursive: true, force: true })
-    mkdirSync(fontsOut, { recursive: true })
-    for (const name of readdirSync(fontsSrc)) {
-      if (!name.endsWith('.woff2')) {
-        continue
+    const css = embedKatexWoff2(readFileSync(cssSrc, 'utf8'), (fileName) => {
+      const fontPath = join(fontsSrc, fileName)
+      if (!existsSync(fontPath)) {
+        throw new Error(`KaTeX font not found at ${fontPath}`)
       }
-      cpSync(join(fontsSrc, name), join(fontsOut, name))
-    }
+      return readFileSync(fontPath)
+    })
+    rmSync(katexOut, { recursive: true, force: true })
+    mkdirSync(katexOut, { recursive: true })
+    writeFileSync(cssOut, css)
   }
 
   return {
@@ -40,37 +65,13 @@ export const katexFontsPlugin = (options: KatexFontsOptions): Plugin => {
       if (!normalized.endsWith('/katex/dist/katex.min.css')) {
         return null
       }
-      return code.replace(
-        FONT_URL,
-        'url(data:application/x-foxycape-katex,$1)',
-      )
+      if (code.includes('url(fonts/')) {
+        return ''
+      }
+      return null
     },
     writeBundle() {
-      copyFonts()
-      const cssNames = ['reader-bundle.css', 'pdf-bundle.css', 'styles.css']
-      let rewritten = false
-      for (const name of cssNames) {
-        const cssPath = join(options.outDir, name)
-        if (!existsSync(cssPath)) {
-          continue
-        }
-        const css = readFileSync(cssPath, 'utf8')
-        if (!css.includes('data:application/x-foxycape-katex')) {
-          continue
-        }
-        const next = css.replace(PLACEHOLDER, 'url(katex/fonts/$1)')
-        if (next.includes('data:application/x-foxycape-katex')) {
-          throw new Error(`KaTeX font urls were not rewritten in ${name}`)
-        }
-        if (next.includes('data:font')) {
-          throw new Error(`${name} still inlines font data`)
-        }
-        writeFileSync(cssPath, next)
-        rewritten = true
-      }
-      if (!rewritten) {
-        throw new Error('KaTeX font urls were not rewritten')
-      }
+      writeCss()
     },
   }
 }

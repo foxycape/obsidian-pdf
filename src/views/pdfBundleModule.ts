@@ -9,7 +9,9 @@ export type PdfBundleRuntime = {
   apiClient: unknown
   storage?: unknown
   getLicense: () => string
-  onNeedLicense: () => void
-  onQuotaExhausted: () => void
-  chrome?: { openAccess: (mode: 'need-license' | 'quota') => void } | null
+  onNeedLicense: (prompt?: { officialOnly?: boolean }) => void
+  onQuotaExhausted: (prompt?: { officialOnly?: boolean }) => void
+  chrome?: {
+    openAccess: (mode: 'need-license' | 'quota', prompt?: { officialOnly?: boolean }) => void
+  } | null
 }

@@ -15,16 +15,20 @@ export type PassageNoteWrite = {
 
 export type AiAccessMode = 'need-license' | 'quota'
 
+export type AiAccessPrompt = {
+  officialOnly?: boolean
+}
+
 export type AiChromeHooks = {
-  openAccess: (mode: AiAccessMode) => void
+  openAccess: (mode: AiAccessMode, prompt?: AiAccessPrompt) => void
 }
 
 export type AiRuntime = {
   apiClient: IApiClient
   storage: IStorage
   getLicense: () => string
-  onNeedLicense: () => void
-  onQuotaExhausted: () => void
+  onNeedLicense: (prompt?: AiAccessPrompt) => void
+  onQuotaExhausted: (prompt?: AiAccessPrompt) => void
   writePassageNote?: (input: PassageNoteWrite) => Promise<void>
   fetchImpl?: typeof fetch
   chrome?: AiChromeHooks | null

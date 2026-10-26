@@ -25,6 +25,11 @@ const readReaderSource = async (plugin: Plugin): Promise<string> => {
 
 const evaluateReaderBundle = (source: string): ReaderBundle => {
   const exported = evaluateObsidianCjs(source, 'the reader bundle')
+  // only debug
+  // const exported = evaluateObsidianCjs(
+  //   `${source}\n//# sourceURL=reader-bundle.js\n`,
+  //   'the reader bundle',
+  // )
   if (isReaderBundle(exported)) {
     return exported
   }

@@ -64,6 +64,48 @@ export type CroppedPagePiece = {
   y: number
 }
 
+/** OCR re-renders a zoomed-out page at this multiple of the scale-1 PDF viewport. */
+export const OCR_PAGE_SCALE = 2
+
+/** Current bitmap width divided by the scale-1 viewport width. Includes zoom and device pixels. */
+export const pageDrawScale = (canvasWidth: number, unitViewportWidth: number): number => {
+  if (!(canvasWidth > 0) || !(unitViewportWidth > 0)) {
+    return 0
+  }
+  return canvasWidth / unitViewportWidth
+}
+
+/** True when the on-screen page is already finer than the OCR render scale. */
+export const exceedsOcrPageScale = (canvasWidth: number, unitViewportWidth: number): boolean =>
+  pageDrawScale(canvasWidth, unitViewportWidth) > OCR_PAGE_SCALE
+
+/** Map a crop on the displayed canvas onto a larger target viewport, keeping its page fraction. */
+export const mapCropToTargetViewport = (options: {
+  crop: CssRect
+  sourceWidth: number
+  sourceHeight: number
+  targetWidth: number
+  targetHeight: number
+}): CssRect | null => {
+  const { crop, sourceWidth, sourceHeight, targetWidth, targetHeight } = options
+  if (
+    !(sourceWidth > 0) ||
+    !(sourceHeight > 0) ||
+    !(targetWidth > 0) ||
+    !(targetHeight > 0) ||
+    !(crop.width > 0) ||
+    !(crop.height > 0)
+  ) {
+    return null
+  }
+  return {
+    x: (crop.x / sourceWidth) * targetWidth,
+    y: (crop.y / sourceHeight) * targetHeight,
+    width: (crop.width / sourceWidth) * targetWidth,
+    height: (crop.height / sourceHeight) * targetHeight,
+  }
+}
+
 /** Crop every page canvas that intersects a viewport-space rect. Gaps are dropped. */
 export const cropPagesInClientRect = (
   pages: PageCanvasSource[],

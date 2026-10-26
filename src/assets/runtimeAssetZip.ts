@@ -31,12 +31,12 @@ const isSafeZipPath = (name: string): boolean => {
   return !normalized.startsWith('/') && !normalized.includes('..')
 }
 
-/** reader-bundle.zip contains the reader bundle (UI, Dexie, hash worker) and KaTeX woff2. */
+/** reader-bundle.zip contains the reader bundle (UI, Dexie, hash worker) and KaTeX CSS. */
 export const isReaderZipEntryName = (name: string): boolean => {
   const normalized = normalizeZipEntryName(name)
   return (
     isSafeZipPath(normalized) &&
-    (normalized === 'reader-bundle.js' || /^katex\/fonts\/[^/]+\.woff2$/.test(normalized))
+    (normalized === 'reader-bundle.js' || normalized === 'katex/katex.css')
   )
 }
 

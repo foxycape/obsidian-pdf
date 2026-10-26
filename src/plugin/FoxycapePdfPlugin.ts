@@ -8,6 +8,7 @@ import {
   ensureRemoteRuntimeAssets,
   ensureRuntimeAssets as unpackRuntimeAssets,
 } from '@/assets/ensureRuntimeAssets'
+import { installKatexStylesheet, removeKatexStylesheet } from '@/assets/installKatexStylesheet'
 import { ObsidianLocale } from '@/i18n'
 import { LicenseService } from '@/license'
 import { installPdfImageRefContextMenu } from '@/obsidian/installPdfImageRefContextMenu'
@@ -80,6 +81,7 @@ export class FoxycapePdfPlugin extends Plugin {
 
     await this.licenseService.ensureTrialStarted()
     this.bootstrapRuntimeAssets()
+    void installKatexStylesheet(this)
     await this.locale.initialize()
     const savedLanguage = this.savedLanguageCode()
     if (savedLanguage) {
@@ -144,6 +146,7 @@ export class FoxycapePdfPlugin extends Plugin {
     } catch (error) {
       console.warn('[Foxycape PDF] failed to restore pdf extension', error)
     }
+    removeKatexStylesheet()
     void disposeInstalledPdfHost()
     void this.locale.dispose()
   }

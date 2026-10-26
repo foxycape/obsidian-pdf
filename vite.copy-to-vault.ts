@@ -28,6 +28,7 @@ const ALWAYS_FILES = [
   'pdfjs/.foxycape-worker-version',
   'locales/.foxycape-locales-version',
   'markdown/.foxycape-markdown-version',
+  'katex/katex.css',
 ] as const
 
 const SIDECAR_DIRS = ['pdfjs', 'katex'] as const
