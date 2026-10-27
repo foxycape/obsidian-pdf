@@ -613,7 +613,10 @@ export const usePdfScreenshot = (options: {
     if (!region) {
       return null
     }
-    const full = getOwnerDocument().createElement('canvas')
+    const full = (getOwnerDocument().win as Window & {
+      createEl<K extends keyof HTMLElementTagNameMap>(tag: K): HTMLElementTagNameMap[K]
+    }).createEl('canvas')
+    full.detach()
     full.width = Math.max(1, Math.ceil(target.width))
     full.height = Math.max(1, Math.ceil(target.height))
     const context = full.getContext('2d')

@@ -64,6 +64,8 @@ export const recognizeOcrRegion = async (input: {
   return readStringField(data, ...contentField(input.kind))
 }
 
+const isUnknownArray = (value: unknown): value is unknown[] => Array.isArray(value)
+
 const readBoolField = (data: Record<string, unknown>, ...keys: string[]): boolean => {
   for (const key of keys) {
     const value = data[key]
@@ -108,7 +110,7 @@ export const reviewOcrRegion = async (input: {
     input.accessToken,
   )
   const results = data.results ?? data.Results
-  const first = Array.isArray(results) ? results[0] : null
+  const first = isUnknownArray(results) ? results[0] : null
   if (!first || typeof first !== 'object') {
     throw new OcrRequestError('Proofreading did not return a result')
   }

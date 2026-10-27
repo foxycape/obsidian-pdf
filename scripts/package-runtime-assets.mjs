@@ -151,20 +151,19 @@ const main = () => {
 
   const readerBundle = join(distDir, 'reader-bundle.js')
   const readerVersion = join(distDir, '.foxycape-reader-version')
-  const katexCss = join(distDir, 'katex', 'katex.css')
-  for (const file of [readerBundle, readerVersion, katexCss]) {
+  const stylesCss = join(distDir, 'styles.css')
+  for (const file of [readerBundle, readerVersion, stylesCss]) {
     if (!existsSync(file)) {
-      throw new Error(`Missing ${file}. Run the reader vite build before packaging assets.`)
+      throw new Error(`Missing ${file}. Run the vite builds before packaging assets.`)
     }
   }
-  const katexCssText = readFileSync(katexCss, 'utf8')
-  if (!katexCssText.includes('data:font/woff2;base64,') || katexCssText.includes('url(fonts/')) {
-    throw new Error(`${katexCss} is missing embedded KaTeX fonts.`)
+  const stylesText = readFileSync(stylesCss, 'utf8')
+  if (!stylesText.includes('data:font/woff2;base64,') || stylesText.includes('url(fonts/')) {
+    throw new Error(`${stylesCss} is missing embedded KaTeX fonts.`)
   }
   /** @type {Record<string, Uint8Array>} */
   const readerEntries = {
     'reader-bundle.js': new Uint8Array(readFileSync(readerBundle)),
-    'katex/katex.css': new Uint8Array(readFileSync(katexCss)),
   }
   const readerZipPath = resolve(distDir, 'reader-bundle.zip')
   const readerZipped = zipSync(readerEntries)

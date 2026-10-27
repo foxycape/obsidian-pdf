@@ -44,11 +44,8 @@ export const PDF_LIB_FILE = 'pdf-lib.js'
 
 export const PDF_LIB_VERSION_MARKER = '.foxycape-pdf-lib-version'
 
-/** Reader, Dexie, the hash worker, and KaTeX CSS. Downloaded when the plugin version changes. */
+/** Reader, Dexie, and the hash worker. Downloaded when the plugin version changes. */
 export const READER_PACK_ZIP_NAME = 'reader-bundle.zip'
-
-/** KaTeX stylesheet with embedded woff2, extracted from reader-bundle.zip. */
-export const KATEX_CSS = 'katex/katex.css'
 
 export const READER_BUNDLE_FILE = 'reader-bundle.js'
 

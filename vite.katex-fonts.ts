@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { Plugin } from 'vite'
 
@@ -6,7 +6,6 @@ const FONT_SRC = /url\(fonts\/(KaTeX_[^)]+?\.woff2)\) format\("woff2"\),url\(fon
 
 type KatexFontsOptions = {
   packageDir: string
-  outDir: string
 }
 
 /** Keep KaTeX layout rules and embed each woff2 as a data URI. */
@@ -32,29 +31,18 @@ export const embedKatexWoff2 = (
 }
 
 /**
- * Write `dist/katex/katex.css` with embedded woff2.
- * Bundled plugin CSS must not contain KaTeX: Obsidian injects styles.css as a style tag.
+ * Rewrite the imported `katex.min.css` so Vite emits it in `styles.css`.
+ * Obsidian loads that file; plugins must not inject a style element.
  */
 export const katexFontsPlugin = (options: KatexFontsOptions): Plugin => {
   const fontsSrc = join(options.packageDir, 'node_modules', 'katex', 'dist', 'fonts')
-  const cssSrc = join(options.packageDir, 'node_modules', 'katex', 'dist', 'katex.min.css')
-  const katexOut = join(options.outDir, 'katex')
-  const cssOut = join(katexOut, 'katex.css')
 
-  const writeCss = () => {
-    if (!existsSync(cssSrc) || !existsSync(fontsSrc)) {
-      throw new Error(`KaTeX CSS not found at ${cssSrc}`)
+  const readWoff2 = (fileName: string): Buffer => {
+    const fontPath = join(fontsSrc, fileName)
+    if (!existsSync(fontPath)) {
+      throw new Error(`KaTeX font not found at ${fontPath}`)
     }
-    const css = embedKatexWoff2(readFileSync(cssSrc, 'utf8'), (fileName) => {
-      const fontPath = join(fontsSrc, fileName)
-      if (!existsSync(fontPath)) {
-        throw new Error(`KaTeX font not found at ${fontPath}`)
-      }
-      return readFileSync(fontPath)
-    })
-    rmSync(katexOut, { recursive: true, force: true })
-    mkdirSync(katexOut, { recursive: true })
-    writeFileSync(cssOut, css)
+    return readFileSync(fontPath)
   }
 
   return {
@@ -65,13 +53,10 @@ export const katexFontsPlugin = (options: KatexFontsOptions): Plugin => {
       if (!normalized.endsWith('/katex/dist/katex.min.css')) {
         return null
       }
-      if (code.includes('url(fonts/')) {
-        return ''
+      if (!code.includes('url(fonts/')) {
+        return null
       }
-      return null
-    },
-    writeBundle() {
-      writeCss()
+      return embedKatexWoff2(code, readWoff2)
     },
   }
 }

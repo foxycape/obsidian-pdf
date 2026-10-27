@@ -12,6 +12,7 @@ import { assertNoDynamicScriptElementsPlugin } from './vite.strip-localforage'
 import { copyToVaultPlugin } from './vite.copy-to-vault'
 import { copyLocalesPlugin } from './vite.copy-locales'
 import { mergePdfBundleCssPlugin } from './vite.merge-pdf-css'
+import { katexFontsPlugin } from './vite.katex-fonts'
 import { stubPdfWorkerRawPlugin } from './vite.stub-pdf-worker-raw'
 import { pdfjsShimPlugin } from './vite.pdfjs-shim'
 
@@ -82,6 +83,7 @@ export default {
     __FOXYCAPE_LOCALES_ID__: JSON.stringify(localesId),
   },
   plugins: [
+    katexFontsPlugin({ packageDir }),
     markdownIdPlugin(),
     stubPdfWorkerRawPlugin(),
     pdfjsShimPlugin(pdfApiPath, pdfViewerPath),

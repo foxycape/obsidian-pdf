@@ -9,7 +9,6 @@ import { buildLocalesId } from './scripts/localesId.mjs'
 import { readObsidianPluginDir } from './scripts/readObsidianPluginDir.mjs'
 import { assertNoHostPdfjsGlobalsPlugin } from './vite.rename-pdfjs-globals'
 import { assertNoDynamicScriptElementsPlugin } from './vite.strip-localforage'
-import { katexFontsPlugin } from './vite.katex-fonts'
 import { stubPdfWorkerRawPlugin } from './vite.stub-pdf-worker-raw'
 import { pdfjsShimPlugin } from './vite.pdfjs-shim'
 import { copyVaultFiles } from './vite.copy-to-vault'
@@ -54,7 +53,7 @@ const writeReaderVersionPlugin = (
     if (!this.meta.watchMode) {
       return
     }
-    copyVaultFiles(outDir, vaultPluginDir, ['reader-bundle.js', READER_VERSION_FILE, 'katex/katex.css'])
+    copyVaultFiles(outDir, vaultPluginDir, ['reader-bundle.js', READER_VERSION_FILE])
   },
 })
 
@@ -86,7 +85,6 @@ export default {
   plugins: [
     stubPdfWorkerRawPlugin(),
     pdfjsShimPlugin(pdfApiPath, pdfViewerPath),
-    katexFontsPlugin({ packageDir, outDir }),
     ...(base.plugins ?? []),
     assertNoHostPdfjsGlobalsPlugin(readerBundlePath),
     assertNoDynamicScriptElementsPlugin(readerBundlePath),

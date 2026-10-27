@@ -1,5 +1,21 @@
 const TABLE_TAGS = new Set(['TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR', 'TH', 'TD'])
 
+type CreateElWindow = Window & {
+  createEl<K extends keyof HTMLElementTagNameMap>(tag: K): HTMLElementTagNameMap[K]
+  createDiv(): HTMLDivElement
+}
+
+const ownerWindow = (node: Node): CreateElWindow => node.win as CreateElWindow
+
+const createDetached = <K extends keyof HTMLElementTagNameMap>(
+  node: Node,
+  tag: K,
+): HTMLElementTagNameMap[K] => {
+  const created = ownerWindow(node).createEl(tag)
+  created.detach()
+  return created
+}
+
 const cellText = (cell: Element): string => {
   const clone = cell.cloneNode(true) as Element
   clone.querySelectorAll('script, style').forEach((node) => node.remove())
@@ -13,7 +29,7 @@ const appendSanitized = (source: Element, target: Element) => {
   if (!TABLE_TAGS.has(source.tagName)) {
     return
   }
-  const copy = source.ownerDocument.createElement(source.tagName.toLowerCase())
+  const copy = createDetached(source, source.tagName.toLowerCase() as keyof HTMLElementTagNameMap)
   if (source.tagName === 'TH' || source.tagName === 'TD') {
     for (const name of ['colspan', 'rowspan']) {
       const value = source.getAttribute(name)
@@ -40,7 +56,8 @@ export const sanitizeTableHtml = (html: string): string => {
   if (!table) {
     return ''
   }
-  const host = parsed.createElement('div')
+  const host = ownerWindow(parsed).createDiv()
+  host.detach()
   appendSanitized(table, host)
   return host.innerHTML
 }

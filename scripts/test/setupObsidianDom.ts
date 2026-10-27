@@ -59,6 +59,48 @@ if (typeof proto.createSpan !== 'function') {
   }
 }
 
+if (typeof proto.detach !== 'function') {
+  proto.detach = function detach(this: Node) {
+    this.parentNode?.removeChild(this)
+  }
+}
+
+const testWindow = window as Window & {
+  createEl?: (tag: string, options?: { cls?: string; text?: string; attr?: Record<string, string> }) => HTMLElement
+  createDiv?: (options?: { cls?: string; text?: string; attr?: Record<string, string> }) => HTMLDivElement
+}
+
+if (typeof testWindow.createEl !== 'function') {
+  testWindow.createEl = (tag, options) => {
+    const el = document.createElement(tag)
+    if (options?.cls) {
+      el.className = options.cls
+    }
+    if (options?.text) {
+      el.textContent = options.text
+    }
+    if (options?.attr) {
+      for (const [key, value] of Object.entries(options.attr)) {
+        el.setAttribute(key, value)
+      }
+    }
+    return el
+  }
+}
+
+if (typeof testWindow.createDiv !== 'function') {
+  testWindow.createDiv = (options) => testWindow.createEl!('div', options) as HTMLDivElement
+}
+
+if (!Object.prototype.hasOwnProperty.call(proto, 'win')) {
+  Object.defineProperty(proto, 'win', {
+    configurable: true,
+    get() {
+      return window
+    },
+  })
+}
+
 if (typeof proto.setCssStyles !== 'function') {
   proto.setCssStyles = function setCssStyles(
     this: Node,
