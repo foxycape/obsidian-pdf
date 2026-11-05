@@ -154,4 +154,14 @@ describe('pending image ref', () => {
     ).toBe(true)
     expect(matchesPendingImageRefSentinel('hello', pending)).toBe(false)
   })
+
+  it('reads a payload written on window by another bundle', () => {
+    const pending = samplePending(Date.now())
+    const host = window as Window & {
+      __foxycapePendingPdfImageRef?: PendingPdfImageRef | null
+    }
+    host.__foxycapePendingPdfImageRef = pending
+    expect(peekPendingPdfImageRef()?.id).toBe('abc')
+    expect(peekPendingPdfImageRef()?.pageNumber).toBe(2)
+  })
 })

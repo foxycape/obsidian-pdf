@@ -37,7 +37,25 @@ export type PendingPdfImageRef = {
   stagedAt: number
 }
 
-let pendingRef: PendingPdfImageRef | null = null
+/**
+ * main.js and reader-bundle.js each bundle this module, so a file-level
+ * variable staged in the reader is invisible to the paste handler in main.
+ * Both scripts share one window.
+ */
+const PENDING_PDF_IMAGE_REF_KEY = '__foxycapePendingPdfImageRef'
+
+type PendingPdfImageRefGlobal = Window & {
+  [PENDING_PDF_IMAGE_REF_KEY]?: PendingPdfImageRef | null
+}
+
+const pendingHost = (): PendingPdfImageRefGlobal => window
+
+const readPendingPdfImageRef = (): PendingPdfImageRef | null =>
+  pendingHost()[PENDING_PDF_IMAGE_REF_KEY] ?? null
+
+const writePendingPdfImageRef = (value: PendingPdfImageRef | null): void => {
+  pendingHost()[PENDING_PDF_IMAGE_REF_KEY] = value
+}
 
 const defaultNow = () => Date.now()
 
@@ -49,17 +67,18 @@ const createPendingId = (): string => {
 }
 
 export const clearPendingPdfImageRef = (): void => {
-  pendingRef = null
+  writePendingPdfImageRef(null)
 }
 
 export const peekPendingPdfImageRef = (
   now: () => number = defaultNow,
 ): PendingPdfImageRef | null => {
+  const pendingRef = readPendingPdfImageRef()
   if (!pendingRef) {
     return null
   }
   if (now() - pendingRef.stagedAt > PDF_IMAGE_REF_PENDING_TTL_MS) {
-    pendingRef = null
+    writePendingPdfImageRef(null)
     return null
   }
   return pendingRef
@@ -69,15 +88,15 @@ export const consumePendingPdfImageRef = (
   now: () => number = defaultNow,
 ): PendingPdfImageRef | null => {
   const current = peekPendingPdfImageRef(now)
-  pendingRef = null
+  writePendingPdfImageRef(null)
   return current
 }
 
-/** Test helper: replace or clear the in-memory pending payload. */
+/** Test helper: replace or clear the shared pending payload. */
 export const __setPendingPdfImageRefForTests = (
   value: PendingPdfImageRef | null,
 ): void => {
-  pendingRef = value
+  writePendingPdfImageRef(value)
 }
 
 export const resolvePdfSiblingAssetFolder = (pdfFile: TFile): string => {
@@ -245,7 +264,7 @@ export const stagePdfImageRefCopy = async (
     rect: options.rect,
     stagedAt: now(),
   }
-  pendingRef = staged
+  writePendingPdfImageRef(staged)
 
   const sentinel = `${PDF_IMAGE_REF_SENTINEL_PREFIX}${id}`
   const item = new ClipboardItem({

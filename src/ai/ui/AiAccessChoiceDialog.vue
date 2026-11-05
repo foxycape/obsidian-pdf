@@ -32,7 +32,7 @@ const description = computed(() => {
   if (props.officialOnly && isQuota.value) {
     return props.t(
       'ai_ocr_quota_choice',
-      'Recognition and proofreading can only use the official model. The AI usage on this license is used up. A traffic pack tops up this license.',
+      'Recognition and proofreading can only use the official model. The AI usage on this license is used up. A token pack tops up this license.',
     )
   }
   if (props.officialOnly) {
@@ -44,7 +44,7 @@ const description = computed(() => {
   return isQuota.value
     ? props.t(
         'ai_quota_choice',
-        'The license is still valid, but the AI usage on it is used up. A traffic pack tops up this license. You can also switch to your own AI key.',
+        'The license is still valid, but the AI usage on it is used up. A token pack tops up this license. You can also switch to your own AI key.',
       )
     : props.t(
         'ai_access_choice',
@@ -91,7 +91,7 @@ onMounted(() => {
         {{ t('ai_configure_key', 'Configure AI key') }}
       </button>
       <button v-if="isQuota" type="button" class="clickable-icon fpdf-action mod-cta" @click="emit('purchase')">
-        {{ t('ai_buy_quota', 'Buy an AI traffic pack') }}
+        {{ t('ai_buy_quota', 'Buy a token pack') }}
       </button>
       <button v-else type="button" class="clickable-icon fpdf-action mod-cta" @click="emit('enterLicense')">
         {{ t('ai_enter_license', 'Enter a license') }}

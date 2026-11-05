@@ -640,7 +640,7 @@ export class FoxycapePdfSettingTab extends PluginSettingTab {
     balanceEl.createSpan({ text })
     const button = balanceEl.createEl('button', {
       cls: 'foxycape-pdf-ai-balance__buy',
-      text: this.plugin.t('ai_buy_quota', 'Buy an AI traffic pack'),
+      text: this.plugin.t('ai_buy_quota', 'Buy a token pack'),
     })
     button.type = 'button'
     button.addEventListener('click', () => {
