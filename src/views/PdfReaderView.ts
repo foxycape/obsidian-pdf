@@ -200,6 +200,18 @@ export class PdfReaderView {
     this.screenshotMount?.toggle()
   }
 
+  requestZoomIn() {
+    void getPdfRenderer(this.reader)?.scalable.zoomIn()
+  }
+
+  requestZoomOut() {
+    void getPdfRenderer(this.reader)?.scalable.zoomOut()
+  }
+
+  requestZoomReset() {
+    void getPdfRenderer(this.reader)?.scalable.zoomReset()
+  }
+
   // Must be prototype methods: ItemView calls getViewType() inside super().
   getViewType() {
     return PDF_READER_VIEW_TYPE

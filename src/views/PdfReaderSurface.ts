@@ -20,6 +20,9 @@ export type PdfReaderSession = {
   getIcon: () => string
   requestOpenFind: () => void
   requestToggleScreenshot: () => void
+  requestZoomIn: () => void
+  requestZoomOut: () => void
+  requestZoomReset: () => void
   getReader: () => { context?: { id?: string } } | null
   isMounted: () => boolean
 }

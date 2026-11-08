@@ -200,6 +200,9 @@ export class FoxycapePdfPlugin extends Plugin {
       this.removeCommand('open-pdf-view')
       this.removeCommand('pdf-search')
       this.removeCommand('pdf-screenshot')
+      this.removeCommand('pdf-zoom-in')
+      this.removeCommand('pdf-zoom-out')
+      this.removeCommand('pdf-zoom-reset')
     }
     this.commandsRegistered = true
     this.addCommand({
@@ -257,6 +260,48 @@ export class FoxycapePdfPlugin extends Plugin {
         }
         if (!checking) {
           view.requestToggleScreenshot()
+        }
+        return true
+      },
+    })
+    this.addCommand({
+      id: 'pdf-zoom-in',
+      name: this.t('plugin_command_pdf_zoom_in', 'Zoom in PDF'),
+      checkCallback: (checking) => {
+        const view = this.getActiveFoxycapePdfView()
+        if (!view) {
+          return false
+        }
+        if (!checking) {
+          view.requestZoomIn()
+        }
+        return true
+      },
+    })
+    this.addCommand({
+      id: 'pdf-zoom-out',
+      name: this.t('plugin_command_pdf_zoom_out', 'Zoom out PDF'),
+      checkCallback: (checking) => {
+        const view = this.getActiveFoxycapePdfView()
+        if (!view) {
+          return false
+        }
+        if (!checking) {
+          view.requestZoomOut()
+        }
+        return true
+      },
+    })
+    this.addCommand({
+      id: 'pdf-zoom-reset',
+      name: this.t('plugin_command_pdf_zoom_reset', 'Zoom reset PDF'),
+      checkCallback: (checking) => {
+        const view = this.getActiveFoxycapePdfView()
+        if (!view) {
+          return false
+        }
+        if (!checking) {
+          view.requestZoomReset()
         }
         return true
       },

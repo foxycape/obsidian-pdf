@@ -105,6 +105,18 @@ export class PdfReaderHostView extends ItemView {
     this.session?.requestToggleScreenshot()
   }
 
+  requestZoomIn() {
+    this.session?.requestZoomIn()
+  }
+
+  requestZoomOut() {
+    this.session?.requestZoomOut()
+  }
+
+  requestZoomReset() {
+    this.session?.requestZoomReset()
+  }
+
   async onOpen() {
     this.closed = false
     await this.kick()
