@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@crazydos/vue-markdown": "^1.1.4",
-    "@foxycape/core": "^1.2.2",
+    "@foxycape/core": "^1.2.5",
     "@lucide/vue": "^1.59.0",
     "dexie": "4.4.4",
     "events": "^3.3.0",
