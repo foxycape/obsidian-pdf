@@ -57,7 +57,6 @@ export class PdfMarker implements IMarker {
   private readonly logger: ILogger
   private readonly highlighter: IHighlighter
   private storage: IMarkStorage | undefined
-  private simpleId = ''
   private readonly cache = new Map<string, Mark>()
   private isInitialized = false
 
@@ -68,12 +67,14 @@ export class PdfMarker implements IMarker {
     this.highlighter = new PdfHighlighter(renderer)
   }
 
+  private get simpleId(): string {
+    return this.renderer.owner.context?.id ?? ''
+  }
+
   async initialize(): Promise<void> {
     if (this.isInitialized) {
       return
     }
-    const context = this.renderer.owner.context
-    this.simpleId = context?.id ?? ''
     if (!this.simpleId) {
       this.logger.warn('PdfMarker initialize skipped: missing simpleId')
       return
