@@ -1506,3 +1506,7 @@ button.clickable-icon.foxycape-pdf-toolbar-more__item:hover {
 .foxycape-pdf-init-retry {
   margin-top: 0.25rem;
 }
+
+.window-no-drag {
+  -webkit-app-region: no-drag;
+}

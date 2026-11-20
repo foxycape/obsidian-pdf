@@ -329,7 +329,7 @@ export class PdfImageViewer {
     onClick: () => void
   ) => {
     const button = parent.createEl('button', {
-      cls: 'pswp__button pswp-button pswp-custom-button',
+      cls: 'pswp__button pswp-button pswp-custom-button window-no-drag',
       attr: { type: 'button', rel: 'noopener', title },
     })
     this.setButtonIconHtml(button, html)

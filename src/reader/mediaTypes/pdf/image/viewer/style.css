@@ -26,7 +26,6 @@
   padding: 0;
   margin: 0;
   opacity: 1;
-  -webkit-app-region: no-drag;
   box-sizing: border-box;
 }
 
